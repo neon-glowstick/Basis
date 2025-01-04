@@ -183,6 +183,10 @@ public static class AssetBundleBuilder
             assetImporter.assetBundleName = assetBundleName;
             return assetBundleName;
         }
+        else
+        {
+            Debug.LogError("Missing Asset Import for path " + assetPath);
+        }
 
         return null;
     }
