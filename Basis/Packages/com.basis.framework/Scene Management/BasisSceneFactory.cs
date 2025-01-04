@@ -12,6 +12,10 @@ public class BasisSceneFactory : MonoBehaviour
     public BasisScene BasisScene;
     public AudioMixerGroup WorldDefaultMixer;
     public static BasisSceneFactory Instance;
+    private float timeSinceLastCheck = 0f;
+    public float RespawnCheckTimer = 5f;
+    public float RespawnHeight = -100f;
+    public BasisLocalPlayer BasisLocalPlayer;
     public void Awake()
     {
         if (BasisHelpers.CheckInstance(Instance))
@@ -53,9 +57,15 @@ public class BasisSceneFactory : MonoBehaviour
                 }
             }
         }
-        BasisLocalPlayer = BasisLocalPlayer.Instance;
+        if (BasisLocalPlayer.Instance != null)
+        {
+            BasisLocalPlayer = BasisLocalPlayer.Instance;
+        }
+        else
+        {
+            BasisLocalPlayer = FindFirstObjectByType<BasisLocalPlayer>(FindObjectsInactive.Exclude);
+        }
     }
-    public BasisLocalPlayer BasisLocalPlayer;
     public void LoadCameraPropertys(Camera Camera)
     {
         Camera RealCamera = BasisLocalCameraDriver.Instance.Camera;
@@ -108,10 +118,11 @@ public class BasisSceneFactory : MonoBehaviour
         {
             Basis.Teleport(position, rotation);
         }
+        else
+        {
+            BasisDebug.LogError("Missing Local Player!");
+        }
     }
-    private float timeSinceLastCheck = 0f;
-    public float RespawnCheckTimer = 5f;
-    public float RespawnHeight = -100f;
     public void FixedUpdate()
     {
         timeSinceLastCheck += Time.deltaTime;
