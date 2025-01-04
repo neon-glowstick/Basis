@@ -3,7 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewBasisAssetBundleObject", menuName = "Basis/ScriptableObjects/BasisAssetBundleObject", order = 1)]
 public class BasisAssetBundleObject : ScriptableObject
 {
-    public static string AssetBundleObject = "Assets/Settings/AssetBundleBuildSettings.asset";
+    public static string AssetBundleObject = "Packages/com.basis.sdk/Settings/AssetBundleBuildSettings.asset";
     public string TemporaryStorage = "Packages/com.basis.basisdk/TemporaryStorage";
     public string BundleExtension = ".bundle";
     public string hashExtension = ".hash";
