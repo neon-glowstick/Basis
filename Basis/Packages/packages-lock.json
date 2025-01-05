@@ -57,7 +57,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "8b89ac399363dc044dbbf937828cd44a5969d0f9"
+      "hash": "4485499e3025a6d7c4136687e94700a2952550dc"
     },
     "com.basis.visualtrackers": {
       "version": "https://github.com/BasisVR/BasisVisualTrackers.git",
