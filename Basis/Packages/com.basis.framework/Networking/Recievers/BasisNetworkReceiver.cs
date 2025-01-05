@@ -79,29 +79,46 @@ namespace Basis.Scripts.Networking.Recievers
         {
             if (PoseHandler != null)
             {
-                if (HasAvatarInitalized)
+                try
                 {
-                    OutputRotation = math.slerp(First.rotation, Last.rotation, interpolationTime);
-                    // Complete the jobs and apply the results
-                    musclesHandle.Complete();
+                    if (HasAvatarInitalized)
+                    {
+                        OutputRotation = math.slerp(First.rotation, Last.rotation, interpolationTime);
+                        // Complete the jobs and apply the results
+                        musclesHandle.Complete();
 
-                    ApplyPoseData(NetworkedPlayer.Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, muscles);
-                    PoseHandler.SetHumanPose(ref HumanPose);
+                        ApplyPoseData(NetworkedPlayer.Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, muscles);
+                        PoseHandler.SetHumanPose(ref HumanPose);
 
-                    RemotePlayer.RemoteBoneDriver.SimulateAndApply(TimeAsDouble, DeltaTime);
+                        RemotePlayer.RemoteBoneDriver.SimulateAndApply(TimeAsDouble, DeltaTime);
 
-                    //come back to this later!  RemotePlayer.Avatar.FaceVisemeMesh.transform.position = RemotePlayer.MouthControl.OutgoingWorldData.position;
+                        //come back to this later!  RemotePlayer.Avatar.FaceVisemeMesh.transform.position = RemotePlayer.MouthControl.OutgoingWorldData.position;
+                    }
+                    if (interpolationTime >= 1 && PayloadQueue.TryDequeue(out AvatarBuffer result))
+                    {
+                        First = Last;
+                        Last = result;
+
+                        TimeBeforeCompletion = Last.SecondsInterval;
+                        TimeInThePast = TimeAsDouble;
+                    }
                 }
-                if (interpolationTime >= 1 && PayloadQueue.TryDequeue(out AvatarBuffer result))
+                catch (Exception ex)
                 {
-                    First = Last;
-                    Last = result;
-
-                    TimeBeforeCompletion = Last.SecondsInterval;
-                    TimeInThePast = TimeAsDouble;
+                    if (LogFirstError == false)
+                    {
+                        // Log the error and continue with the next iteration
+                        //muting the error for now
+                        BasisDebug.LogError($"Error in Apply : {ex.Message} {ex.StackTrace}");
+                    }
+                    else
+                    {
+                        LogFirstError = true;
+                    }
                 }
             }
         }
+        public bool LogFirstError = false;
         public void EnQueueAvatarBuffer(ref AvatarBuffer avatarBuffer)
         {
             if(avatarBuffer == null)

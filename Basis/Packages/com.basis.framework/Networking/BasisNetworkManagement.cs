@@ -210,18 +210,9 @@ namespace Basis.Scripts.Networking
             // Complete tasks and apply results
             for (int Index = 0; Index < ReceiverCount; Index++)
             {
-                try
+                if (ReceiverArray[Index] != null)
                 {
-                    if (ReceiverArray[Index] != null)
-                    {
-                        ReceiverArray[Index].Apply(TimeAsDouble, deltaTime);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log the error and continue with the next iteration
-                  //muting the error for now
-                  //BasisDebug.LogError($"Error in Apply at index {Index}: {ex.Message} {ex.StackTrace}");
+                    ReceiverArray[Index].Apply(TimeAsDouble, deltaTime);
                 }
             }
         }
