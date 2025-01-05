@@ -90,6 +90,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3db25ca9c2123284e9e48b968d7ba75d
+    m_Address: Packages/com.basis.tests/Prefabs/Toggle Example.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 411cf3d73f4e3dc46a7ae9e13da44f03
     m_Address: oculus_quest_pro_controller_right
     m_ReadOnly: 0
