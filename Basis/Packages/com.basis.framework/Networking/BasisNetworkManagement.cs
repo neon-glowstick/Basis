@@ -220,7 +220,8 @@ namespace Basis.Scripts.Networking
                 catch (Exception ex)
                 {
                     // Log the error and continue with the next iteration
-                    BasisDebug.LogError($"Error in Apply at index {Index}: {ex.Message} {ex.StackTrace}");
+                  //muting the error for now
+                  //BasisDebug.LogError($"Error in Apply at index {Index}: {ex.Message} {ex.StackTrace}");
                 }
             }
         }
