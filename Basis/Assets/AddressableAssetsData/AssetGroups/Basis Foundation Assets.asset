@@ -41,17 +41,17 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 18406c2d98a4b874e9ccd06d2741d401
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/vr_tracker_vive_3_0.prefab
+    m_Address: vr_tracker_vive_3_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1c4eb22ae1b895b4999f192628cd9cdb
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_cv1_controller_right.prefab
+    m_Address: oculus_cv1_controller_right
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 213ae8df071a2ec42a9f405d5b3e0b62
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_cv1_controller_left.prefab
+    m_Address: oculus_cv1_controller_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -80,13 +80,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c89e9ae91882974f8334191aa8f704f
+    m_Address: Packages/com.basis.gizmos/Gizmo.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3d0b5834872dc2e49bcc10f8b0d13e9c
     m_Address: Assets/UI/Material/RayCastMaterial.mat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 411cf3d73f4e3dc46a7ae9e13da44f03
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest_pro_controller_right.prefab
+    m_Address: oculus_quest_pro_controller_right
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -111,7 +116,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4c139b2f91b0dc9448dca7fcc1b6f1e6
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest2_controller_left.prefab
+    m_Address: oculus_quest2_controller_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -131,12 +136,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 664b0a1856405914186fc25229d9d893
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/vr_tracker_vive_1_0.prefab
+    m_Address: vr_tracker_vive_1_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6cdbeef6535327d40a6f7839159facff
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest_controller_left.prefab
+    m_Address: oculus_quest_controller_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -156,7 +161,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86272a90b30fb814ea93537106bd9c2c
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/valve_controller_knu_right.prefab
+    m_Address: valve_controller_knu_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 938a74e0852c65a46b1e41fd00424827
+    m_Address: Packages/com.basis.gizmos/GizmoShader.shadergraph
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -166,7 +176,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 98f7128bebf3e374eb8cab55434e4f7e
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/FallbackSphere.prefab
+    m_Address: FallbackSphere
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -185,8 +195,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a67751b7d392b924e89b90084f01a19b
+    m_Address: Packages/com.basis.gizmos/GizmoLine.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb4eb766250cf0b4d9e2dc0a7d939808
+    m_Address: Packages/com.basis.gizmos/GizmoMaterial.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c48a4804c2b9e8e4ba8c9ea8aab07a1e
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/valve_controller_knu_left.prefab
+    m_Address: valve_controller_knu_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -196,17 +216,17 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cdff6bc74faea65489485131ad236623
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest_plus_controller_left.prefab
+    m_Address: oculus_quest_plus_controller_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d736adbd5f9ea3441922acf7da4225c3
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest_plus_controller_right.prefab
+    m_Address: oculus_quest_plus_controller_right
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7624434af8aa17488fd698eabbf2bb6
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest2_controller_right.prefab
+    m_Address: oculus_quest2_controller_right
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -221,17 +241,17 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f95798865974f0740a6932a53740011f
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest_controller_right.prefab
+    m_Address: oculus_quest_controller_right
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fc769e29146b5b34583aa23bb7d1a2b5
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/tundra_tracker.prefab
+    m_Address: tundra_tracker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd12decbd8eb25048853cfde62e68f90
-    m_Address: Packages/com.basis.visualtrackers/Prefabs/oculus_quest_pro_controller_left.prefab
+    m_Address: oculus_quest_pro_controller_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
