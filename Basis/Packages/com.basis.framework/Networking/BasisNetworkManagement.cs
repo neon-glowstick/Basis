@@ -179,7 +179,7 @@ namespace Basis.Scripts.Networking
                 receiverArray = null;
             }
 
-            Debug.Log("BasisNetworkManagement has been successfully shutdown.");
+            BasisDebug.Log("BasisNetworkManagement has been successfully shutdown.", BasisDebug.LogTag.Networking);
         }
         public void Update()
         {

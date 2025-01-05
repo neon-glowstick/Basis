@@ -201,7 +201,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bb4eb766250cf0b4d9e2dc0a7d939808
-    m_Address: Packages/com.basis.gizmos/GizmoMaterial.mat
+    m_Address: GizmoMaterial
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
