@@ -29,7 +29,10 @@ public class BasisNetworkManagementEditor : Editor
         EditorGUILayout.LabelField("Receiver Count:", BasisNetworkManagement.ReceiverCount.ToString());
 
 
-
+        if(BasisNetworkManagement.Instance == null)
+        {
+            return;
+        }
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Transmitter Details", EditorStyles.boldLabel);
         if (BasisNetworkManagement.Instance.Transmitter != null)
