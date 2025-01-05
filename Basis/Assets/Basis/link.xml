@@ -14,6 +14,8 @@
 			<type fullname="FeatureNetworking" preserve="all"/>
 		</namespace>
 	</assembly>
+	    <!-- Preserve the entire BasisExamples.dll assembly -->
+    <assembly fullname="BasisExamples.dll" preserve="all" />
 
 	<!-- Preserve the entire AudioLink assembly -->
 	<assembly fullname="AudioLink" preserve="all" />

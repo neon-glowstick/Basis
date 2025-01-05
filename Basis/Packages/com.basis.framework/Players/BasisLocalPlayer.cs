@@ -7,7 +7,6 @@ using Basis.Scripts.Drivers;
 using Basis.Scripts.BasisSdk.Helpers;
 using Basis.Scripts.Device_Management.Devices.Desktop;
 using Basis.Scripts.Device_Management;
-using Basis.Scripts.TransformBinders.BoneControl;
 using Basis.Scripts.Avatar;
 using Basis.Scripts.Common;
 using System.Collections.Generic;
@@ -86,6 +85,23 @@ namespace Basis.Scripts.BasisSdk.Players
             }
             MicrophoneRecorder.TryInitialize();
             OnLocalPlayerCreatedAndReady?.Invoke();
+            BasisSceneFactory BasisSceneFactory = FindFirstObjectByType<BasisSceneFactory>(FindObjectsInactive.Exclude);
+            if (BasisSceneFactory != null)
+            {
+                BasisScene BasisScene = FindFirstObjectByType<BasisScene>(FindObjectsInactive.Exclude);
+                if (BasisScene != null)
+                {
+                    BasisSceneFactory.Initalize(BasisScene);
+                }
+                else
+                {
+                    BasisDebug.LogError("Cant Find Basis Scene");
+                }
+            }
+            else
+            {
+                BasisDebug.LogError("Cant Find Scene Factory");
+            }
         }
         public async Task LoadInitalAvatar(BasisDataStore.BasisSavedAvatar LastUsedAvatar)
         {

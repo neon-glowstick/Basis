@@ -57,7 +57,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "8b89ac399363dc044dbbf937828cd44a5969d0f9"
+      "hash": "4485499e3025a6d7c4136687e94700a2952550dc"
     },
     "com.basis.visualtrackers": {
       "version": "https://github.com/BasisVR/BasisVisualTrackers.git",
@@ -74,7 +74,7 @@
         "com.unity.burst": "1.4.11",
         "com.unity.mathematics": "1.2.5"
       },
-      "hash": "d60f02432f913a7c3ea9fa6fe19dcfe1f3557912"
+      "hash": "5416ef78b1cb72699d719b5cb60ef12946d11ee4"
     },
     "com.keviniglesias.basicmotions": {
       "version": "file:com.keviniglesias.basicmotions",

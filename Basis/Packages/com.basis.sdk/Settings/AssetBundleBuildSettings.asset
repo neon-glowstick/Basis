@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b719066808df17f4580ce2b537d91c90, type: 3}
   m_Name: AssetBundleBuildSettings
   m_EditorClassIdentifier: 
-  TemporaryStorage: Packages/com.basis.basisdk/TemporaryStorage
+  TemporaryStorage: Assets/TemporaryStorage
   BundleExtension: .bundle
   hashExtension: .hash
   BasisMetaExtension: .BasisMeta
-  BasisBundleCompressedExtension: .BasisEncyptedBundle
+  BasisBundleEncyptedExtension: .BasisEncyptedBundle
+  BasisMetaEncyptedExtension: .BasisEncyptedMeta
   useCompression: 1
   GenerateImage: 1
   BuildTarget: 19

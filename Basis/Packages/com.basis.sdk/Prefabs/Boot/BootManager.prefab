@@ -100,9 +100,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BasisScene: {fileID: 0}
   WorldDefaultMixer: {fileID: 6216228358845890117, guid: 471a0209081144d4da2426822e8a0b47, type: 2}
-  BasisLocalPlayer: {fileID: 0}
   RespawnCheckTimer: 5
   RespawnHeight: -100
+  BasisLocalPlayer: {fileID: 0}
 --- !u!114 &-3484738083713026149
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,8 +188,8 @@ MonoBehaviour:
     UnlockPassword: Scene
     BasisRemoteBundleEncrypted:
       IsLocal: 0
-      MetaURL: https://BasisFramework.b-cdn.net/Worlds/Oasis/d5ae850a-7d32-47ce-b282-c19343cf0cc4_638704887471524350.BasisEncyptedMeta
-      BundleURL: https://BasisFramework.b-cdn.net/Worlds/Oasis/d5ae850a-7d32-47ce-b282-c19343cf0cc4_638704887471524350.BasisEncyptedBundle
+      MetaURL: https://BasisFramework.b-cdn.net/Worlds/Oasis2/c4096975-b089-468e-92e1-bd9bea145c04_638716034722167144.BasisEncyptedMeta
+      BundleURL: https://BasisFramework.b-cdn.net/Worlds/Oasis2/c4096975-b089-468e-92e1-bd9bea145c04_638716034722167144.BasisEncyptedBundle
     BasisLocalEncryptedBundle:
       LocalMetaFile: 
       LocalBundleFile: 

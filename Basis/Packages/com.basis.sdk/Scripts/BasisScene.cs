@@ -13,10 +13,16 @@ namespace Basis.Scripts.BasisSdk
         public static BasisScene Instance;
         public static UnityEvent<BasisScene> Ready = new UnityEvent<BasisScene>();
         public Camera MainCamera;
+        public bool IsReady;
         public void Awake()
         {
             Instance = this;
             Ready?.Invoke(this);
+            IsReady = true;
+        }
+        public void OnDestroy()
+        {
+            IsReady = false;
         }
         public static SceneNetworkMessageReceiveEvent OnNetworkMessageReceived;
         public static SceneNetworkMessageSendEvent OnNetworkMessageSend;
