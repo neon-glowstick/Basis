@@ -31,7 +31,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "5b098deac6d115759870689224a62c562b1bf485"
+      "hash": "6f2492e58e7e542d685e81ff4bef0a8f5010a966"
     },
     "com.basis.odinserializer": {
       "version": "https://github.com/BasisVR/odin-serializer.git",
@@ -57,7 +57,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "4485499e3025a6d7c4136687e94700a2952550dc"
+      "hash": "f232ec073b7f8bd0812c486c28d53e0d0c3382c9"
     },
     "com.basis.visualtrackers": {
       "version": "https://github.com/BasisVR/BasisVisualTrackers.git",
