@@ -306,6 +306,10 @@ public static class BasisNetworkServer
         catch (Exception e)
         {
             BNL.LogError($"{e.Message} : {e.StackTrace}");
+            if (reader != null)
+            {
+                reader.Recycle();
+            }
         }
     }
 
