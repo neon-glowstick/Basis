@@ -37,7 +37,7 @@ namespace Basis.Network.Server.Generic
                 ConcurrentDictionary<ushort, NetPeer> targetedClients = new ConcurrentDictionary<ushort, NetPeer>();
 
                 int recipientsLength = SceneDataMessage.recipientsSize;
-                BNL.Log("Query Recipients " + recipientsLength);
+              //  BNL.Log("Query Recipients " + recipientsLength);
                 for (int index = 0; index < recipientsLength; index++)
                 {
                     if (BasisNetworkServer.Peers.TryGetValue(SceneDataMessage.recipients[index], out NetPeer client))
@@ -53,7 +53,7 @@ namespace Basis.Network.Server.Generic
 
                 if (targetedClients.Count > 0)
                 {
-                    BNL.Log("Sending out Target Clients " + targetedClients.Count);
+                  //  BNL.Log("Sending out Target Clients " + targetedClients.Count);
                     BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, targetedClients, DeliveryMethod);
                 }
             }
@@ -108,7 +108,7 @@ namespace Basis.Network.Server.Generic
 
                 if (targetedClients.Count > 0)
                 {
-                    BNL.Log("Sending out Target Clients " + targetedClients.Count);
+                    //BNL.Log("Sending out Target Clients " + targetedClients.Count);
                     BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, targetedClients, DeliveryMethod);
                 }
             }

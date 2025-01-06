@@ -6,7 +6,7 @@ public class Configuration
     public int PeerLimit = 1024;
     public ushort SetPort = 4296;
     public int QueueEvents = 10;
-    public bool UseNativeSockets = false;
+    public bool UseNativeSockets = true;
     public bool NatPunchEnabled = true;
     public int PingInterval = 1500;
     public int DisconnectTimeout = 30000;
@@ -56,7 +56,7 @@ public class Configuration
             PeerLimit = int.Parse(doc.SelectSingleNode("/Configuration/PeerLimit")?.InnerText ?? "1024"),
             SetPort = ushort.Parse(doc.SelectSingleNode("/Configuration/SetPort")?.InnerText ?? "4296"),
             QueueEvents = int.Parse(doc.SelectSingleNode("/Configuration/QueueEvents")?.InnerText ?? "10"),
-            UseNativeSockets = bool.Parse(doc.SelectSingleNode("/Configuration/UseNativeSockets")?.InnerText ?? "false"),
+            UseNativeSockets = bool.Parse(doc.SelectSingleNode("/Configuration/UseNativeSockets")?.InnerText ?? "true"),
             NatPunchEnabled = bool.Parse(doc.SelectSingleNode("/Configuration/NatPunchEnabled")?.InnerText ?? "true"),
             PingInterval = int.Parse(doc.SelectSingleNode("/Configuration/PingInterval")?.InnerText ?? "1500"),
             DisconnectTimeout = int.Parse(doc.SelectSingleNode("/Configuration/DisconnectTimeout")?.InnerText ?? "30000"),

@@ -9,7 +9,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using static Basis.Network.Core.Serializable.SerializableBasis;
 using static Basis.Network.Server.Generic.BasisSavedState;
 using static SerializableBasis;
@@ -19,7 +22,6 @@ public static class BasisNetworkServer
     public static NetManager server;
     public static ConcurrentDictionary<ushort, NetPeer> Peers = new ConcurrentDictionary<ushort, NetPeer>();
     public static Configuration Configuration;
-    public static Thread serverIncomeThread;
     private static IAuth auth;
 
     public static void StartServer(Configuration configuration)
@@ -37,21 +39,6 @@ public static class BasisNetworkServer
         }
         BNL.Log("Server Worker Threads Booted");
 
-
-        serverIncomeThread = new Thread(WorkerThread)
-        {
-            IsBackground = true // Ensure the thread doesn't prevent the application from exiting
-        };
-        serverIncomeThread.Start();
-
-    }
-    public static void WorkerThread()
-    {
-        while (true)
-        {
-            server.PollEvents();
-            Thread.Sleep(15);
-        }
     }
     #region Server Setup
     private static void SetupServer(Configuration configuration)
@@ -70,7 +57,9 @@ public static class BasisNetworkServer
             IPv6Enabled = configuration.IPv6Enabled,
             UpdateTime = BasisNetworkCommons.NetworkIntervalPoll,
             PingInterval = configuration.PingInterval,
-            DisconnectTimeout = configuration.DisconnectTimeout
+            DisconnectTimeout = configuration.DisconnectTimeout,
+            PacketPoolSize = 2000,
+            UnsyncedEvents = true,
         };
 
         StartListening(configuration);
@@ -90,15 +79,64 @@ public static class BasisNetworkServer
         }
     }
     #endregion
-
     #region Server Events Setup
+
     private static void SetupServerEvents(Configuration configuration)
     {
-        listener.ConnectionRequestEvent += HandleConnectionRequest;
-        listener.PeerDisconnectedEvent += HandlePeerDisconnected;
-        listener.NetworkReceiveEvent += HandleNetworkReceiveEvent;
+        SubscribeServerEvents();
     }
 
+    private static void SubscribeServerEvents()
+    {
+        listener.ConnectionRequestEvent += OnConnectionRequest;
+        listener.PeerDisconnectedEvent += OnPeerDisconnected;
+        listener.NetworkReceiveEvent += OnNetworkReceive;
+        listener.NetworkErrorEvent += OnNetworkError;
+    }
+
+    private static void UnsubscribeServerEvents()
+    {
+        listener.ConnectionRequestEvent -= OnConnectionRequest;
+        listener.PeerDisconnectedEvent -= OnPeerDisconnected;
+        listener.NetworkReceiveEvent -= OnNetworkReceive;
+        listener.NetworkErrorEvent -= OnNetworkError;
+    }
+
+    private static void OnConnectionRequest(ConnectionRequest request)
+    {
+        Task.Run(() => HandleConnectionRequest(request));
+    }
+
+    private static void OnPeerDisconnected(NetPeer peer, DisconnectInfo info)
+    {
+        Task.Run(() => HandlePeerDisconnected(peer, info));
+    }
+
+    private static void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+    {
+        Task.Run(() => HandleNetworkReceiveEvent(peer, reader, channel, deliveryMethod));
+    }
+
+    private static void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
+    {
+        Task.Run(() => HandleNetworkErrorEvent(endPoint, socketError));
+    }
+
+    #endregion
+    #region Worker Thread
+
+    public static void StopWorker()
+    {
+        server?.Stop();
+        UnsubscribeServerEvents();
+    }
+
+    #endregion
+    #region Server Events Setup
+    private static void HandleNetworkErrorEvent(IPEndPoint endPoint, SocketError socketError)
+    {
+        BNL.LogError($"Endpoint {endPoint.ToString()} was reported with error {socketError}");
+    }
     private static void HandleConnectionRequest(ConnectionRequest request)
     {
         try
@@ -200,16 +238,6 @@ public static class BasisNetworkServer
         BasisServerReductionSystem.RemovePlayer(peer);
     }
     #endregion
-
-    #region Worker Thread
-
-    public static void StopWorker()
-    {
-        server.Stop();
-    }
-
-    #endregion
-
     #region Network Receive Handlers
     private static void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
     {
@@ -275,7 +303,7 @@ public static class BasisNetworkServer
                     break;
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             BNL.LogError($"{e.Message} : {e.StackTrace}");
         }
