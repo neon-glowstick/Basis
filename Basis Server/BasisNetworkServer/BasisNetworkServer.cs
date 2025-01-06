@@ -23,7 +23,6 @@ public static class BasisNetworkServer
     public static ConcurrentDictionary<ushort, NetPeer> Peers = new ConcurrentDictionary<ushort, NetPeer>();
     public static Configuration Configuration;
     private static IAuth auth;
-
     public static void StartServer(Configuration configuration)
     {
         Configuration = configuration;
@@ -270,11 +269,11 @@ public static class BasisNetworkServer
                     break;
                 case BasisNetworkCommons.MovementChannel:
                     HandleAvatarMovement(reader, peer);
-                    reader.Recycle();
+                   //moved into function reader.Recycle();
                     break;
                 case BasisNetworkCommons.VoiceChannel:
                     HandleVoiceMessage(reader, peer);
-                    reader.Recycle();
+                    //moved into function reader.Recycle();
                     break;
                 case BasisNetworkCommons.AvatarChannel:
                     BasisNetworkingGeneric.HandleAvatar(reader, deliveryMethod, peer);
@@ -371,6 +370,7 @@ public static class BasisNetworkServer
     {
         AudioSegmentDataMessage audioSegment = new AudioSegmentDataMessage();
         audioSegment.Deserialize(Reader);
+        Reader.Recycle();
         ServerAudioSegmentMessage ServerAudio = new ServerAudioSegmentMessage
         {
             audioSegmentData = audioSegment
@@ -453,6 +453,7 @@ public static class BasisNetworkServer
     {
         LocalAvatarSyncMessage LocalAvatarSyncMessage = new LocalAvatarSyncMessage();
         LocalAvatarSyncMessage.Deserialize(Reader);
+        Reader.Recycle();
         BasisSavedState.AddLastData(Peer, LocalAvatarSyncMessage);
         ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
         foreach (NetPeer client in Peers)

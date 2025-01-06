@@ -1,5 +1,6 @@
 using Basis.Network.Core;
 using Basis.Scripts.Networking.Compression;
+using BasisNetworkClientConsole;
 using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -15,6 +16,7 @@ namespace Basis
         public static string Password = "default_password";
         private static readonly object nameLock = new object(); // To synchronize name generation
         public static NetPeer LocalPLayer;
+
         public static void Main(string[] args)
         {
             // Set up global exception handlers
@@ -55,7 +57,7 @@ namespace Basis
                     };
                     BasisNetworkClient.AuthenticationMessage = Authmessage;
                     LocalPLayer = BasisNetworkClient.StartClient("localhost", 4296, RM, true);
-                    BasisNetworkClient.listener.NetworkReceiveEvent += NetworkReceiveEvent;
+                 //   BasisNetworkClient.listener.NetworkReceiveEvent += NetworkReceiveEvent;
                     BNL.Log($"Connecting! Player Name: {randomPlayerName}, UUID: {randomUUID}");
                 }
                 catch (Exception ex)
@@ -86,7 +88,7 @@ namespace Basis
             // Keep the application running
             while (true)
             {
-              //  SendMovement();
+               SendMovement();
                 Thread.Sleep(33);
             }
         }
@@ -101,11 +103,11 @@ namespace Basis
                 {
                     ServerSideSyncPlayerMessage SSM = new ServerSideSyncPlayerMessage();
                     SSM.Deserialize(Reader);
+                    Reader.Recycle();
                     NetDataWriter Writer = NetDataWriterPool.GetWriter();
                     SSM.avatarSerialization.Serialize(Writer);
                     LocalPLayer.Send(Writer, BasisNetworkCommons.MovementChannel, deliveryMethod);
                     NetDataWriterPool.ReturnWriter(Writer);
-                    Reader.Recycle();
                 }
                 else
                 {
@@ -115,7 +117,7 @@ namespace Basis
                         {
                             if (Reader.TryGetByte(out byte Byte))
                             {
-                                NetworkReceiveEvent(peer, Reader, Byte, deliveryMethod);
+                              //  NetworkReceiveEvent(peer, Reader, Byte, deliveryMethod);
                             }
                             else
                             {
@@ -144,12 +146,14 @@ namespace Basis
             if (LocalPLayer != null)
             {
                 int Offset = 0;
+                Position = Randomizer.GetRandomPosition(new Vector3(30,30,30),new Vector3(80,80,80));
                 WriteVectorFloatToBytes(Position, ref AvatarMessage, ref Offset);
                 WriteQuaternionToBytes(Rotation, ref AvatarMessage, ref Offset, RotationCompression);
                 WriteUShortsToBytes(UshortArray, ref AvatarMessage, ref Offset);
                 LocalPLayer.Send(AvatarMessage, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
             }
         }
+
         public static ushort Compress(float value, float MinValue, float MaxValue, float valueDiffence)
         {
             // Clamp the value to ensure it's within the specified range

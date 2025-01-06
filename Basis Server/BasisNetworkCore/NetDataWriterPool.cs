@@ -1,4 +1,5 @@
 using LiteNetLib.Utils;
+using System;
 using System.Collections.Concurrent;
 
 namespace BasisNetworkCore
@@ -7,8 +8,8 @@ namespace BasisNetworkCore
     {
         private static readonly ConcurrentBag<NetDataWriter> _pool = new ConcurrentBag<NetDataWriter>();
         private static readonly ConcurrentDictionary<int, ConcurrentBag<NetDataWriter>> _sizeBuckets = new ConcurrentDictionary<int, ConcurrentBag<NetDataWriter>>();
-        private static readonly int _maxPoolSize = 1000; // Max size of the pool, adjust as needed
         private static readonly int _maxBucketSize = 100; // Max size for size-specific buckets, adjust as needed
+        private static readonly int _maxPoolSize = 200;
 
         /// <summary>
         /// Retrieves a NetDataWriter from the pool or creates a new one if none are available.
@@ -67,6 +68,12 @@ namespace BasisNetworkCore
                 // If the pool is too large, consider discarding the writer or disposing of it
                 //dispose baby!   writer.Dispose(); // Uncomment if disposable
                 BNL.LogError("Exceeding Pool Count!");
+                CleanUp();
+                // Trigger garbage collection
+                BNL.Log("Triggering garbage collection...");
+                GC.Collect();
+                GC.WaitForPendingFinalizers(); // Ensure all finalizers are run
+                BNL.Log("Garbage collection completed.");
             }
         }
 
