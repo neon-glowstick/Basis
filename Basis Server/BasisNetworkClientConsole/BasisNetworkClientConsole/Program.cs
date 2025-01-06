@@ -3,8 +3,6 @@ using Basis.Scripts.Networking.Compression;
 using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using System.Reflection.PortableExecutable;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 using static Basis.Network.Core.Serializable.SerializableBasis;
 using static BasisNetworkPrimitiveCompression;
@@ -107,6 +105,7 @@ namespace Basis
                     SSM.avatarSerialization.Serialize(Writer);
                     LocalPLayer.Send(Writer, BasisNetworkCommons.MovementChannel, deliveryMethod);
                     NetDataWriterPool.ReturnWriter(Writer);
+                    Reader.Recycle();
                 }
                 else
                 {
