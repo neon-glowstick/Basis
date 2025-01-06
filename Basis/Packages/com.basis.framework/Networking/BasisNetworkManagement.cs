@@ -188,18 +188,10 @@ namespace Basis.Scripts.Networking
             // Schedule multithreaded tasks
             for (int Index = 0; Index < ReceiverCount; Index++)
             {
-                try
-                {
                     if (ReceiverArray[Index] != null)
                     {
                         ReceiverArray[Index].Compute(TimeAsDouble);
                     }
-                }
-                catch (Exception ex)
-                {
-                    // Log the error and continue with the next iteration
-                    BasisDebug.LogError($"Error in Compute at index {Index}: {ex.Message} {ex.StackTrace}");
-                }
             }
         }
         public void LateUpdate()

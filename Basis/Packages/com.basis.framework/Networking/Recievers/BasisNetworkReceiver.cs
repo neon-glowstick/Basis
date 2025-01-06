@@ -39,7 +39,6 @@ namespace Basis.Scripts.Networking.Recievers
         public quaternion OutputRotation;
         public AvatarBuffer First;
         public AvatarBuffer Last;
-        //  public int PayloadCount = 0;
         public static int BufferCapacityBeforeCleanup = 3;
         public float interpolationTime;
         public double TimeBeforeCompletion;
@@ -54,17 +53,52 @@ namespace Basis.Scripts.Networking.Recievers
             {
                 if (HasAvatarInitalized)
                 {
+
                     // Calculate interpolation time
                     interpolationTime = Mathf.Clamp01((float)((TimeAsDouble - TimeInThePast) / TimeBeforeCompletion));
+                    if(First == null)
+                    {
+                        if(Last != null)
+                        {
+                            First = Last;
+                            PayloadQueue.TryDequeue(out Last);
+                            BasisDebug.LogError("Last != null filled in gap", BasisDebug.LogTag.Networking);
+                        }
+                        else
+                        {
+                            PayloadQueue.TryDequeue(out First);
+                            BasisDebug.LogError("Last and first are null replacing First!", BasisDebug.LogTag.Networking);
+                        }
+                    }
+                    if(Last == null)
+                    {
+                        PayloadQueue.TryDequeue(out Last);
+                        BasisDebug.LogError("Last == null tried to dequeue", BasisDebug.LogTag.Networking);
 
-                    // PayloadCount = PayloadQueue.Count;
-                    TargetVectors[0] = Last.Position; // Target position at index 0
-                    OuputVectors[0] = First.Position; // Position at index 0
+                    }
+                    try
+                    {
+                        TargetVectors[0] = Last.Position; // Target position at index 0
+                        OuputVectors[0] = First.Position; // Position at index 0
 
-                    OuputVectors[1] = First.Scale;    // Scale at index 1
-                    TargetVectors[1] = Last.Scale;    // Target scale at index 1
-                    muscles.CopyFrom(First.Muscles);
-                    targetMuscles.CopyFrom(Last.Muscles);
+                        OuputVectors[1] = First.Scale;    // Scale at index 1
+                        TargetVectors[1] = Last.Scale;    // Target scale at index 1
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the full exception details, including stack trace
+                        BasisDebug.LogError($"Error in Vector Set: {ex.Message}\nStack Trace:\n{ex.StackTrace}");
+                    }
+                    try
+                    {
+                        muscles.CopyFrom(First.Muscles);
+                        targetMuscles.CopyFrom(Last.Muscles);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the full exception details, including stack trace
+                        BasisDebug.LogError($"Error in Muscle Copy: {ex.Message}\nStack Trace:\n{ex.StackTrace}");
+                    }
                     AvatarJob.Time = interpolationTime;
 
                     AvatarHandle = AvatarJob.Schedule();
@@ -107,12 +141,14 @@ namespace Basis.Scripts.Networking.Recievers
                 {
                     if (LogFirstError == false)
                     {
-                        // Log the error and continue with the next iteration
-                        //muting the error for now
-                        BasisDebug.LogError($"Error in Apply : {ex.Message} {ex.StackTrace}");
-                    }
-                    else
-                    {
+                        // Log the full exception details, including stack trace
+                        BasisDebug.LogError($"Error in Apply: {ex.Message}\nStack Trace:\n{ex.StackTrace}");
+
+                        // If the exception has an inner exception, log it as well
+                        if (ex.InnerException != null)
+                        {
+                            BasisDebug.LogError($"Inner Exception: {ex.InnerException.Message}\nStack Trace:\n{ex.InnerException.StackTrace}");
+                        }
                         LogFirstError = true;
                     }
                 }
@@ -150,6 +186,11 @@ namespace Basis.Scripts.Networking.Recievers
         }
         public void ApplyPoseData(Animator animator, float3 Scale, float3 Position, quaternion Rotation, NativeArray<float> Muscles)
         {
+            if(animator == null)
+            {
+                BasisDebug.LogError("Missing Animator!");
+                return;
+            }
             // Directly adjust scaling by applying the inverse of the AvatarHumanScale
             Vector3 Scaling = Vector3.one / animator.humanScale;  // Initial scaling with human scale inverse
 
