@@ -3,6 +3,7 @@ using Basis.Network.Server;
 using Basis.Network.Server.Auth;
 using Basis.Network.Server.Generic;
 using Basis.Network.Server.Ownership;
+using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -11,7 +12,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using static Basis.Network.Core.Serializable.SerializableBasis;
 using static Basis.Network.Server.Generic.BasisSavedState;
@@ -60,6 +60,7 @@ public static class BasisNetworkServer
             DisconnectTimeout = configuration.DisconnectTimeout,
             PacketPoolSize = 2000,
             UnsyncedEvents = true,
+            
         };
 
         StartListening(configuration);
@@ -184,6 +185,7 @@ public static class BasisNetworkServer
                 NetPeer newPeer = request.Accept();
                 if (Peers.TryAdd((ushort)newPeer.Id, newPeer))
                 {
+                    BasisPlayerArray.AddPlayer(newPeer);
                     BNL.Log($"Peer connected: {newPeer.Id}");
                     ReadyMessage readyMessage = new ReadyMessage();
                     readyMessage.Deserialize(request.Data);
@@ -215,6 +217,7 @@ public static class BasisNetworkServer
             ushort id = (ushort)peer.Id;
             ClientDisconnect(id, Peers);
 
+            BasisPlayerArray.RemovePlayer(peer);
             if (Peers.TryRemove(id, out _))
             {
                 BNL.Log($"Peer removed: {id}");
@@ -278,7 +281,7 @@ public static class BasisNetworkServer
                     reader.Recycle();
                     break;
                 case BasisNetworkCommons.SceneChannel:
-                    BasisNetworkingGeneric.HandleScene(reader, deliveryMethod, peer, Peers);
+                    BasisNetworkingGeneric.HandleScene(reader, deliveryMethod, peer);
                     reader.Recycle();
                     break;
                 case BasisNetworkCommons.AvatarChangeMessage:
@@ -286,11 +289,11 @@ public static class BasisNetworkServer
                     reader.Recycle();
                     break;
                 case BasisNetworkCommons.OwnershipTransfer:
-                    BasisNetworkOwnership.OwnershipTransfer(reader, peer, Peers);
+                    BasisNetworkOwnership.OwnershipTransfer(reader, peer);
                     reader.Recycle();
                     break;
                 case BasisNetworkCommons.OwnershipResponse:
-                    BasisNetworkOwnership.OwnershipResponse(reader, peer, Peers);
+                    BasisNetworkOwnership.OwnershipResponse(reader, peer);
                     reader.Recycle();
                     break;
                 case BasisNetworkCommons.AudioRecipients:
@@ -318,22 +321,26 @@ public static class BasisNetworkServer
     #region Utility Methods
     private static void RejectWithReason(ConnectionRequest request, string reason)
     {
-        NetDataWriter writer = new NetDataWriter();
+        NetDataWriter writer = NetDataWriterPool.GetWriter();
         writer.Put(reason);
         request.Reject(writer);
         BNL.LogError($"Rejected: {reason}");
+        NetDataWriterPool.ReturnWriter(writer);
     }
 
     public static void ClientDisconnect(ushort leaving, ConcurrentDictionary<ushort, NetPeer> authenticatedClients)
     {
-        NetDataWriter writer = new NetDataWriter();
+        NetDataWriter writer = NetDataWriterPool.GetWriter(sizeof(ushort));
         writer.Put(leaving);
 
         foreach (var client in authenticatedClients.Values)
         {
             if (client.Id != leaving)
+            {
                 client.Send(writer, BasisNetworkCommons.Disconnection, DeliveryMethod.ReliableOrdered);
+            }
         }
+        NetDataWriterPool.ReturnWriter(writer);
     }
     #endregion
     private static void SendAvatarMessageToClients(NetPacketReader Reader, NetPeer Peer)
@@ -349,9 +356,10 @@ public static class BasisNetworkServer
             }
         };
         BasisSavedState.AddLastData(Peer, ClientAvatarChangeMessage);
-        NetDataWriter Writer = new NetDataWriter();
+        NetDataWriter Writer = NetDataWriterPool.GetWriter();
         serverAvatarChangeMessage.Serialize(Writer);
-        BroadcastMessageToClients(Writer, BasisNetworkCommons.AvatarChangeMessage, Peer, Peers);
+        BroadcastMessageToClients(Writer, BasisNetworkCommons.AvatarChangeMessage, Peer,BasisPlayerArray.GetSnapshot());
+        NetDataWriterPool.ReturnWriter(Writer);
     }
     private static void UpdateVoiceReceivers(NetPacketReader Reader, NetPeer Peer)
     {
@@ -404,26 +412,36 @@ public static class BasisNetworkServer
             {
                 playerID = (ushort)sender.Id
             };
-            NetDataWriter NetDataWriter = new NetDataWriter();
+            NetDataWriter NetDataWriter = NetDataWriterPool.GetWriter();
             audioSegment.Serialize(NetDataWriter);
             //  BNL.Log("Sending Voice Data To Clients");
-            BroadcastMessageToClients(NetDataWriter, channel, endPoints, DeliveryMethod.Sequenced);
+            BroadcastMessageToClients(NetDataWriter, channel,ref endPoints, DeliveryMethod.Sequenced);
+            NetDataWriterPool.ReturnWriter(NetDataWriter);
         }
         else
         {
             BNL.Log("Error unable to find " + sender.Id + " in the data store!");
         }
     }
-    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel, NetPeer sender, ConcurrentDictionary<ushort, NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
+    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel, NetPeer sender, ReadOnlySpan<NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
     {
-        IEnumerable<KeyValuePair<ushort, NetPeer>> clientsExceptSender = authenticatedClients.Where(client => client.Value.Id != sender.Id);
-
-        foreach (KeyValuePair<ushort, NetPeer> client in clientsExceptSender)
+        foreach (NetPeer client in authenticatedClients)
         {
-            client.Value.Send(Reader, channel, deliveryMethod);
+            if (client.Id != sender.Id)
+            {
+                client.Send(Reader, channel, deliveryMethod);
+            }
         }
     }
-    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel, List<NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
+    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel, ReadOnlySpan<NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
+    {
+        int count = authenticatedClients.Length;
+        for (int index = 0; index < count; index++)
+        {
+            authenticatedClients[index].Send(Reader, channel, deliveryMethod);
+        }
+    }
+    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel,ref List<NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
     {
         int count = authenticatedClients.Count;
         for (int index = 0; index < count; index++)
@@ -431,19 +449,13 @@ public static class BasisNetworkServer
             authenticatedClients[index].Send(Reader, channel, deliveryMethod);
         }
     }
-    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel, ConcurrentDictionary<ushort, NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
-    {
-        foreach (KeyValuePair<ushort, NetPeer> client in authenticatedClients)
-        {
-            client.Value.Send(Reader, channel, deliveryMethod);
-        }
-    }
     private static void HandleAvatarMovement(NetPacketReader Reader, NetPeer Peer)
     {
         LocalAvatarSyncMessage LocalAvatarSyncMessage = new LocalAvatarSyncMessage();
         LocalAvatarSyncMessage.Deserialize(Reader);
         BasisSavedState.AddLastData(Peer, LocalAvatarSyncMessage);
-        foreach (NetPeer client in Peers.Values)
+        ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
+        foreach (NetPeer client in Peers)
         {
             if (client.Id == Peer.Id)
             {
@@ -480,17 +492,20 @@ public static class BasisNetworkServer
     }
     private static void NotifyExistingClients(ServerReadyMessage serverSideSyncPlayerMessage, NetPeer authClient)
     {
-        NetDataWriter Writer = new NetDataWriter();
+        NetDataWriter Writer = NetDataWriterPool.GetWriter();
         serverSideSyncPlayerMessage.Serialize(Writer);
-        IEnumerable<NetPeer> clientsToNotify = Peers.Values.Where(client => client != authClient);
-
-        string ClientIds = string.Empty;
-        foreach (NetPeer client in clientsToNotify)
+        ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
+        // string ClientIds = string.Empty;
+        foreach (NetPeer client in Peers)
         {
-            ClientIds += $" | {client.Id}";
-            client.Send(Writer, BasisNetworkCommons.CreateRemotePlayer, DeliveryMethod.ReliableOrdered);
+            if (client != authClient)
+            {
+                //  ClientIds += $" | {client.Id}";
+                client.Send(Writer, BasisNetworkCommons.CreateRemotePlayer, DeliveryMethod.ReliableOrdered);
+            }
         }
-        BNL.Log($"Sent Remote Spawn request to {ClientIds}");
+        NetDataWriterPool.ReturnWriter(Writer);
+        //   BNL.Log($"Sent Remote Spawn request to {ClientIds}");
     }
     private static void SendClientListToNewClient(NetPeer authClient)
     {
@@ -537,9 +552,10 @@ public static class BasisNetworkServer
         {
             serverSidePlayer = copied.ToArray(),
         };
-        NetDataWriter Writer = new NetDataWriter();
+        NetDataWriter Writer = NetDataWriterPool.GetWriter();
         remoteMessages.Serialize(Writer);
         BNL.Log($"Sending list of clients to {authClient.Id}");
         authClient.Send(Writer, BasisNetworkCommons.CreateRemotePlayers, DeliveryMethod.ReliableOrdered);
+        NetDataWriterPool.ReturnWriter(Writer);
     }
 }

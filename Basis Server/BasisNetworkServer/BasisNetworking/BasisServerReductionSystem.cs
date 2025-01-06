@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using Basis.Network.Core;
 using Basis.Network.Core.Compression;
 using Basis.Scripts.Networking.Compression;
+using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using static SerializableBasis;
@@ -172,7 +173,7 @@ public class BasisServerReductionSystem
                     {
                         Console.WriteLine("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
                     }
-                    NetDataWriter Writer = new NetDataWriter();
+                    NetDataWriter Writer = NetDataWriterPool.GetWriter();
                     if (playerData.serverSideSyncPlayerMessage.avatarSerialization.array == null || playerData.serverSideSyncPlayerMessage.avatarSerialization.array.Length == 0)
                     {
                         Console.WriteLine("Unable to send out Avatar Data Was null or Empty!");
@@ -183,14 +184,14 @@ public class BasisServerReductionSystem
                         playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
                     }
                     playerData.newDataExists = false;
+                    NetDataWriterPool.ReturnWriter(Writer);
                 }
             }
         }
     }
     public static float Distance(Vector3 pointA, Vector3 pointB)
     {
-        Vector3 difference = pointB - pointA;
-        return difference.SquaredMagnitude();
+        return (pointB - pointA).SquaredMagnitude(); // Avoid intermediate objects if possible
     }
 
     /// <summary>

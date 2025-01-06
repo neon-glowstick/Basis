@@ -1,4 +1,5 @@
 using Basis.Network.Core;
+using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using static Basis.Network.Core.Serializable.SerializableBasis;
@@ -37,12 +38,13 @@ public static class BasisNetworkClient
                 UnsyncedEvents = true,
             };
             client.Start();
-            NetDataWriter Writer = new NetDataWriter();
+            NetDataWriter Writer = NetDataWriterPool.GetWriter();
             //this is the only time we dont put key!
             Writer.Put(BasisNetworkVersion.ServerVersion);
             AuthenticationMessage.Serialize(Writer);
             ReadyMessage.Serialize(Writer);
             peer = client.Connect(IP, port, Writer);
+            NetDataWriterPool.ReturnWriter(Writer);
             return peer;
         }
         else
