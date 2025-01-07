@@ -109,6 +109,7 @@ namespace Basis
                     NetDataWriter Writer = NetDataWriterPool.GetWriter();
                     SSM.avatarSerialization.Serialize(Writer);
                     LocalPLayer.Send(Writer, BasisNetworkCommons.MovementChannel, deliveryMethod);
+                    
                     NetDataWriterPool.ReturnWriter(Writer);
                 }
                 else

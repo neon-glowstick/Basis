@@ -1,7 +1,6 @@
 using System;
 using System.Net.Sockets;
 using System.Net;
-using System.Threading.Tasks;
 using LiteNetLib;
 using System.Collections.Concurrent;
 using BasisNetworkCore;
@@ -159,6 +158,8 @@ namespace BasisServerHandle
                     }
                     else
                     {
+                        BasisNetworkServer.Peers.Remove((ushort)newPeer.Id,out _);
+                        BasisPlayerArray.RemovePlayer(newPeer);
                         RejectWithReason(request, "Payload Provided was invalid!");
                     }
                 }

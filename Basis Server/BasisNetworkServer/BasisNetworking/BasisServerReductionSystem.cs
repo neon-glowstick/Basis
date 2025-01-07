@@ -37,6 +37,7 @@ public class BasisServerReductionSystem
             //first time request create said data!
             playerData = new SyncedToPlayerPulse
             {
+             //   playerID = playerID,
                 queuedPlayerMessages = new ConcurrentDictionary<NetPeer, ServerSideReducablePlayer>(),
                 lastPlayerInformation = playerToUpdate,
             };
@@ -70,7 +71,7 @@ public class BasisServerReductionSystem
     public class SyncedToPlayerPulse
     {
         // The player ID to which the data is being sent
-        // public NetPeer playerID;
+       // public NetPeer playerID;
         public ServerSideSyncPlayerMessage lastPlayerInformation;
         /// <summary>
         /// Dictionary to hold queued messages for each player.
@@ -148,10 +149,8 @@ public class BasisServerReductionSystem
         {
             if (state is ClientPayload playerID && queuedPlayerMessages.TryGetValue(playerID.dataCameFromThisUser, out ServerSideReducablePlayer playerData))
             {
-                if (playerData.newDataExists == false)
+                if (playerData.newDataExists)
                 {
-                    return;
-                }
                     if (PlayerSync.TryGetValue(playerID.localClient, out SyncedToPlayerPulse pulse))
                     {
                         Vector3 from = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(pulse.lastPlayerInformation);
@@ -159,10 +158,13 @@ public class BasisServerReductionSystem
                         // Calculate the distance between the two points
                         float activeDistance = Distance(from, to);
                         // Adjust the timer interval based on the new syncRateMultiplier
-                        //50 * (1 + 1 * 0.005f)
-
-                        int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier +(activeDistance * Configuration.BSRSIncreaseRate)));
-                        adjustedInterval = Math.Clamp(adjustedInterval, 1, byte.MaxValue);
+                        int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
+                        if (adjustedInterval > byte.MaxValue)
+                        {
+                            adjustedInterval = byte.MaxValue;
+                        }
+                        //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
+                        playerData.timer.Change(adjustedInterval, adjustedInterval);
                         //how long does this data need to last for
                         playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
                     }
@@ -180,8 +182,9 @@ public class BasisServerReductionSystem
                         playerData.serverSideSyncPlayerMessage.Serialize(Writer);
                         playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
                     }
-                    playerData.newDataExists = false;
                     NetDataWriterPool.ReturnWriter(Writer);
+                    playerData.newDataExists = false;
+                }
             }
         }
     }
