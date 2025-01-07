@@ -12,6 +12,8 @@ using Basis.Network.Server.Generic;
 using static SerializableBasis;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace BasisServerHandle
 {
@@ -177,68 +179,88 @@ namespace BasisServerHandle
         #endregion
 
         #region Network Receive Handlers
-        private static void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        private static readonly SemaphoreSlim TaskLimiter = new SemaphoreSlim(300); // Limit to 300 concurrent tasks
+        private static readonly ConcurrentBag<Task> ActiveTasks = new ConcurrentBag<Task>();
+
+        private static async void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
         {
             try
             {
-                switch (channel)
+                await TaskLimiter.WaitAsync(); // Wait if the limit is reached
+
+                var task = Task.Run(() =>
                 {
-                    case BasisNetworkCommons.FallChannel:
-                        if (deliveryMethod == DeliveryMethod.Unreliable)
+                    try
+                    {
+                        switch (channel)
                         {
-                            if (reader.TryGetByte(out byte Byte))
-                            {
-                                HandleNetworkReceiveEvent(peer, reader, Byte, deliveryMethod);
-                            }
-                            else
-                            {
-                                BNL.LogError($"Unknown channel no data remains: {channel} " + reader.AvailableBytes);
+                            case BasisNetworkCommons.FallChannel:
+                                if (deliveryMethod == DeliveryMethod.Unreliable)
+                                {
+                                    if (reader.TryGetByte(out byte Byte))
+                                    {
+                                        HandleNetworkReceiveEvent(peer, reader, Byte, deliveryMethod);
+                                    }
+                                    else
+                                    {
+                                        BNL.LogError($"Unknown channel no data remains: {channel} " + reader.AvailableBytes);
+                                        reader.Recycle();
+                                    }
+                                }
+                                else
+                                {
+                                    BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
+                                    reader.Recycle();
+                                }
+                                break;
+                            case BasisNetworkCommons.MovementChannel:
+                                HandleAvatarMovement(reader, peer);
+                                break;
+                            case BasisNetworkCommons.VoiceChannel:
+                                HandleVoiceMessage(reader, peer);
+                                break;
+                            case BasisNetworkCommons.AvatarChannel:
+                                BasisNetworkingGeneric.HandleAvatar(reader, deliveryMethod, peer);
+                                break;
+                            case BasisNetworkCommons.SceneChannel:
+                                BasisNetworkingGeneric.HandleScene(reader, deliveryMethod, peer);
+                                break;
+                            case BasisNetworkCommons.AvatarChangeMessage:
+                                SendAvatarMessageToClients(reader, peer);
+                                break;
+                            case BasisNetworkCommons.OwnershipTransfer:
+                                BasisNetworkOwnership.OwnershipTransfer(reader, peer);
+                                break;
+                            case BasisNetworkCommons.OwnershipResponse:
+                                BasisNetworkOwnership.OwnershipResponse(reader, peer);
+                                break;
+                            case BasisNetworkCommons.AudioRecipients:
+                                UpdateVoiceReceivers(reader, peer);
+                                break;
+                            default:
+                                BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
                                 reader.Recycle();
-                            }
+                                break;
                         }
-                        else
-                        {
-                            BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
-                            reader.Recycle();
-                        }
-                        break;
-                    case BasisNetworkCommons.MovementChannel:
-                        HandleAvatarMovement(reader, peer);
-                        break;
-                    case BasisNetworkCommons.VoiceChannel:
-                        HandleVoiceMessage(reader, peer);
-                        break;
-                    case BasisNetworkCommons.AvatarChannel:
-                        BasisNetworkingGeneric.HandleAvatar(reader, deliveryMethod, peer);
-                        break;
-                    case BasisNetworkCommons.SceneChannel:
-                        BasisNetworkingGeneric.HandleScene(reader, deliveryMethod, peer);
-                        break;
-                    case BasisNetworkCommons.AvatarChangeMessage:
-                        SendAvatarMessageToClients(reader, peer);
-                        break;
-                    case BasisNetworkCommons.OwnershipTransfer:
-                        BasisNetworkOwnership.OwnershipTransfer(reader, peer);
-                        break;
-                    case BasisNetworkCommons.OwnershipResponse:
-                        BasisNetworkOwnership.OwnershipResponse(reader, peer);
-                        break;
-                    case BasisNetworkCommons.AudioRecipients:
-                        UpdateVoiceReceivers(reader, peer);
-                        break;
-                    default:
-                        BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
-                        reader.Recycle();
-                        break;
-                }
+                    }
+                    catch (Exception e)
+                    {
+                        BNL.LogError($"{e.Message} : {e.StackTrace}");
+                        reader?.Recycle();
+                    }
+                    finally
+                    {
+                        TaskLimiter.Release(); // Release semaphore when the task is done
+                    }
+                });
+
+                ActiveTasks.Add(task);
+                task.ContinueWith(t => ActiveTasks.TryTake(out _)); // Remove completed tasks from the bag
             }
             catch (Exception e)
             {
                 BNL.LogError($"{e.Message} : {e.StackTrace}");
-                if (reader != null)
-                {
-                    reader.Recycle();
-                }
+                reader?.Recycle();
             }
         }
         #endregion
