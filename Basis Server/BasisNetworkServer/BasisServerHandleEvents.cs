@@ -21,17 +21,17 @@ namespace BasisServerHandle
         #region Server Events Setup
         public static void SubscribeServerEvents()
         {
-            BasisNetworkServer.listener.ConnectionRequestEvent += OnConnectionRequest;
-            BasisNetworkServer.listener.PeerDisconnectedEvent += OnPeerDisconnected;
-            BasisNetworkServer.listener.NetworkReceiveEvent += OnNetworkReceive;
+            BasisNetworkServer.listener.ConnectionRequestEvent += HandleConnectionRequest;
+            BasisNetworkServer.listener.PeerDisconnectedEvent += HandlePeerDisconnected;
+            BasisNetworkServer.listener.NetworkReceiveEvent += HandleNetworkReceiveEvent;
             BasisNetworkServer.listener.NetworkErrorEvent += OnNetworkError;
         }
 
         public static void UnsubscribeServerEvents()
         {
-            BasisNetworkServer.listener.ConnectionRequestEvent -= OnConnectionRequest;
-            BasisNetworkServer.listener.PeerDisconnectedEvent -= OnPeerDisconnected;
-            BasisNetworkServer.listener.NetworkReceiveEvent -= OnNetworkReceive;
+            BasisNetworkServer.listener.ConnectionRequestEvent -= HandleConnectionRequest;
+            BasisNetworkServer.listener.PeerDisconnectedEvent -= HandlePeerDisconnected;
+            BasisNetworkServer.listener.NetworkReceiveEvent -= HandleNetworkReceiveEvent;
             BasisNetworkServer.listener.NetworkErrorEvent -= OnNetworkError;
         }
 
@@ -43,27 +43,8 @@ namespace BasisServerHandle
         #endregion
 
         #region Network Event Handlers
-        public static void OnConnectionRequest(ConnectionRequest request)
-        {
-            Task.Run(() => HandleConnectionRequest(request));
-        }
-
-        public static void OnPeerDisconnected(NetPeer peer, DisconnectInfo info)
-        {
-            Task.Run(() => HandlePeerDisconnected(peer, info));
-        }
-
-        public static void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
-        {
-            Task.Run(() => HandleNetworkReceiveEvent(peer, reader, channel, deliveryMethod));
-        }
 
         public static void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
-        {
-            Task.Run(() => HandleNetworkErrorEvent(endPoint, socketError));
-        }
-
-        private static void HandleNetworkErrorEvent(IPEndPoint endPoint, SocketError socketError)
         {
             BNL.LogError($"Endpoint {endPoint.ToString()} was reported with error {socketError}");
         }
