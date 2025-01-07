@@ -6,11 +6,11 @@ namespace BasisNetworkCore
     public class BasisPlayerArray
     {
         private static readonly object PlayerArrayLock = new object();
-        private static NetPeer[] PlayerArray = new NetPeer[4096];
+        private static NetPeer[] PlayerArray = new NetPeer[1024];
         private static int PlayerCount = 0;
 
         // Reusable snapshot buffer
-        private static NetPeer[] SnapshotBuffer = new NetPeer[4096];
+        private static NetPeer[] SnapshotBuffer = new NetPeer[1024];
 
         public static void AddPlayer(NetPeer player)
         {
