@@ -1,4 +1,4 @@
- using System;
+using System;
 using System.Collections.Concurrent;
 using Basis.Network.Core;
 using Basis.Network.Core.Compression;
@@ -37,14 +37,13 @@ public class BasisServerReductionSystem
             //first time request create said data!
             playerData = new SyncedToPlayerPulse
             {
-                playerID = playerID,
                 queuedPlayerMessages = new ConcurrentDictionary<NetPeer, ServerSideReducablePlayer>(),
                 lastPlayerInformation = playerToUpdate,
             };
             //ok now we can try to schedule sending out this data!
             if (PlayerSync.TryAdd(playerID, playerData))
             {  // Update the player's message
-               playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
+                playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
             }
         }
     }
@@ -71,7 +70,7 @@ public class BasisServerReductionSystem
     public class SyncedToPlayerPulse
     {
         // The player ID to which the data is being sent
-        public NetPeer playerID;
+        // public NetPeer playerID;
         public ServerSideSyncPlayerMessage lastPlayerInformation;
         /// <summary>
         /// Dictionary to hold queued messages for each player.
@@ -149,8 +148,10 @@ public class BasisServerReductionSystem
         {
             if (state is ClientPayload playerID && queuedPlayerMessages.TryGetValue(playerID.dataCameFromThisUser, out ServerSideReducablePlayer playerData))
             {
-                if (playerData.newDataExists)
+                if (playerData.newDataExists == false)
                 {
+                    return;
+                }
                     if (PlayerSync.TryGetValue(playerID.localClient, out SyncedToPlayerPulse pulse))
                     {
                         Vector3 from = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(pulse.lastPlayerInformation);
@@ -159,24 +160,20 @@ public class BasisServerReductionSystem
                         float activeDistance = Distance(from, to);
                         // Adjust the timer interval based on the new syncRateMultiplier
                         //50 * (1 + 1 * 0.005f)
-                        int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
-                        if (adjustedInterval > byte.MaxValue)
-                        {
-                            adjustedInterval = byte.MaxValue;
-                        }
-                        //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
-                        playerData.timer.Change(adjustedInterval, adjustedInterval);
+
+                        int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier +(activeDistance * Configuration.BSRSIncreaseRate)));
+                        adjustedInterval = Math.Clamp(adjustedInterval, 1, byte.MaxValue);
                         //how long does this data need to last for
                         playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
                     }
                     else
                     {
-                        Console.WriteLine("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
+                        BNL.Log("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
                     }
                     NetDataWriter Writer = NetDataWriterPool.GetWriter();
                     if (playerData.serverSideSyncPlayerMessage.avatarSerialization.array == null || playerData.serverSideSyncPlayerMessage.avatarSerialization.array.Length == 0)
                     {
-                        Console.WriteLine("Unable to send out Avatar Data Was null or Empty!");
+                        BNL.Log("Unable to send out Avatar Data Was null or Empty!");
                     }
                     else
                     {
@@ -185,7 +182,6 @@ public class BasisServerReductionSystem
                     }
                     playerData.newDataExists = false;
                     NetDataWriterPool.ReturnWriter(Writer);
-                }
             }
         }
     }

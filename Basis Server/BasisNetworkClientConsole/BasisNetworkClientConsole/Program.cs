@@ -17,6 +17,8 @@ namespace Basis
         private static readonly object nameLock = new object(); // To synchronize name generation
         public static NetPeer LocalPLayer;
 
+        public static string Ip = "localhost";//server1.basisvr.org
+        public static int Port = 4296;
         public static void Main(string[] args)
         {
             // Set up global exception handlers
@@ -56,7 +58,7 @@ namespace Basis
                         bytes = Encoding.UTF8.GetBytes(Password)
                     };
                     BasisNetworkClient.AuthenticationMessage = Authmessage;
-                    LocalPLayer = BasisNetworkClient.StartClient("localhost", 4296, RM, true);
+                    LocalPLayer = BasisNetworkClient.StartClient(Ip, Port, RM, true);
                  //   BasisNetworkClient.listener.NetworkReceiveEvent += NetworkReceiveEvent;
                     BNL.Log($"Connecting! Player Name: {randomPlayerName}, UUID: {randomUUID}");
                 }

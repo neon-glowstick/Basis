@@ -30,7 +30,7 @@ public static class BasisNetworkServer
         auth = new PasswordAuth(configuration.Password ?? string.Empty);
 
         SetupServer(configuration);
-        SetupServerEvents(configuration);
+        SubscribeServerEvents();
 
         if (configuration.EnableStatistics)
         {
@@ -59,7 +59,7 @@ public static class BasisNetworkServer
             DisconnectTimeout = configuration.DisconnectTimeout,
             PacketPoolSize = 2000,
             UnsyncedEvents = true,
-            
+
         };
 
         StartListening(configuration);
@@ -80,12 +80,6 @@ public static class BasisNetworkServer
     }
     #endregion
     #region Server Events Setup
-
-    private static void SetupServerEvents(Configuration configuration)
-    {
-        SubscribeServerEvents();
-    }
-
     private static void SubscribeServerEvents()
     {
         listener.ConnectionRequestEvent += OnConnectionRequest;
@@ -269,7 +263,7 @@ public static class BasisNetworkServer
                     break;
                 case BasisNetworkCommons.MovementChannel:
                     HandleAvatarMovement(reader, peer);
-                   //moved into function reader.Recycle();
+                    //moved into function reader.Recycle();
                     break;
                 case BasisNetworkCommons.VoiceChannel:
                     HandleVoiceMessage(reader, peer);
@@ -277,27 +271,27 @@ public static class BasisNetworkServer
                     break;
                 case BasisNetworkCommons.AvatarChannel:
                     BasisNetworkingGeneric.HandleAvatar(reader, deliveryMethod, peer);
-                    reader.Recycle();
+                    //moved into function reader.Recycle();
                     break;
                 case BasisNetworkCommons.SceneChannel:
                     BasisNetworkingGeneric.HandleScene(reader, deliveryMethod, peer);
-                    reader.Recycle();
+                    //moved into function reader.Recycle();
                     break;
                 case BasisNetworkCommons.AvatarChangeMessage:
                     SendAvatarMessageToClients(reader, peer);
-                    reader.Recycle();
+                    //moved into function reader.Recycle();
                     break;
                 case BasisNetworkCommons.OwnershipTransfer:
                     BasisNetworkOwnership.OwnershipTransfer(reader, peer);
-                    reader.Recycle();
+                    //moved into function reader.Recycle();
                     break;
                 case BasisNetworkCommons.OwnershipResponse:
                     BasisNetworkOwnership.OwnershipResponse(reader, peer);
-                    reader.Recycle();
+                    // reader.Recycle();
                     break;
                 case BasisNetworkCommons.AudioRecipients:
                     UpdateVoiceReceivers(reader, peer);
-                    reader.Recycle();
+                    //moved into function reader.Recycle();
                     break;
                 default:
                     BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
@@ -346,6 +340,7 @@ public static class BasisNetworkServer
     {
         ClientAvatarChangeMessage ClientAvatarChangeMessage = new ClientAvatarChangeMessage();
         ClientAvatarChangeMessage.Deserialize(Reader);
+        Reader.Recycle();
         ServerAvatarChangeMessage serverAvatarChangeMessage = new ServerAvatarChangeMessage
         {
             clientAvatarChangeMessage = ClientAvatarChangeMessage,
@@ -357,13 +352,14 @@ public static class BasisNetworkServer
         BasisSavedState.AddLastData(Peer, ClientAvatarChangeMessage);
         NetDataWriter Writer = NetDataWriterPool.GetWriter();
         serverAvatarChangeMessage.Serialize(Writer);
-        BroadcastMessageToClients(Writer, BasisNetworkCommons.AvatarChangeMessage, Peer,BasisPlayerArray.GetSnapshot());
+        BroadcastMessageToClients(Writer, BasisNetworkCommons.AvatarChangeMessage, Peer, BasisPlayerArray.GetSnapshot());
         NetDataWriterPool.ReturnWriter(Writer);
     }
     private static void UpdateVoiceReceivers(NetPacketReader Reader, NetPeer Peer)
     {
         VoiceReceiversMessage VoiceReceiversMessage = new VoiceReceiversMessage();
         VoiceReceiversMessage.Deserialize(Reader);
+        Reader.Recycle();
         BasisSavedState.AddLastData(Peer, VoiceReceiversMessage);
     }
     private static void HandleVoiceMessage(NetPacketReader Reader, NetPeer peer)
@@ -379,22 +375,22 @@ public static class BasisNetworkServer
     }
     private static void SendVoiceMessageToClients(ServerAudioSegmentMessage audioSegment, byte channel, NetPeer sender)
     {
-        if (BasisSavedState.GetLastData(sender, out StoredData data))
+        if (BasisSavedState.GetLastVoiceReceivers(sender, out VoiceReceiversMessage data))
         {
-            if (data.voiceReceiversMessage.users == null)
+            if (data.users == null)
             {
                 // BNL.Log("No Users!");
                 return;
             }
 
-            int count = data.voiceReceiversMessage.users.Length;
+            int count = data.users.Length;
             if (count == 0)
             {
                 //  BNL.Log("No Count!");
                 return;
             }
             List<NetPeer> endPoints = new List<NetPeer>(count);
-            foreach (ushort user in data.voiceReceiversMessage.users)
+            foreach (ushort user in data.users)
             {
                 if (Peers.TryGetValue(user, out NetPeer client))
                 {
@@ -415,7 +411,7 @@ public static class BasisNetworkServer
             NetDataWriter NetDataWriter = NetDataWriterPool.GetWriter();
             audioSegment.Serialize(NetDataWriter);
             //  BNL.Log("Sending Voice Data To Clients");
-            BroadcastMessageToClients(NetDataWriter, channel,ref endPoints, DeliveryMethod.Sequenced);
+            BroadcastMessageToClients(NetDataWriter, channel, ref endPoints, DeliveryMethod.Sequenced);
             NetDataWriterPool.ReturnWriter(NetDataWriter);
         }
         else
@@ -441,7 +437,7 @@ public static class BasisNetworkServer
             authenticatedClients[index].Send(Reader, channel, deliveryMethod);
         }
     }
-    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel,ref List<NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
+    public static void BroadcastMessageToClients(NetDataWriter Reader, byte channel, ref List<NetPeer> authenticatedClients, DeliveryMethod deliveryMethod = DeliveryMethod.Sequenced)
     {
         int count = authenticatedClients.Count;
         for (int index = 0; index < count; index++)
@@ -524,28 +520,26 @@ public static class BasisNetworkServer
         {
             ServerReadyMessage serverReadyMessage = new ServerReadyMessage();
 
-            if (BasisSavedState.GetLastData(client, out StoredData sspm))
+            if (BasisSavedState.GetLastAvatarChangeState(client, out var ChangeState) == false)
             {
-                serverReadyMessage.localReadyMessage = new ReadyMessage
-                {
-                    localAvatarSyncMessage = sspm.lastAvatarSyncState,
-                    clientAvatarChangeMessage = sspm.lastAvatarChangeState,
-                    playerMetaDataMessage = sspm.playerMetaDataMessage,
-                };
-                serverReadyMessage.playerIdMessage = new PlayerIdMessage() { playerID = (ushort)client.Id };
+                ChangeState = new ClientAvatarChangeMessage();
             }
-            else
+            if (BasisSavedState.GetLastAvatarSyncState(client, out var SyncState) == false)
             {
-                BNL.Log("Unable to get last Data Creating Fake");
-                serverReadyMessage.playerIdMessage = new PlayerIdMessage { playerID = (ushort)client.Id };
-                serverReadyMessage.localReadyMessage = new ReadyMessage
-                {
-                    localAvatarSyncMessage = new LocalAvatarSyncMessage() { array = new byte[386] },
-                    clientAvatarChangeMessage = new ClientAvatarChangeMessage() { byteArray = new byte[] { }, },
-                    playerMetaDataMessage = new PlayerMetaDataMessage() { playerDisplayName = "Error", playerUUID = string.Empty },
-                };
+                SyncState = new LocalAvatarSyncMessage() { array = new byte[386] };
+            }
+            if (BasisSavedState.GetLastPlayerMetaData(client, out var MetaData) == false)
+            {
+                MetaData = new PlayerMetaDataMessage() { playerDisplayName = "Error", playerUUID = string.Empty };
             }
 
+            serverReadyMessage.localReadyMessage = new ReadyMessage
+            {
+                localAvatarSyncMessage = SyncState,
+                clientAvatarChangeMessage = ChangeState,
+                playerMetaDataMessage = MetaData,
+            };
+            serverReadyMessage.playerIdMessage = new PlayerIdMessage() { playerID = (ushort)client.Id };
             copied.Add(serverReadyMessage);
         }
 

@@ -14,6 +14,7 @@ namespace Basis.Network.Server.Generic
         {
             SceneDataMessage SceneDataMessage = new SceneDataMessage();
             SceneDataMessage.Deserialize(Reader);
+            Reader.Recycle();
             ServerSceneDataMessage serverSceneDataMessage = new ServerSceneDataMessage
             {
                 sceneDataMessage = new RemoteSceneDataMessage()
@@ -69,6 +70,7 @@ namespace Basis.Network.Server.Generic
         {
             AvatarDataMessage avatarDataMessage = new AvatarDataMessage();
             avatarDataMessage.Deserialize(Reader);
+            Reader.Recycle();
             ServerAvatarDataMessage serverAvatarDataMessage = new ServerAvatarDataMessage
             {
                 avatarDataMessage = new RemoteAvatarDataMessage()
