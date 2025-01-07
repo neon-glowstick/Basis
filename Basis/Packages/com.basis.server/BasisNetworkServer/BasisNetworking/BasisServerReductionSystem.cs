@@ -1,8 +1,9 @@
- using System;
+using System;
 using System.Collections.Concurrent;
 using Basis.Network.Core;
 using Basis.Network.Core.Compression;
 using Basis.Scripts.Networking.Compression;
+using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using static SerializableBasis;
@@ -36,14 +37,14 @@ public class BasisServerReductionSystem
             //first time request create said data!
             playerData = new SyncedToPlayerPulse
             {
-                playerID = playerID,
+             //   playerID = playerID,
                 queuedPlayerMessages = new ConcurrentDictionary<NetPeer, ServerSideReducablePlayer>(),
                 lastPlayerInformation = playerToUpdate,
             };
             //ok now we can try to schedule sending out this data!
             if (PlayerSync.TryAdd(playerID, playerData))
             {  // Update the player's message
-               playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
+                playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
             }
         }
     }
@@ -70,7 +71,7 @@ public class BasisServerReductionSystem
     public class SyncedToPlayerPulse
     {
         // The player ID to which the data is being sent
-        public NetPeer playerID;
+       // public NetPeer playerID;
         public ServerSideSyncPlayerMessage lastPlayerInformation;
         /// <summary>
         /// Dictionary to hold queued messages for each player.
@@ -157,7 +158,6 @@ public class BasisServerReductionSystem
                         // Calculate the distance between the two points
                         float activeDistance = Distance(from, to);
                         // Adjust the timer interval based on the new syncRateMultiplier
-                        //50 * (1 + 1 * 0.005f)
                         int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
                         if (adjustedInterval > byte.MaxValue)
                         {
@@ -170,18 +170,19 @@ public class BasisServerReductionSystem
                     }
                     else
                     {
-                        Console.WriteLine("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
+                        BNL.Log("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
                     }
-                    NetDataWriter Writer = new NetDataWriter();
+                    NetDataWriter Writer = NetDataWriterPool.GetWriter();
                     if (playerData.serverSideSyncPlayerMessage.avatarSerialization.array == null || playerData.serverSideSyncPlayerMessage.avatarSerialization.array.Length == 0)
                     {
-                        Console.WriteLine("Unable to send out Avatar Data Was null or Empty!");
+                        BNL.Log("Unable to send out Avatar Data Was null or Empty!");
                     }
                     else
                     {
                         playerData.serverSideSyncPlayerMessage.Serialize(Writer);
                         playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
                     }
+                    NetDataWriterPool.ReturnWriter(Writer);
                     playerData.newDataExists = false;
                 }
             }
@@ -189,8 +190,7 @@ public class BasisServerReductionSystem
     }
     public static float Distance(Vector3 pointA, Vector3 pointB)
     {
-        Vector3 difference = pointB - pointA;
-        return difference.SquaredMagnitude();
+        return (pointB - pointA).SquaredMagnitude(); // Avoid intermediate objects if possible
     }
 
     /// <summary>
