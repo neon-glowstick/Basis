@@ -179,7 +179,7 @@ namespace Basis.Scripts.Networking
                 receiverArray = null;
             }
 
-            Debug.Log("BasisNetworkManagement has been successfully shutdown.");
+            BasisDebug.Log("BasisNetworkManagement has been successfully shutdown.", BasisDebug.LogTag.Networking);
         }
         public void Update()
         {
@@ -188,18 +188,10 @@ namespace Basis.Scripts.Networking
             // Schedule multithreaded tasks
             for (int Index = 0; Index < ReceiverCount; Index++)
             {
-                try
-                {
                     if (ReceiverArray[Index] != null)
                     {
                         ReceiverArray[Index].Compute(TimeAsDouble);
                     }
-                }
-                catch (Exception ex)
-                {
-                    // Log the error and continue with the next iteration
-                    BasisDebug.LogError($"Error in Compute at index {Index}: {ex.Message} {ex.StackTrace}");
-                }
             }
         }
         public void LateUpdate()
@@ -210,17 +202,9 @@ namespace Basis.Scripts.Networking
             // Complete tasks and apply results
             for (int Index = 0; Index < ReceiverCount; Index++)
             {
-                try
+                if (ReceiverArray[Index] != null)
                 {
-                    if (ReceiverArray[Index] != null)
-                    {
-                        ReceiverArray[Index].Apply(TimeAsDouble, deltaTime);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log the error and continue with the next iteration
-                    BasisDebug.LogError($"Error in Apply at index {Index}: {ex.Message} {ex.StackTrace}");
+                    ReceiverArray[Index].Apply(TimeAsDouble, deltaTime);
                 }
             }
         }

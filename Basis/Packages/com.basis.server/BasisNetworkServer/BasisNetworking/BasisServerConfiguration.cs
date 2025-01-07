@@ -6,7 +6,7 @@ public class Configuration
     public int PeerLimit = 1024;
     public ushort SetPort = 4296;
     public int QueueEvents = 10;
-    public bool UseNativeSockets = false;
+    public bool UseNativeSockets = true;
     public bool NatPunchEnabled = true;
     public int PingInterval = 1500;
     public int DisconnectTimeout = 30000;
@@ -32,9 +32,9 @@ public class Configuration
     public string HealthCheckHost = "localhost";
     public ushort HealthCheckPort = 10666;
     public string HealthPath = "/health";
-    public int BSRSMillisecondDefaultInterval = 66;
+    public int BSRSMillisecondDefaultInterval = 50;
     public int BSRBaseMultiplier = 1;
-    public float BSRSIncreaseRate = 0.0075f;
+    public float BSRSIncreaseRate = 0.005f;
     public bool OverrideAutoDiscoveryOfIpv = false;
     public string IPv4Address = "0.0.0.0";
     public string IPv6Address = "::1";
@@ -56,7 +56,7 @@ public class Configuration
             PeerLimit = int.Parse(doc.SelectSingleNode("/Configuration/PeerLimit")?.InnerText ?? "1024"),
             SetPort = ushort.Parse(doc.SelectSingleNode("/Configuration/SetPort")?.InnerText ?? "4296"),
             QueueEvents = int.Parse(doc.SelectSingleNode("/Configuration/QueueEvents")?.InnerText ?? "10"),
-            UseNativeSockets = bool.Parse(doc.SelectSingleNode("/Configuration/UseNativeSockets")?.InnerText ?? "false"),
+            UseNativeSockets = bool.Parse(doc.SelectSingleNode("/Configuration/UseNativeSockets")?.InnerText ?? "true"),
             NatPunchEnabled = bool.Parse(doc.SelectSingleNode("/Configuration/NatPunchEnabled")?.InnerText ?? "true"),
             PingInterval = int.Parse(doc.SelectSingleNode("/Configuration/PingInterval")?.InnerText ?? "1500"),
             DisconnectTimeout = int.Parse(doc.SelectSingleNode("/Configuration/DisconnectTimeout")?.InnerText ?? "30000"),
@@ -84,7 +84,7 @@ public class Configuration
             HealthPath = doc.SelectSingleNode("/Configuration/HealthPath")?.InnerText ?? "/health",
             BSRSMillisecondDefaultInterval = int.Parse(doc.SelectSingleNode("/Configuration/BSRSMillisecondDefaultInterval")?.InnerText ?? "50"),
             BSRBaseMultiplier = int.Parse(doc.SelectSingleNode("/Configuration/BSRBaseMultiplier")?.InnerText ?? "1"),
-            BSRSIncreaseRate = float.Parse(doc.SelectSingleNode("/Configuration/BSRSIncreaseRate")?.InnerText ?? "0.0075f"),
+            BSRSIncreaseRate = float.Parse(doc.SelectSingleNode("/Configuration/BSRSIncreaseRate")?.InnerText ?? "0.005"),
             OverrideAutoDiscoveryOfIpv = bool.Parse(doc.SelectSingleNode("/Configuration/OverrideAutoDiscoveryOfIpv")?.InnerText ?? "false"),
             IPv4Address = doc.SelectSingleNode("/Configuration/IPv4Address")?.InnerText ?? "0.0.0.0",
             IPv6Address = doc.SelectSingleNode("/Configuration/IPv6Address")?.InnerText ?? "::1",
@@ -130,7 +130,7 @@ public class Configuration
         root.AppendChild(CreateElement(doc, "HealthPath", "/health"));
         root.AppendChild(CreateElement(doc, "BSRSMillisecondDefaultInterval", "50"));
         root.AppendChild(CreateElement(doc, "BSRBaseMultiplier", "1"));
-        root.AppendChild(CreateElement(doc, "BSRSIncreaseRate", "0.0075f"));
+        root.AppendChild(CreateElement(doc, "BSRSIncreaseRate", "0.005"));
         root.AppendChild(CreateElement(doc, "OverrideAutoDiscoveryOfIpv", "false"));
         root.AppendChild(CreateElement(doc, "IPv4Address", "0.0.0.0"));
         root.AppendChild(CreateElement(doc, "IPv6Address", "::1"));

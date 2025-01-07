@@ -14,7 +14,7 @@ namespace Basis.Network
 
         private static CancellationTokenSource _cancellationTokenSource;
         private static Task _loggingTask;
-        private static readonly BlockingCollection<string> LogQueue = new(new ConcurrentQueue<string>());
+        private static readonly BlockingCollection<string> LogQueue = new(new ConcurrentQueue<string>(), 200);
         private static readonly SemaphoreSlim FileWriteSemaphore = new(1, 1);
 
         static BasisServerSideLogging()
@@ -61,7 +61,7 @@ namespace Basis.Network
                 {
                     while (!cancellationToken.IsCancellationRequested || !LogQueue.IsCompleted)
                     {
-                        if (LogQueue.TryTake(out var logEntry, Timeout.Infinite))
+                        if (LogQueue.TryTake(out var logEntry, 50))
                         {
                             await WriteToFileAsync(logEntry, cancellationToken).ConfigureAwait(false);
                         }
@@ -116,22 +116,25 @@ namespace Basis.Network
             return $"[{timestamp}] [{level}] {message}";
         }
 
-        public static void Log(string message)
+        private static void Log(string message)
         {
             if (WriteToScreen || UseLogging)
             {
                 string formattedMessage = FormatMessage("INFO", message);
-                WriteColoredMessage($"[{DateTime.Now:HH:mm}] ", ConsoleColor.DarkCyan); // Timestamp in white
-                WriteColoredMessage("[INFO] ", ConsoleColor.DarkMagenta); // Level in gray
-                WriteColoredMessage($"{message}\n", ConsoleColor.Gray); // Message in gray
+                WriteColoredMessage($"[{DateTime.Now:HH:mm}] ", ConsoleColor.DarkCyan);
+                WriteColoredMessage("[INFO] ", ConsoleColor.DarkMagenta);
+                WriteColoredMessage($"{message}\n", ConsoleColor.Gray);
 
                 if (UseLogging)
                 {
-                    LogQueue.Add(formattedMessage);
+                    if (!LogQueue.TryAdd(formattedMessage))
+                    {
+                        LogQueue.TryTake(out _); // Drop oldest log if the queue is full
+                        LogQueue.TryAdd(formattedMessage); // Retry adding the new message
+                    }
                 }
             }
         }
-
         public static void LogWarning(string message)
         {
             if (WriteToScreen || UseLogging)
@@ -143,7 +146,11 @@ namespace Basis.Network
 
                 if (UseLogging)
                 {
-                    LogQueue.Add(formattedMessage);
+                    if (!LogQueue.TryAdd(formattedMessage))
+                    {
+                        LogQueue.TryTake(out _); // Drop oldest log if the queue is full
+                        LogQueue.TryAdd(formattedMessage); // Retry adding the new message
+                    }
                 }
             }
         }
@@ -157,9 +164,14 @@ namespace Basis.Network
                 WriteColoredMessage("[ERROR] ", ConsoleColor.DarkRed); // Level in red
                 WriteColoredMessage($"{message}\n", ConsoleColor.Gray); // Message in gray
 
+
                 if (UseLogging)
                 {
-                    LogQueue.Add(formattedMessage);
+                    if (!LogQueue.TryAdd(formattedMessage))
+                    {
+                        LogQueue.TryTake(out _); // Drop oldest log if the queue is full
+                        LogQueue.TryAdd(formattedMessage); // Retry adding the new message
+                    }
                 }
             }
         }

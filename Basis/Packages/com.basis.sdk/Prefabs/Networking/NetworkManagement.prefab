@@ -44,10 +44,348 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ea7f8ee05ae1754488a389ba53893fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Ip: 170.64.184.249
+  Ip: server1.basisvr.org
   Port: 4296
-  HasAuthenticated: 0
-  ForceConnect: 0
-  TryToReconnectAutomatically: 1
-  HasInitalizedClient: 0
-  ISServer: 0
+  Password: default_password
+  IsHostMode: 0
+  receiverArray: []
+  Transmitter:
+    Ready: 0
+    NetworkedPlayer:
+      MouthBone:
+        TargetControl:
+          LerpAmountNormal: 0
+          LerpAmountFastMovement: 0
+          AngleBeforeSpeedup: 0
+          HasRotationalTarget: 0
+          HasLineDraw: 0
+          LineDrawIndex: 0
+          HasTarget: 0
+          Offset:
+            x: 0
+            y: 0
+            z: 0
+          LerpAmount: 0
+        OutGoingData:
+          rotation:
+            value:
+              x: 0
+              y: 0
+              z: 0
+              w: 0
+          position:
+            x: 0
+            y: 0
+            z: 0
+        LastRunData:
+          rotation:
+            value:
+              x: 0
+              y: 0
+              z: 0
+              w: 0
+          position:
+            x: 0
+            y: 0
+            z: 0
+        TposeLocal:
+          rotation:
+            value:
+              x: 0
+              y: 0
+              z: 0
+              w: 0
+          position:
+            x: 0
+            y: 0
+            z: 0
+        InverseOffsetFromBone:
+          Use: 0
+          rotation:
+            value:
+              x: 0
+              y: 0
+              z: 0
+              w: 0
+          position:
+            x: 0
+            y: 0
+            z: 0
+        IncomingData:
+          rotation:
+            value:
+              x: 0
+              y: 0
+              z: 0
+              w: 0
+          position:
+            x: 0
+            y: 0
+            z: 0
+        OutgoingWorldData:
+          rotation:
+            value:
+              x: 0
+              y: 0
+              z: 0
+              w: 0
+          position:
+            x: 0
+            y: 0
+            z: 0
+        GizmoReference: -1
+        HasGizmo: 0
+        TposeGizmoReference: -1
+        TposeHasGizmo: 0
+        HasVirtualOverride: 0
+        trackersmooth: 25
+        IsHintRoleIgnoreRotation: 0
+        Cullable: 0
+        Name: 
+        gizmoColor: {r: 0, g: 0, b: 1, a: 1}
+        HasBone: 0
+        BoneTransform: {fileID: 0}
+        HasEvents: 0
+        hasTrackerDriver: 1
+        NotProcessing: 0
+        OnHasRigChanged:
+          m_PersistentCalls:
+            m_Calls: []
+        WeightsChanged:
+          m_PersistentCalls:
+            m_Calls: []
+        hasRigLayer: 1
+        positionWeight: 1
+        rotationWeight: 1
+        GeneralLocation: 0
+      Player: {fileID: 0}
+      hasID: 0
+    Offset: 0
+    HasEvents: 0
+    timer: 0
+    interval: 0.033333335
+    SmallestDistanceToAnotherPlayer: 0
+    AudioTransmission:
+      NetworkedPlayer:
+        MouthBone:
+          TargetControl:
+            LerpAmountNormal: 0
+            LerpAmountFastMovement: 0
+            AngleBeforeSpeedup: 0
+            HasRotationalTarget: 0
+            HasLineDraw: 0
+            LineDrawIndex: 0
+            HasTarget: 0
+            Offset:
+              x: 0
+              y: 0
+              z: 0
+            LerpAmount: 0
+          OutGoingData:
+            rotation:
+              value:
+                x: 0
+                y: 0
+                z: 0
+                w: 0
+            position:
+              x: 0
+              y: 0
+              z: 0
+          LastRunData:
+            rotation:
+              value:
+                x: 0
+                y: 0
+                z: 0
+                w: 0
+            position:
+              x: 0
+              y: 0
+              z: 0
+          TposeLocal:
+            rotation:
+              value:
+                x: 0
+                y: 0
+                z: 0
+                w: 0
+            position:
+              x: 0
+              y: 0
+              z: 0
+          InverseOffsetFromBone:
+            Use: 0
+            rotation:
+              value:
+                x: 0
+                y: 0
+                z: 0
+                w: 0
+            position:
+              x: 0
+              y: 0
+              z: 0
+          IncomingData:
+            rotation:
+              value:
+                x: 0
+                y: 0
+                z: 0
+                w: 0
+            position:
+              x: 0
+              y: 0
+              z: 0
+          OutgoingWorldData:
+            rotation:
+              value:
+                x: 0
+                y: 0
+                z: 0
+                w: 0
+            position:
+              x: 0
+              y: 0
+              z: 0
+          GizmoReference: -1
+          HasGizmo: 0
+          TposeGizmoReference: -1
+          TposeHasGizmo: 0
+          HasVirtualOverride: 0
+          trackersmooth: 25
+          IsHintRoleIgnoreRotation: 0
+          Cullable: 0
+          Name: 
+          gizmoColor: {r: 0, g: 0, b: 1, a: 1}
+          HasBone: 0
+          BoneTransform: {fileID: 0}
+          HasEvents: 0
+          hasTrackerDriver: 1
+          NotProcessing: 0
+          OnHasRigChanged:
+            m_PersistentCalls:
+              m_Calls: []
+          WeightsChanged:
+            m_PersistentCalls:
+              m_Calls: []
+          hasRigLayer: 1
+          positionWeight: 1
+          rotationWeight: 1
+          GeneralLocation: 0
+        Player: {fileID: 0}
+        hasID: 0
+      settings: {fileID: 0}
+      Local: {fileID: 0}
+      Recorder: {fileID: 0}
+      IsInitalized: 0
+      AudioSegmentData:
+        buffer: 
+        LengthUsed: 0
+      audioSilentSegmentData:
+        buffer: 
+        LengthUsed: 0
+      HasEvents: 0
+    FloatArray:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    UshortArray: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    UnClampedInterval: 0
+    DefaultInterval: 0.033333335
+    BaseMultiplier: 1
+    IncreaseRate: 0.0075
+    IndexLength: -1
+    SlowestSendRate: 2.5
+    MicrophoneRangeIndex: 
+    LastMicrophoneRangeIndex: 
+    HearingIndex: 
+    AvatarIndex: 
+    HearingIndexToId: 
+  IsRunning: 1

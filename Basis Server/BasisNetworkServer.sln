@@ -19,6 +19,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasisNetworkCore", "BasisNe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasisNetworkServer", "BasisNetworkServer\BasisNetworkServer.csproj", "{51F765C5-646F-4F9E-B212-416E93E2E562}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasisNetworkClientConsole", "BasisNetworkClientConsole\BasisNetworkClientConsole\BasisNetworkClientConsole.csproj", "{B806E008-766C-42FD-BD05-BD486B23CA76}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6972BF72-BE14-4C71-ABF3-6EF914FADEC8} = {6972BF72-BE14-4C71-ABF3-6EF914FADEC8}
+		{7828CBD0-B57F-4C02-AD19-A0E015A5DD70} = {7828CBD0-B57F-4C02-AD19-A0E015A5DD70}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +51,10 @@ Global
 		{51F765C5-646F-4F9E-B212-416E93E2E562}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51F765C5-646F-4F9E-B212-416E93E2E562}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51F765C5-646F-4F9E-B212-416E93E2E562}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B806E008-766C-42FD-BD05-BD486B23CA76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B806E008-766C-42FD-BD05-BD486B23CA76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B806E008-766C-42FD-BD05-BD486B23CA76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B806E008-766C-42FD-BD05-BD486B23CA76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
