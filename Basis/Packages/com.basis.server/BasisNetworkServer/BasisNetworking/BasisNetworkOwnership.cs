@@ -1,4 +1,5 @@
 using Basis.Network.Core;
+using BasisNetworkCore;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -14,21 +15,23 @@ namespace Basis.Network.Server.Ownership
         public static ConcurrentDictionary<string, ushort> ownershipByObjectId = new ConcurrentDictionary<string, ushort>();
 
         public static readonly object LockObject = new object();  // For synchronized multi-step operations
-        public static void OwnershipResponse(NetPacketReader Reader, NetPeer Peer, ConcurrentDictionary<ushort, NetPeer> allClients)
+        public static void OwnershipResponse(NetPacketReader Reader, NetPeer Peer)
         {
             try
             {
                 OwnershipTransferMessage ownershipTransferMessage = new OwnershipTransferMessage();
                 ownershipTransferMessage.Deserialize(Reader);
+                Reader.Recycle();
                 //if we are not aware of this ownershipID lets only give back to that client that its been assigned to them
                 //the goal here is to make it so ownership understanding has to be requested.
                 //once a ownership has been requested there good for life or when a ownership switch happens.
                 NetworkRequestNewOrExisting(ownershipTransferMessage, out ushort currentOwner);
-                NetDataWriter Writer = new NetDataWriter();
+                NetDataWriter Writer = NetDataWriterPool.GetWriter();
                 ownershipTransferMessage.playerIdMessage.playerID = currentOwner;
                 ownershipTransferMessage.Serialize(Writer);
                 BNL.Log("OwnershipResponse " + currentOwner + " for " + ownershipTransferMessage.playerIdMessage);
                 Peer.Send(Writer, BasisNetworkCommons.OwnershipResponse, DeliveryMethod.ReliableSequenced);
+                NetDataWriterPool.ReturnWriter(Writer);
             }
             catch (Exception ex)
             {
@@ -38,14 +41,16 @@ namespace Basis.Network.Server.Ownership
         /// <summary>
         /// Handles the ownership transfer for all clients with proper error handling.
         /// </summary>
-        public static void OwnershipTransfer(NetPacketReader Reader, NetPeer Peer, ConcurrentDictionary<ushort, NetPeer> allClients)
+        public static void OwnershipTransfer(NetPacketReader Reader, NetPeer Peer)
         {
             try
             {
                 OwnershipTransferMessage ownershipTransferMessage = new OwnershipTransferMessage();
                 ownershipTransferMessage.Deserialize(Reader);
+                Reader.Recycle();
+
                 ushort ClientId = (ushort)Peer.Id;
-                NetDataWriter Writer = new NetDataWriter();
+                NetDataWriter Writer = NetDataWriterPool.GetWriter();
                 //all clients need to know about a ownership switch
                 if (SwitchOwnership(ownershipTransferMessage.ownershipID, ClientId))
                 {
@@ -53,7 +58,7 @@ namespace Basis.Network.Server.Ownership
                     ownershipTransferMessage.Serialize(Writer);
 
                     BNL.Log("OwnershipResponse " + ownershipTransferMessage.ownershipID + " for " + ownershipTransferMessage.playerIdMessage);
-                    BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.OwnershipTransfer, allClients, DeliveryMethod.ReliableSequenced);
+                    BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.OwnershipTransfer,BasisPlayerArray.GetSnapshot(), DeliveryMethod.ReliableSequenced);
                 }
                 else
                 {
@@ -64,6 +69,7 @@ namespace Basis.Network.Server.Ownership
                     ownershipTransferMessage.Serialize(Writer);
                     Peer.Send(Writer, BasisNetworkCommons.OwnershipTransfer, DeliveryMethod.ReliableSequenced);
                 }
+                NetDataWriterPool.ReturnWriter(Writer);
             }
             catch (Exception ex)
             {

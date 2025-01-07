@@ -1,17 +1,20 @@
 using Basis.Network.Core;
+using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using static SerializableBasis;
 
 namespace Basis.Network.Server.Generic
 {
     public static class BasisNetworkingGeneric
     {
-        public static void HandleScene(NetPacketReader Reader, DeliveryMethod DeliveryMethod, NetPeer sender, ConcurrentDictionary<ushort, NetPeer> allClients)
+        public static void HandleScene(NetPacketReader Reader, DeliveryMethod DeliveryMethod, NetPeer sender)
         {
             SceneDataMessage SceneDataMessage = new SceneDataMessage();
             SceneDataMessage.Deserialize(Reader);
+            Reader.Recycle();
             ServerSceneDataMessage serverSceneDataMessage = new ServerSceneDataMessage
             {
                 sceneDataMessage = new RemoteSceneDataMessage()
@@ -25,7 +28,7 @@ namespace Basis.Network.Server.Generic
                 }
             };
             byte Channel = BasisNetworkCommons.SceneChannel;
-            NetDataWriter Writer = new NetDataWriter();
+            NetDataWriter Writer = NetDataWriterPool.GetWriter();
             if (DeliveryMethod == DeliveryMethod.Unreliable)
             {
                 Writer.Put(Channel);
@@ -34,16 +37,16 @@ namespace Basis.Network.Server.Generic
             serverSceneDataMessage.Serialize(Writer);
             if (SceneDataMessage.recipientsSize != 0)
             {
-                ConcurrentDictionary<ushort, NetPeer> targetedClients = new ConcurrentDictionary<ushort, NetPeer>();
+                List<NetPeer> targetedClients = new List<NetPeer>();
 
                 int recipientsLength = SceneDataMessage.recipientsSize;
-              //  BNL.Log("Query Recipients " + recipientsLength);
+                //  BNL.Log("Query Recipients " + recipientsLength);
                 for (int index = 0; index < recipientsLength; index++)
                 {
                     if (BasisNetworkServer.Peers.TryGetValue(SceneDataMessage.recipients[index], out NetPeer client))
                     {
                         BNL.Log("Found Peer! " + SceneDataMessage.recipients[index]);
-                        targetedClients.TryAdd((ushort)client.Id, client);
+                        targetedClients.Add(client);
                     }
                     else
                     {
@@ -53,19 +56,21 @@ namespace Basis.Network.Server.Generic
 
                 if (targetedClients.Count > 0)
                 {
-                  //  BNL.Log("Sending out Target Clients " + targetedClients.Count);
-                    BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, targetedClients, DeliveryMethod);
+                    //  BNL.Log("Sending out Target Clients " + targetedClients.Count);
+                    BasisNetworkServer.BroadcastMessageToClients(Writer, Channel,ref targetedClients, DeliveryMethod);
                 }
             }
             else
             {
-                BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, sender, BasisNetworkServer.Peers, DeliveryMethod);
+                BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, sender,BasisPlayerArray.GetSnapshot(), DeliveryMethod);
             }
+            NetDataWriterPool.ReturnWriter(Writer);
         }
         public static void HandleAvatar(NetPacketReader Reader, DeliveryMethod DeliveryMethod, NetPeer sender)
         {
             AvatarDataMessage avatarDataMessage = new AvatarDataMessage();
             avatarDataMessage.Deserialize(Reader);
+            Reader.Recycle();
             ServerAvatarDataMessage serverAvatarDataMessage = new ServerAvatarDataMessage
             {
                 avatarDataMessage = new RemoteAvatarDataMessage()
@@ -80,7 +85,7 @@ namespace Basis.Network.Server.Generic
                 }
             };
             byte Channel = BasisNetworkCommons.AvatarChannel;
-            NetDataWriter Writer = new NetDataWriter();
+            NetDataWriter Writer = NetDataWriterPool.GetWriter();
             if (DeliveryMethod == DeliveryMethod.Unreliable)
             {
                 Writer.Put(Channel);
@@ -89,7 +94,7 @@ namespace Basis.Network.Server.Generic
             serverAvatarDataMessage.Serialize(Writer);
             if (avatarDataMessage.recipientsSize != 0)
             {
-                ConcurrentDictionary<ushort, NetPeer> targetedClients = new ConcurrentDictionary<ushort, NetPeer>();
+                List<NetPeer> targetedClients = new List<NetPeer>();
 
                 int recipientsLength = avatarDataMessage.recipientsSize;
                 //  BNL.Log("Query Recipients " + recipientsLength);
@@ -98,7 +103,7 @@ namespace Basis.Network.Server.Generic
                     if (BasisNetworkServer.Peers.TryGetValue(avatarDataMessage.recipients[index], out NetPeer client))
                     {
                         //   BNL.Log("Found Peer! " + avatarDataMessage.recipients[index]);
-                        targetedClients.TryAdd((ushort)client.Id, client);
+                        targetedClients.Add(client);
                     }
                     else
                     {
@@ -109,13 +114,14 @@ namespace Basis.Network.Server.Generic
                 if (targetedClients.Count > 0)
                 {
                     //BNL.Log("Sending out Target Clients " + targetedClients.Count);
-                    BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, targetedClients, DeliveryMethod);
+                    BasisNetworkServer.BroadcastMessageToClients(Writer, Channel,ref targetedClients, DeliveryMethod);
                 }
             }
             else
             {
-                BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, sender, BasisNetworkServer.Peers, DeliveryMethod);
+                BasisNetworkServer.BroadcastMessageToClients(Writer, Channel, sender, BasisPlayerArray.GetSnapshot(), DeliveryMethod);
             }
+            NetDataWriterPool.ReturnWriter(Writer);
         }
     }
 }

@@ -6,109 +6,81 @@ namespace Basis.Network.Server.Generic
 {
     public static class BasisSavedState
     {
-        /// <summary>
-        /// Stores the last state of each player on the server side.
-        /// </summary>
-        private static readonly ConcurrentDictionary<int, StoredData> serverSideLastState = new ConcurrentDictionary<int, StoredData>();
+        // Separate dictionaries for each type of data
+        private static readonly ConcurrentDictionary<int, LocalAvatarSyncMessage> avatarSyncStates = new ConcurrentDictionary<int, LocalAvatarSyncMessage>();
+        private static readonly ConcurrentDictionary<int, ClientAvatarChangeMessage> avatarChangeStates = new ConcurrentDictionary<int, ClientAvatarChangeMessage>();
+        private static readonly ConcurrentDictionary<int, PlayerMetaDataMessage> playerMetaDataMessages = new ConcurrentDictionary<int, PlayerMetaDataMessage>();
+        private static readonly ConcurrentDictionary<int, VoiceReceiversMessage> voiceReceiversMessages = new ConcurrentDictionary<int, VoiceReceiversMessage>();
 
         /// <summary>
-        /// Removes a player from the store.
+        /// Removes all state data for a specific player.
         /// </summary>
-        /// <param name="client">The client representing the player to be removed.</param>
         public static void RemovePlayer(NetPeer client)
         {
-            serverSideLastState.TryRemove(client.Id, out _);
-        }
-
-        public static void AddLastData(NetPeer client, LocalAvatarSyncMessage avatarSyncMessage)
-        {
-            if (serverSideLastState.TryGetValue(client.Id, out var existingData))
-            {
-                existingData.lastAvatarSyncState = avatarSyncMessage;
-                serverSideLastState[client.Id] = existingData;
-            }
-            else
-            {
-                serverSideLastState[client.Id] = new StoredData
-                {
-                    lastAvatarSyncState = avatarSyncMessage
-                };
-            }
-        }
-
-        public static void AddLastData(NetPeer client, ReadyMessage readyMessage)
-        {
-            if (serverSideLastState.TryGetValue(client.Id, out var existingData))
-            {
-                existingData.lastAvatarSyncState = readyMessage.localAvatarSyncMessage;
-                existingData.lastAvatarChangeState = readyMessage.clientAvatarChangeMessage;
-                existingData.playerMetaDataMessage = readyMessage.playerMetaDataMessage;
-                serverSideLastState[client.Id] = existingData;
-
-                BNL.Log("Updated " + client.Id + " with AvatarID " + readyMessage.clientAvatarChangeMessage.byteArray.Length);
-            }
-            else
-            {
-                serverSideLastState[client.Id] = new StoredData
-                {
-                    lastAvatarSyncState = readyMessage.localAvatarSyncMessage,
-                    lastAvatarChangeState = readyMessage.clientAvatarChangeMessage,
-                    playerMetaDataMessage = readyMessage.playerMetaDataMessage
-                };
-
-                BNL.Log("Added " + client.Id + " with AvatarID " + readyMessage.clientAvatarChangeMessage.byteArray.Length);
-            }
-        }
-
-        public static void AddLastData(NetPeer client, VoiceReceiversMessage voiceReceiversMessage)
-        {
-            if (serverSideLastState.TryGetValue(client.Id, out var existingData))
-            {
-                existingData.voiceReceiversMessage = voiceReceiversMessage;
-                serverSideLastState[client.Id] = existingData;
-            }
-            else
-            {
-                serverSideLastState[client.Id] = new StoredData
-                {
-                    voiceReceiversMessage = voiceReceiversMessage
-                };
-            }
-        }
-
-        public static void AddLastData(NetPeer client, ClientAvatarChangeMessage avatarChangeMessage)
-        {
-            if (serverSideLastState.TryGetValue(client.Id, out var existingData))
-            {
-                existingData.lastAvatarChangeState = avatarChangeMessage;
-                serverSideLastState[client.Id] = existingData;
-            }
-            else
-            {
-                serverSideLastState[client.Id] = new StoredData
-                {
-                    lastAvatarChangeState = avatarChangeMessage
-                };
-            }
+            avatarSyncStates.TryRemove(client.Id, out _);
+            avatarChangeStates.TryRemove(client.Id, out _);
+            playerMetaDataMessages.TryRemove(client.Id, out _);
+            voiceReceiversMessages.TryRemove(client.Id, out _);
         }
 
         /// <summary>
-        /// Retrieves the last data message for a player.
+        /// Adds or updates the LocalAvatarSyncMessage for a player.
         /// </summary>
-        /// <param name="client">The client representing the player.</param>
-        /// <param name="storedData">The last stored data of the player.</param>
-        /// <returns>True if the player is found, otherwise false.</returns>
-        public static bool GetLastData(NetPeer client, out StoredData storedData)
+        public static void AddLastData(NetPeer client, LocalAvatarSyncMessage avatarSyncMessage)
         {
-            return serverSideLastState.TryGetValue(client.Id, out storedData);
+            avatarSyncStates[client.Id] = avatarSyncMessage;
         }
 
-        public struct StoredData
+        /// <summary>
+        /// Adds or updates the ReadyMessage for a player.
+        /// </summary>
+        public static void AddLastData(NetPeer client, ReadyMessage readyMessage)
         {
-            public LocalAvatarSyncMessage lastAvatarSyncState; // pos 1 & 2, rot, scale, muscles
-            public ClientAvatarChangeMessage lastAvatarChangeState; // last avatar state
-            public PlayerMetaDataMessage playerMetaDataMessage; //who i am meta
-            public VoiceReceiversMessage voiceReceiversMessage; //who am i talking to
+            avatarSyncStates[client.Id] = readyMessage.localAvatarSyncMessage;
+            avatarChangeStates[client.Id] = readyMessage.clientAvatarChangeMessage;
+            playerMetaDataMessages[client.Id] = readyMessage.playerMetaDataMessage;
+
+            BNL.Log($"Updated {client.Id} with AvatarID {readyMessage.clientAvatarChangeMessage.byteArray.Length}");
         }
+
+        /// <summary>
+        /// Adds or updates the VoiceReceiversMessage for a player.
+        /// </summary>
+        public static void AddLastData(NetPeer client, VoiceReceiversMessage voiceReceiversMessage)
+        {
+            voiceReceiversMessages[client.Id] = voiceReceiversMessage;
+        }
+
+        /// <summary>
+        /// Adds or updates the ClientAvatarChangeMessage for a player.
+        /// </summary>
+        public static void AddLastData(NetPeer client, ClientAvatarChangeMessage avatarChangeMessage)
+        {
+            avatarChangeStates[client.Id] = avatarChangeMessage;
+        }
+
+        /// <summary>
+        /// Retrieves the last LocalAvatarSyncMessage for a player.
+        /// </summary>
+        public static bool GetLastAvatarSyncState(NetPeer client, out LocalAvatarSyncMessage message) =>
+            avatarSyncStates.TryGetValue(client.Id, out message);
+
+        /// <summary>
+        /// Retrieves the last ClientAvatarChangeMessage for a player.
+        /// </summary>
+        public static bool GetLastAvatarChangeState(NetPeer client, out ClientAvatarChangeMessage message) =>
+            avatarChangeStates.TryGetValue(client.Id, out message);
+
+        /// <summary>
+        /// Retrieves the last PlayerMetaDataMessage for a player.
+        /// </summary>
+        public static bool GetLastPlayerMetaData(NetPeer client, out PlayerMetaDataMessage message) =>
+            playerMetaDataMessages.TryGetValue(client.Id, out message);
+
+        /// <summary>
+        /// Retrieves the last VoiceReceiversMessage for a player.
+        /// </summary>
+        public static bool GetLastVoiceReceivers(NetPeer client, out VoiceReceiversMessage message) =>
+            voiceReceiversMessages.TryGetValue(client.Id, out message);
     }
 }
