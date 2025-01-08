@@ -71,7 +71,7 @@ public class BasisServerReductionSystem
     public class SyncedToPlayerPulse
     {
         // The player ID to which the data is being sent
-       // public NetPeer playerID;
+        // public NetPeer playerID;
         public ServerSideSyncPlayerMessage lastPlayerInformation;
         /// <summary>
         /// Dictionary to hold queued messages for each player.
@@ -151,39 +151,46 @@ public class BasisServerReductionSystem
             {
                 if (playerData.newDataExists)
                 {
-                    if (PlayerSync.TryGetValue(playerID.localClient, out SyncedToPlayerPulse pulse))
+                    try
                     {
-                        Vector3 from = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(pulse.lastPlayerInformation);
-                        Vector3 to = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerData.serverSideSyncPlayerMessage);
-                        // Calculate the distance between the two points
-                        float activeDistance = Distance(from, to);
-                        // Adjust the timer interval based on the new syncRateMultiplier
-                        int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
-                        if (adjustedInterval > byte.MaxValue)
+                        if (PlayerSync.TryGetValue(playerID.localClient, out SyncedToPlayerPulse pulse))
                         {
-                            adjustedInterval = byte.MaxValue;
+                            Vector3 from = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(pulse.lastPlayerInformation);
+                            Vector3 to = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerData.serverSideSyncPlayerMessage);
+                            // Calculate the distance between the two points
+                            float activeDistance = Distance(from, to);
+                            // Adjust the timer interval based on the new syncRateMultiplier
+                            int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
+                            if (adjustedInterval > byte.MaxValue)
+                            {
+                                adjustedInterval = byte.MaxValue;
+                            }
+                            //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
+                            playerData.timer.Change(adjustedInterval, adjustedInterval);
+                            //how long does this data need to last for
+                            playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
                         }
-                        //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
-                        playerData.timer.Change(adjustedInterval, adjustedInterval);
-                        //how long does this data need to last for
-                        playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
+                        else
+                        {
+                            BNL.Log("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
+                        }
+                        NetDataWriter Writer = NetDataWriterPool.GetWriter();
+                        if (playerData.serverSideSyncPlayerMessage.avatarSerialization.array == null || playerData.serverSideSyncPlayerMessage.avatarSerialization.array.Length == 0)
+                        {
+                            BNL.Log("Unable to send out Avatar Data Was null or Empty!");
+                        }
+                        else
+                        {
+                            playerData.serverSideSyncPlayerMessage.Serialize(Writer);
+                            playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
+                        }
+                        NetDataWriterPool.ReturnWriter(Writer);
+                        playerData.newDataExists = false;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        BNL.Log("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
+                        BNL.LogError("Server Reduction System Encounter Isssue " + e.Message + " " + e.StackTrace);
                     }
-                    NetDataWriter Writer = NetDataWriterPool.GetWriter();
-                    if (playerData.serverSideSyncPlayerMessage.avatarSerialization.array == null || playerData.serverSideSyncPlayerMessage.avatarSerialization.array.Length == 0)
-                    {
-                        BNL.Log("Unable to send out Avatar Data Was null or Empty!");
-                    }
-                    else
-                    {
-                        playerData.serverSideSyncPlayerMessage.Serialize(Writer);
-                        playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
-                    }
-                    NetDataWriterPool.ReturnWriter(Writer);
-                    playerData.newDataExists = false;
                 }
             }
         }

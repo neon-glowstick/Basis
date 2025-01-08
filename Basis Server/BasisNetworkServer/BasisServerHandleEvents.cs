@@ -17,7 +17,7 @@ using System.Threading;
 
 namespace BasisServerHandle
 {
-    public static class BasisServerHandleEvents
+    public static class BasisServerHandleEvents 
     {
         #region Server Events Setup
         public static void SubscribeServerEvents()
@@ -179,15 +179,10 @@ namespace BasisServerHandle
         #endregion
 
         #region Network Receive Handlers
-        private static readonly SemaphoreSlim TaskLimiter = new SemaphoreSlim(300); // Limit to 300 concurrent tasks
-        private static readonly ConcurrentBag<Task> ActiveTasks = new ConcurrentBag<Task>();
-
-        private static async void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        private static void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
         {
             try
             {
-                await TaskLimiter.WaitAsync(); // Wait if the limit is reached
-
                 var task = Task.Run(() =>
                 {
                     try
@@ -248,14 +243,7 @@ namespace BasisServerHandle
                         BNL.LogError($"{e.Message} : {e.StackTrace}");
                         reader?.Recycle();
                     }
-                    finally
-                    {
-                        TaskLimiter.Release(); // Release semaphore when the task is done
-                    }
                 });
-
-                ActiveTasks.Add(task);
-                task.ContinueWith(t => ActiveTasks.TryTake(out _)); // Remove completed tasks from the bag
             }
             catch (Exception e)
             {
