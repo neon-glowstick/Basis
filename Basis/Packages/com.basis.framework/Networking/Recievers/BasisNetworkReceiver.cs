@@ -47,8 +47,8 @@ namespace Basis.Scripts.Networking.Recievers
 
         private List<OneEuroFilter> filters = new();
         public float frequency = 120f;
-        public float minCutoff = .01f;
-        public float beta = 0.0001f;
+        public float minCutoff = .05f;
+        public float beta = 5f;
         public float dcutoff = 1.0f;
 
         public bool updateFilters;
