@@ -1,5 +1,5 @@
 using Basis.Scripts.Networking;
-using Basis.Scripts.Networking.NetworkedPlayer;
+using Basis.Scripts.Networking.NetworkedAvatar;
 using UnityEngine;
 public static class BasisNetworkHandleRemoval
 {
@@ -8,7 +8,7 @@ public static class BasisNetworkHandleRemoval
         if (reader.TryGetUShort(out ushort DisconnectValue))
         {
             BasisDebug.Log($"trying to remove Networked Player {DisconnectValue}");
-            if (BasisNetworkManagement.Players.TryGetValue(DisconnectValue, out BasisNetworkedPlayer NetworkedPlayer))
+            if (BasisNetworkManagement.Players.TryGetValue(DisconnectValue, out BasisNetworkSendBase NetworkedPlayer))
             {
                 if (NetworkedPlayer.Player.IsLocal == false)
                 {
@@ -16,7 +16,7 @@ public static class BasisNetworkHandleRemoval
                     BasisNetworkManagement.MainThreadContext.Post(_ =>
                     {
                         BasisNetworkManagement.OnRemotePlayerLeft?.Invoke(NetworkedPlayer, (Basis.Scripts.BasisSdk.Players.BasisRemotePlayer)NetworkedPlayer.Player);//tell scripts delete time
-                        NetworkedPlayer.NetworkSend.DeInitialize();//shutdown the networking
+                        NetworkedPlayer.DeInitialize();//shutdown the networking
                         if (NetworkedPlayer.Player.BasisAvatar != null)//nuke avatar first
                         {
                             GameObject.Destroy(NetworkedPlayer.Player.BasisAvatar.gameObject);

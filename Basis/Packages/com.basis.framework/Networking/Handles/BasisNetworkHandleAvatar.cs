@@ -1,7 +1,5 @@
 using Basis.Scripts.Networking;
-using Basis.Scripts.Networking.NetworkedPlayer;
 using Basis.Scripts.Networking.Recievers;
-using UnityEngine;
 using LiteNetLib;
 using static SerializableBasis;
 using System.Collections.Generic;
@@ -36,9 +34,9 @@ public static class BasisNetworkHandleAvatar
         ServerAvatarChangeMessage ServerAvatarChangeMessage = new ServerAvatarChangeMessage();
         ServerAvatarChangeMessage.Deserialize(reader);
         ushort PlayerID = ServerAvatarChangeMessage.uShortPlayerId.playerID;
-        if (BasisNetworkManagement.Players.TryGetValue(PlayerID, out BasisNetworkedPlayer Player))
+        if (BasisNetworkManagement.Players.TryGetValue(PlayerID, out BasisNetworkSendBase Player))
         {
-            BasisNetworkReceiver networkReceiver = (BasisNetworkReceiver)Player.NetworkSend;
+            BasisNetworkReceiver networkReceiver = (BasisNetworkReceiver)Player;
             networkReceiver.ReceiveAvatarChangeRequest(ServerAvatarChangeMessage);
         }
         else

@@ -1,6 +1,5 @@
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Networking.NetworkedAvatar;
-using Basis.Scripts.Networking.NetworkedPlayer;
 using Basis.Scripts.Profiler;
 using System;
 using System.Collections.Generic;
@@ -129,7 +128,7 @@ namespace Basis.Scripts.Networking.Recievers
                         // Complete the jobs and apply the results
                         musclesHandle.Complete();
 
-                        ApplyPoseData(NetworkedPlayer.Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, muscles);
+                        ApplyPoseData(Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, muscles);
                         PoseHandler.SetHumanPose(ref HumanPose);
 
                         RemotePlayer.RemoteBoneDriver.SimulateAndApply(TimeAsDouble, DeltaTime);
@@ -253,7 +252,7 @@ namespace Basis.Scripts.Networking.Recievers
             {
                 BasisNetworkProfiler.ServerAudioSegmentMessageCounter.Sample(audioSegment.audioSegmentData.LengthUsed);
                 AudioReceiverModule.decoder.OnDecode(audioSegment.audioSegmentData.buffer, audioSegment.audioSegmentData.LengthUsed);
-                NetworkedPlayer.Player.AudioReceived?.Invoke(true);
+                Player.AudioReceived?.Invoke(true);
             }
         }
         public void ReceiveSilentNetworkAudio(ServerAudioSegmentMessage audioSilentSegment)
@@ -267,7 +266,7 @@ namespace Basis.Scripts.Networking.Recievers
                 }
                 BasisNetworkProfiler.ServerAudioSegmentMessageCounter.Sample(1);
                 AudioReceiverModule.OnDecoded(silentData, AudioReceiverModule.decoder.FakepcmLength);
-                NetworkedPlayer.Player.AudioReceived?.Invoke(false);
+                Player.AudioReceived?.Invoke(false);
             }
         }
         public void ReceiveAvatarChangeRequest(ServerAvatarChangeMessage ServerAvatarChangeMessage)
@@ -277,14 +276,11 @@ namespace Basis.Scripts.Networking.Recievers
 
             RemotePlayer.CreateAvatar(ServerAvatarChangeMessage.clientAvatarChangeMessage.loadMode, BasisLoadableBundle);
         }
-        public override void Initialize(BasisNetworkedPlayer networkedPlayer)
+        public override void Initialize()
         {
             if (!Ready)
             {
-                if (HumanPose.muscles == null || HumanPose.muscles.Length == 0)
-                {
-                    HumanPose.muscles = new float[95];
-                }
+                HumanPose.muscles = new float[95];
                 OuputVectors = new NativeArray<float3>(2, Allocator.Persistent); // Index 0 = position, Index 1 = scale
                 TargetVectors = new NativeArray<float3>(2, Allocator.Persistent); // Index 0 = target position, Index 1 = target scale
                 muscles = new NativeArray<float>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
@@ -297,11 +293,9 @@ namespace Basis.Scripts.Networking.Recievers
                 AvatarJob.TargetVector = TargetVectors;
 
                 UpdateEuroFilters();
-
-                NetworkedPlayer = networkedPlayer;
-                RemotePlayer = (BasisRemotePlayer)NetworkedPlayer.Player;
-                AudioReceiverModule.OnEnable(networkedPlayer);
-                OnAvatarCalibration();
+                RemotePlayer = (BasisRemotePlayer)Player;
+                AudioReceiverModule.OnEnable(this);
+               //this wont work here OnAvatarCalibrationRemote();
                 if (HasEvents == false)
                 {
                     RemotePlayer.RemoteAvatarDriver.CalibrationComplete += OnCalibration;
@@ -329,7 +323,7 @@ namespace Basis.Scripts.Networking.Recievers
         }
         public void OnCalibration()
         {
-            AudioReceiverModule.OnCalibration(NetworkedPlayer);
+            AudioReceiverModule.OnCalibration(this);
         }
         public override void DeInitialize()
         {

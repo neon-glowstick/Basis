@@ -1,7 +1,7 @@
 using Basis.Network.Core;
 using Basis.Scripts.BasisSdk;
 using Basis.Scripts.Networking;
-using Basis.Scripts.Networking.NetworkedPlayer;
+using Basis.Scripts.Networking.NetworkedAvatar;
 using Basis.Scripts.Profiler;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
@@ -58,7 +58,7 @@ public static class BasisNetworkGenericMessages
         ServerAvatarDataMessage serverAvatarDataMessage = new ServerAvatarDataMessage();
         serverAvatarDataMessage.Deserialize(reader);
         ushort avatarLinkID = serverAvatarDataMessage.avatarDataMessage.PlayerIdMessage.playerID; // destination
-        if (BasisNetworkManagement.Players.TryGetValue(avatarLinkID, out BasisNetworkedPlayer player))
+        if (BasisNetworkManagement.Players.TryGetValue(avatarLinkID, out BasisNetworkSendBase player))
         {
             if (player.Player == null)
             {

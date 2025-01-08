@@ -2,7 +2,7 @@ using Basis.Scripts.BasisSdk.Helpers;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management;
 using Basis.Scripts.Drivers;
-using Basis.Scripts.Networking.NetworkedPlayer;
+using Basis.Scripts.Networking.NetworkedAvatar;
 using System;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace Basis.Scripts.Networking.Recievers
     public class BasisAudioReceiver : BasisAudioReceiverBase
     {
         public BasisRemoteAudioDriver BasisRemoteVisemeAudioDriver;
-        public void OnEnable(BasisNetworkedPlayer networkedPlayer)
+        public void OnEnable(BasisNetworkSendBase networkedPlayer)
         {
             // Initialize settings and audio source
             settings = BasisDeviceManagement.Instance.BasisOpusSettings;
@@ -68,7 +68,7 @@ namespace Basis.Scripts.Networking.Recievers
                 GameObject.Destroy(visemeDriver);
             }
         }
-        public void OnCalibration(BasisNetworkedPlayer networkedPlayer)
+        public void OnCalibration(BasisNetworkSendBase networkedPlayer)
         {
             // Ensure viseme driver is initialized for audio processing
             if (visemeDriver == null)

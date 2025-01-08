@@ -1,8 +1,12 @@
 using Basis.Network.Core;
-using Basis.Scripts.Networking.NetworkedPlayer;
+using Basis.Scripts.BasisSdk;
+using Basis.Scripts.BasisSdk.Players;
+using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
+using Basis.Scripts.TransformBinders.BoneControl;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Threading;
 using UnityEngine;
 using static BasisNetworkPrimitiveCompression;
 using static SerializableBasis;
@@ -16,8 +20,6 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
     public abstract class BasisNetworkSendBase
     {
         public bool Ready;
-        [SerializeField]
-        public BasisNetworkedPlayer NetworkedPlayer;
         private readonly object _lock = new object(); // Lock object for thread-safety
         private bool _hasReasonToSendAudio;
         public int Offset = 0;
@@ -46,58 +48,101 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
         public const int SizeAfterGap = 95 - SecondBuffer;
         public const int FirstBuffer = 15;
         public const int SecondBuffer = 21;
-        public abstract void Initialize(BasisNetworkedPlayer NetworkedPlayer);
+        public static float[] MinMuscle;
+        public static float[] MaxMuscle;
+        public static float[] RangeMuscle;
+        public BasisBoneControl MouthBone;
+        public BasisPlayer Player;
+        [SerializeField]
+        public PlayerIdMessage PlayerIDMessage;
+        public bool hasID = false;
+        public ushort NetId
+        {
+            get
+            {
+                if (hasID)
+                {
+                    return PlayerIDMessage.playerID;
+                }
+                else
+                {
+                    BasisDebug.LogError("Missing Network ID!");
+                    return 0;
+                }
+            }
+        }
+        public abstract void Initialize();
         public abstract void DeInitialize();
+        public void OnAvatarCalibrationLocal()
+        {
+            OnAvatarCalibration();
+        }
+        public void OnAvatarCalibrationRemote()
+        {
+            OnAvatarCalibration();
+        }
         public void OnAvatarCalibration()
         {
-            if (BasisNetworkManagement.MainThreadContext == null)
+            if (IsMainThread())
             {
-                BasisDebug.LogError("Main thread context is not set. Ensure this script is started on the main thread.");
-                return;
+                AvatarCalibrationSetup();
             }
-
-            // Post the task to the main thread
-            BasisNetworkManagement.MainThreadContext.Post(_ =>
+            else
             {
-                if (NetworkedPlayer != null && NetworkedPlayer.Player != null && NetworkedPlayer.Player.BasisAvatar != null)
+                if (BasisNetworkManagement.MainThreadContext == null)
                 {
-                    ComputeHumanPose();
-                    if (!NetworkedPlayer.Player.BasisAvatar.HasSendEvent)
-                    {
-                        NetworkedPlayer.Player.BasisAvatar.OnNetworkMessageSend += OnNetworkMessageSend;
-                        NetworkedPlayer.Player.BasisAvatar.HasSendEvent = true;
-                    }
-
-                    NetworkedPlayer.Player.BasisAvatar.LinkedPlayerID = NetworkedPlayer.NetId;
-                    NetworkedPlayer.Player.BasisAvatar.OnAvatarNetworkReady?.Invoke(NetworkedPlayer.Player.IsLocal);
+                    BasisDebug.LogError("Main thread context is not set. Ensure this script is started on the main thread.");
+                    return;
                 }
-            }, null);
-        }
-        public void ComputeHumanPose()
-        {
-            if (NetworkedPlayer == null)
-            {
-                BasisDebug.LogError("NetworkedPlayer is null! Cannot compute HumanPose.");
-                return;
-            }
 
-            if (NetworkedPlayer.Player == null)
+                // Post the task to the main thread
+                BasisNetworkManagement.MainThreadContext.Post(_ =>
+                {
+                    AvatarCalibrationSetup();
+                }, null);
+            }
+        }
+        public static bool IsMainThread()
+        {
+            // Check if the current synchronization context matches the main thread's context
+            return SynchronizationContext.Current == BasisNetworkManagement.MainThreadContext;
+        }
+
+        public void AvatarCalibrationSetup()
+        {
+            if (CheckAble())
+            {
+                BasisAvatar basisAvatar = Player.BasisAvatar;
+                // All checks passed
+                PoseHandler = new HumanPoseHandler(
+                    basisAvatar.Animator.avatar,
+                    basisAvatar.transform
+                );
+                PoseHandler.GetHumanPose(ref HumanPose);
+                if (!basisAvatar.HasSendEvent)
+                {
+                    basisAvatar.OnNetworkMessageSend += OnNetworkMessageSend;
+                    basisAvatar.HasSendEvent = true;
+                }
+
+                basisAvatar.LinkedPlayerID = NetId;
+                basisAvatar.OnAvatarNetworkReady?.Invoke(Player.IsLocal);
+            }
+        }
+        public bool CheckAble()
+        {
+            if (Player == null)
             {
                 BasisDebug.LogError("NetworkedPlayer.Player is null! Cannot compute HumanPose.");
-                return;
+                return false;
             }
 
-            if (NetworkedPlayer.Player.BasisAvatar == null)
+            if (Player.BasisAvatar == null)
             {
                 BasisDebug.LogError("BasisAvatar is null! Cannot compute HumanPose.");
-                return;
+                return false;
             }
-            // All checks passed
-            PoseHandler = new HumanPoseHandler(
-                NetworkedPlayer.Player.BasisAvatar.Animator.avatar,
-                NetworkedPlayer.Player.BasisAvatar.transform
-            );
-            PoseHandler.GetHumanPose(ref HumanPose);
+            return true;
         }
         private void OnNetworkMessageSend(byte MessageIndex, byte[] buffer = null, DeliveryMethod DeliveryMethod = DeliveryMethod.Sequenced, ushort[] Recipients = null)
         {
@@ -107,7 +152,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                 messageIndex = MessageIndex,
                 payload = buffer,
                 recipients = Recipients,
-                PlayerIdMessage = new PlayerIdMessage() { playerID = NetworkedPlayer.NetId },
+                PlayerIdMessage = new PlayerIdMessage() { playerID = NetId },
             };
             NetDataWriter netDataWriter = new NetDataWriter();
             if (DeliveryMethod == DeliveryMethod.Unreliable)
@@ -123,9 +168,6 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             }
             BasisNetworkProfiler.AvatarDataMessageCounter.Sample(netDataWriter.Length);
         }
-        public static float[] MinMuscle;
-        public static float[] MaxMuscle;
-        public static float[] RangeMuscle;
         public static void SetupData()
         {
             MinMuscle = new float[LocalAvatarSyncMessage.StoredBones];
@@ -143,6 +185,53 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             for (int Index = 0; Index < LocalAvatarSyncMessage.StoredBones; Index++)
             {
                 RangeMuscle[Index] = MaxMuscle[Index] - MinMuscle[Index];
+            }
+        }
+        public void ProvideNetworkKey(ushort PlayerID)
+        {
+            PlayerIDMessage.playerID = PlayerID;
+            hasID = true;
+        }
+        public void LocalInitalize(BasisLocalPlayer BasisLocalPlayer)
+        {
+            Player = BasisLocalPlayer;
+            if (BasisLocalPlayer.AvatarDriver != null)
+            {
+                if (BasisLocalPlayer.AvatarDriver.HasEvents == false)
+                {
+                    BasisLocalPlayer.AvatarDriver.CalibrationComplete += OnAvatarCalibrationLocal;
+                    BasisLocalPlayer.AvatarDriver.HasEvents = true;
+                }
+                BasisLocalPlayer.LocalBoneDriver.FindBone(out MouthBone, BasisBoneTrackedRole.Mouth);
+            }
+            else
+            {
+                BasisDebug.LogError("Missing CharacterIKCalibration");
+            }
+            BasisNetworkManagement.Instance.Transmitter = (BasisNetworkTransmitter)this;
+        }
+        public void RemoteInitalization(BasisRemotePlayer RemotePlayer)
+        {
+            Player = RemotePlayer;
+            if (RemotePlayer.RemoteAvatarDriver != null)
+            {
+                if (RemotePlayer.RemoteAvatarDriver.HasEvents == false)
+                {
+                    RemotePlayer.RemoteAvatarDriver.CalibrationComplete += OnAvatarCalibrationRemote;
+                    RemotePlayer.RemoteAvatarDriver.HasEvents = true;
+                }
+                RemotePlayer.RemoteBoneDriver.FindBone(out MouthBone, BasisBoneTrackedRole.Mouth);
+            }
+            else
+            {
+                BasisDebug.LogError("Missing CharacterIKCalibration");
+            }
+            if (RemotePlayer.RemoteAvatarDriver != null)
+            {
+            }
+            else
+            {
+                BasisDebug.LogError("Missing CharacterIKCalibration");
             }
         }
     }

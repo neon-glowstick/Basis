@@ -6,6 +6,7 @@ using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Device_Management.Devices.Desktop;
 using Basis.Scripts.Device_Management.Devices.Simulation;
 using Basis.Scripts.Networking;
+using Basis.Scripts.Networking.NetworkedAvatar;
 using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
 using Basis.Scripts.TransformBinders.BoneControl;
@@ -276,9 +277,9 @@ public static class BasisMenuItemsEditor
         };
         serverSideSyncPlayerMessage.localReadyMessage.clientAvatarChangeMessage = new ClientAvatarChangeMessage();
         serverSideSyncPlayerMessage.localReadyMessage.localAvatarSyncMessage = new LocalAvatarSyncMessage();
-        if(BasisNetworkManagement.Players.TryGetValue((ushort)BasisNetworkManagement.LocalPlayerPeer.Id, out Basis.Scripts.Networking.NetworkedPlayer.BasisNetworkedPlayer Player))
+        if(BasisNetworkManagement.Players.TryGetValue((ushort)BasisNetworkManagement.LocalPlayerPeer.Id, out BasisNetworkSendBase Player))
         {
-          BasisNetworkTransmitter Transmitter = (BasisNetworkTransmitter)Player.NetworkSend;
+          BasisNetworkTransmitter Transmitter = (BasisNetworkTransmitter)Player;
             if (Transmitter != null)
             {
                 BasisDebug.Log("Apply SpawnFakeRemote");

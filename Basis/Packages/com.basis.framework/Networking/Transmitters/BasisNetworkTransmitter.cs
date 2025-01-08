@@ -1,7 +1,6 @@
 using Basis.Network.Core;
 using Basis.Scripts.Device_Management.Devices.Desktop;
 using Basis.Scripts.Networking.NetworkedAvatar;
-using Basis.Scripts.Networking.NetworkedPlayer;
 using Basis.Scripts.Profiler;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -50,16 +49,22 @@ namespace Basis.Scripts.Networking.Transmitters
         public int IndexLength = -1;
         public float SlowestSendRate = 2.5f;
         public NetDataWriter AvatarSendWriter = new NetDataWriter(true, LocalAvatarSyncMessage.AvatarSyncSize);
+        public bool[] MicrophoneRangeIndex;
+        public bool[] LastMicrophoneRangeIndex;
+
+        public bool[] HearingIndex;
+        public bool[] AvatarIndex;
+        public ushort[] HearingIndexToId;
         void SendOutLatest()
         {
             timer += Time.deltaTime;
 
             if (timer >= interval)
             {
-                if (Ready && NetworkedPlayer.Player.BasisAvatar != null)
+                if (Ready && Player.BasisAvatar != null)
                 {
                     ScheduleCheck();
-                    BasisNetworkAvatarCompressor.Compress(this, NetworkedPlayer.Player.BasisAvatar.Animator);
+                    BasisNetworkAvatarCompressor.Compress(this, Player.BasisAvatar.Animator);
                     distanceJobHandle.Complete();
                     HandleResults();
                     SmallestDistanceToAnotherPlayer = distanceJob.smallestDistance[0];
@@ -73,12 +78,6 @@ namespace Basis.Scripts.Networking.Transmitters
                 }
             }
         }
-        public bool[] MicrophoneRangeIndex;
-        public bool[] LastMicrophoneRangeIndex;
-
-        public bool[] HearingIndex;
-        public bool[] AvatarIndex;
-        public ushort[] HearingIndexToId;
         public void HandleResults()
         {
             if (distanceJob.DistanceResults == null)
@@ -210,19 +209,18 @@ namespace Basis.Scripts.Networking.Transmitters
 
             return true;
         }
-        public override void Initialize(BasisNetworkedPlayer networkedPlayer)
+        public override void Initialize()
         {
             if (Ready == false)
             {
                 IndexLength = -1;
-                NetworkedPlayer = networkedPlayer;
-                AudioTransmission.OnEnable(networkedPlayer);
-                OnAvatarCalibration();
+                AudioTransmission.OnEnable(this);
+                OnAvatarCalibrationLocal();
                 if (HasEvents == false)
                 {
-                    NetworkedPlayer.Player.OnAvatarSwitchedFallBack += OnAvatarCalibration;
-                    NetworkedPlayer.Player.OnAvatarSwitched += OnAvatarCalibration;
-                    NetworkedPlayer.Player.OnAvatarSwitched += SendOutLatestAvatar;
+                    Player.OnAvatarSwitchedFallBack += OnAvatarCalibrationLocal;
+                    Player.OnAvatarSwitched += OnAvatarCalibrationLocal;
+                    Player.OnAvatarSwitched += SendOutLatestAvatar;
                     BasisLocalInputActions.AfterAvatarChanges += SendOutLatest;
                     HasEvents = true;
                 }
@@ -238,7 +236,7 @@ namespace Basis.Scripts.Networking.Transmitters
             distanceJob.AvatarDistance = SMModuleDistanceBasedReductions.AvatarRange;
             distanceJob.HearingDistance = SMModuleDistanceBasedReductions.HearingRange;
             distanceJob.VoiceDistance = SMModuleDistanceBasedReductions.MicrophoneRange;
-            distanceJob.referencePosition = NetworkedPlayer.MouthBone.OutgoingWorldData.position;
+            distanceJob.referencePosition = MouthBone.OutgoingWorldData.position;
             if (IndexLength != BasisNetworkManagement.ReceiverCount)
             {
                 ResizeOrCreateArrayData(BasisNetworkManagement.ReceiverCount);
@@ -252,7 +250,7 @@ namespace Basis.Scripts.Networking.Transmitters
             }
             for (int Index = 0; Index < BasisNetworkManagement.ReceiverCount; Index++)
             {
-                targetPositions[Index] = BasisNetworkManagement.ReceiverArray[Index].NetworkedPlayer.MouthBone.OutgoingWorldData.position;
+                targetPositions[Index] = BasisNetworkManagement.ReceiverArray[Index].MouthBone.OutgoingWorldData.position;
             }
             smallestDistance[0] = float.MaxValue;
             distanceJobHandle = distanceJob.Schedule(targetPositions.Length, 64);
@@ -314,9 +312,9 @@ namespace Basis.Scripts.Networking.Transmitters
             }
             if (HasEvents)
             {
-                NetworkedPlayer.Player.OnAvatarSwitchedFallBack -= OnAvatarCalibration;
-                NetworkedPlayer.Player.OnAvatarSwitched -= OnAvatarCalibration;
-                NetworkedPlayer.Player.OnAvatarSwitched -= SendOutLatestAvatar;
+                Player.OnAvatarSwitchedFallBack -= OnAvatarCalibrationLocal;
+                Player.OnAvatarSwitched -= OnAvatarCalibrationLocal;
+                Player.OnAvatarSwitched -= SendOutLatestAvatar;
                 BasisLocalInputActions.AfterAvatarChanges -= SendOutLatest;
                 if (targetPositions.IsCreated) targetPositions.Dispose();
                 if (distances.IsCreated) distances.Dispose();
@@ -344,8 +342,8 @@ namespace Basis.Scripts.Networking.Transmitters
             NetDataWriter Writer = new NetDataWriter();
             ClientAvatarChangeMessage ClientAvatarChangeMessage = new ClientAvatarChangeMessage
             {
-                byteArray = BasisBundleConversionNetwork.ConvertBasisLoadableBundleToBytes(NetworkedPlayer.Player.AvatarMetaData),
-                loadMode = NetworkedPlayer.Player.AvatarLoadMode,
+                byteArray = BasisBundleConversionNetwork.ConvertBasisLoadableBundleToBytes(Player.AvatarMetaData),
+                loadMode = Player.AvatarLoadMode,
             };
             ClientAvatarChangeMessage.Serialize(Writer);
             BasisNetworkManagement.LocalPlayerPeer.Send(Writer, BasisNetworkCommons.AvatarChangeMessage, DeliveryMethod.ReliableOrdered);
