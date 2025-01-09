@@ -28,8 +28,9 @@ namespace Basis.Scripts.Networking.Recievers
         public bool HasEvents = false;
         private NativeArray<float3> OuputVectors;      // Merged positions and scales
         private NativeArray<float3> TargetVectors; // Merged target positions and scales
-        private NativeArray<float> muscles;
+        private NativeArray<float> musclesPreEuro;
         private NativeArray<float> targetMuscles;
+        private NativeArray<float> EuroValuesOutput;
         public JobHandle musclesHandle;
         public JobHandle AvatarHandle;
         public UpdateAvatarMusclesJob musclesJob = new UpdateAvatarMusclesJob();
@@ -44,14 +45,12 @@ namespace Basis.Scripts.Networking.Recievers
         public double TimeInThePast;
         public bool HasAvatarInitalized;
 
-        private List<OneEuroFilter> filters = new();
-        public float frequency = 120f;
-        public float minCutoff = .05f;
-        public float beta = 5f;
-        public float dcutoff = 1.0f;
-
+        public OneEuroFilterParallelJob oneEuroFilterJob;
+        public  float Frequency = 120f;
+        public  float MinCutoff = .05f;
+        public  float Beta = 5f;
+        public float DerivativeCutoff = 1.0f;
         public bool updateFilters;
-
         /// <summary>
         /// Perform computations to interpolate and update avatar state.
         /// </summary>
@@ -98,7 +97,7 @@ namespace Basis.Scripts.Networking.Recievers
                     }
                     try
                     {
-                        muscles.CopyFrom(First.Muscles);
+                        musclesPreEuro.CopyFrom(First.Muscles);
                         targetMuscles.CopyFrom(Last.Muscles);
                     }
                     catch (Exception ex)
@@ -112,10 +111,16 @@ namespace Basis.Scripts.Networking.Recievers
 
                     // Muscle interpolation job
                     musclesJob.Time = interpolationTime;
-                    musclesHandle = musclesJob.Schedule(muscles.Length, 64, AvatarHandle);
+                    musclesHandle = musclesJob.Schedule(LocalAvatarSyncMessage.StoredBones, 64, AvatarHandle);
+                    if(ForceUpdateFilters)
+                    {
+                        ForceUpdateFilters();
+                    }
+                    EuroFilterHandle = oneEuroFilterJob.Schedule(LocalAvatarSyncMessage.StoredBones,64, musclesHandle);
                 }
             }
         }
+        public JobHandle EuroFilterHandle;
         public void Apply(double TimeAsDouble, float DeltaTime)
         {
             if (PoseHandler != null)
@@ -126,9 +131,9 @@ namespace Basis.Scripts.Networking.Recievers
                     {
                         OutputRotation = math.slerp(First.rotation, Last.rotation, interpolationTime);
                         // Complete the jobs and apply the results
-                        musclesHandle.Complete();
+                        EuroFilterHandle.Complete();
 
-                        ApplyPoseData(Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, muscles);
+                        ApplyPoseData(Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, EuroValuesOutput);
                         PoseHandler.SetHumanPose(ref HumanPose);
 
                         RemotePlayer.RemoteBoneDriver.SimulateAndApply(TimeAsDouble, DeltaTime);
@@ -212,20 +217,10 @@ namespace Basis.Scripts.Networking.Recievers
             HumanPose.bodyPosition = ScaledPosition;
             HumanPose.bodyRotation = Rotation;
 
-            NativeArray<float> filteredMuscles = Muscles;
 
-            if (updateFilters)
-            {
-                UpdateEuroFilters();
-            }
-
-            for (var i = 0; i < LocalAvatarSyncMessage.StoredBones; ++i)
-            {
-                filteredMuscles[i] = filters[i].Filter(Muscles[i]);
-            }
 
             // Copy from job to MuscleFinalStageOutput
-            filteredMuscles.CopyTo(MuscleFinalStageOutput);
+            Muscles.CopyTo(MuscleFinalStageOutput);
             // First, copy the first 14 elements directly
             Array.Copy(MuscleFinalStageOutput, 0, HumanPose.muscles, 0, FirstBuffer);
             // Then, copy the remaining elements from index 15 onwards into the pose.muscles array, starting from index 21
@@ -277,6 +272,8 @@ namespace Basis.Scripts.Networking.Recievers
 
             RemotePlayer.CreateAvatar(ServerAvatarChangeMessage.clientAvatarChangeMessage.loadMode, BasisLoadableBundle);
         }
+        private NativeArray<ThreadedLowPassFilter> positionFilters;
+        private NativeArray<ThreadedLowPassFilter> derivativeFilters;
         public override void Initialize()
         {
             if (!Ready)
@@ -284,16 +281,21 @@ namespace Basis.Scripts.Networking.Recievers
                 HumanPose.muscles = new float[95];
                 OuputVectors = new NativeArray<float3>(2, Allocator.Persistent); // Index 0 = position, Index 1 = scale
                 TargetVectors = new NativeArray<float3>(2, Allocator.Persistent); // Index 0 = target position, Index 1 = target scale
-                muscles = new NativeArray<float>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
+                musclesPreEuro = new NativeArray<float>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
                 targetMuscles = new NativeArray<float>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
+                EuroValuesOutput = new NativeArray<float>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
+
+                positionFilters = new NativeArray<ThreadedLowPassFilter>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
+                derivativeFilters = new NativeArray<ThreadedLowPassFilter>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
+
                 musclesJob = new UpdateAvatarMusclesJob();
                 AvatarJob = new UpdateAvatarJob();
-                musclesJob.Outputmuscles = muscles;
+                musclesJob.Outputmuscles = musclesPreEuro;
                 musclesJob.targetMuscles = targetMuscles;
                 AvatarJob.OutputVector = OuputVectors;
                 AvatarJob.TargetVector = TargetVectors;
+                ForceUpdateFilters();
 
-                UpdateEuroFilters();
                 RemotePlayer = (BasisRemotePlayer)Player;
                 AudioReceiverModule.OnEnable(this);
                //this wont work here OnAvatarCalibrationRemote();
@@ -305,22 +307,36 @@ namespace Basis.Scripts.Networking.Recievers
                 Ready = true;
             }
         }
-        public void UpdateEuroFilters()
+        public void ForceUpdateFilters()
         {
-            if (filters.Count <= 0)
+            for (int i = 0; i < LocalAvatarSyncMessage.StoredBones; i++)
             {
-                for (var i = 0; i < LocalAvatarSyncMessage.StoredBones; ++i)
-                {
-                    filters.Add(new OneEuroFilter(frequency, minCutoff, beta, dcutoff));
-                }
+                // Initialize filters for each data point
+                ThreadedLowPassFilter positionFilter = new ThreadedLowPassFilter();
+                positionFilter.Initialize(Alpha(MinCutoff));
+                positionFilters[i] = positionFilter;
+
+                ThreadedLowPassFilter derivativeFilter = new ThreadedLowPassFilter();
+                derivativeFilter.Initialize(Alpha(DerivativeCutoff));
+                derivativeFilters[i] = derivativeFilter;
             }
-            else
+            oneEuroFilterJob = new OneEuroFilterParallelJob
             {
-                for (var i = 0; i < LocalAvatarSyncMessage.StoredBones; ++i)
-                {
-                    filters[i] = new OneEuroFilter(frequency, minCutoff, beta, dcutoff);
-                }
-            }
+                InputValues = musclesPreEuro,
+                OutputValues = EuroValuesOutput,
+                Frequency = Frequency,
+                MinCutoff = MinCutoff,
+                Beta = Beta,
+                DerivativeCutoff = DerivativeCutoff,
+                PositionFilters = positionFilters,
+                DerivativeFilters = derivativeFilters,
+            };
+        }
+        private float Alpha(float cutoff)
+        {
+            float te = 1.0f / Frequency;
+            float tau = 1.0f / (2.0f * Mathf.PI * cutoff);
+            return 1.0f / (1.0f + tau / te);
         }
         public void OnCalibration()
         {
@@ -330,8 +346,12 @@ namespace Basis.Scripts.Networking.Recievers
         {
             if (OuputVectors.IsCreated) OuputVectors.Dispose();
             if (TargetVectors.IsCreated) TargetVectors.Dispose();
-            if (muscles.IsCreated) muscles.Dispose();
+            if (musclesPreEuro.IsCreated) musclesPreEuro.Dispose();
             if (targetMuscles.IsCreated) targetMuscles.Dispose();
+            if(EuroValuesOutput.IsCreated) EuroValuesOutput.Dispose();
+            if (positionFilters.IsCreated) positionFilters.Dispose();
+            if (derivativeFilters.IsCreated) derivativeFilters.Dispose();
+
             if (HasEvents && RemotePlayer != null && RemotePlayer.RemoteAvatarDriver != null)
             {
                 RemotePlayer.RemoteAvatarDriver.CalibrationComplete -= OnCalibration;
