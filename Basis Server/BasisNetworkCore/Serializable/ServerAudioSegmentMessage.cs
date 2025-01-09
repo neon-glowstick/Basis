@@ -17,7 +17,7 @@ public static partial class SerializableBasis
         }
     }
 
-    public struct VoiceReceiversMessage
+    public class VoiceReceiversMessage
     {
         public ushort[] users;
         public void Deserialize(NetDataReader Writer)
