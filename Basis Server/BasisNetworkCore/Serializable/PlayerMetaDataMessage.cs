@@ -4,7 +4,7 @@ using LiteNetLib.Utils;
 
 public static partial class SerializableBasis
 {
-    public class PlayerMetaDataMessage
+    public struct PlayerMetaDataMessage
     {
         public string playerUUID;
         public string playerDisplayName;

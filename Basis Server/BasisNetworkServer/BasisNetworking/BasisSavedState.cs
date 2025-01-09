@@ -18,10 +18,10 @@ namespace Basis.Network.Server.Generic
         public static void RemovePlayer(NetPeer client)
         {
             int id = client.Id;
-            avatarSyncStates.SetPulse(id, null);
-            avatarChangeStates.SetPulse(id, null);
-            playerMetaDataMessages.SetPulse(id, null);
-            voiceReceiversMessages.SetPulse(id, null);
+            avatarSyncStates.SetPulse(id, default);
+            avatarChangeStates.SetPulse(id, default);
+            playerMetaDataMessages.SetPulse(id, default);
+            voiceReceiversMessages.SetPulse(id, default);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Basis.Network.Server.Generic
         public static bool GetLastAvatarSyncState(NetPeer client, out LocalAvatarSyncMessage message)
         {
             message = avatarSyncStates.GetPulse(client.Id);
-            return message != null;
+            return !message.Equals(default);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Basis.Network.Server.Generic
         public static bool GetLastAvatarChangeState(NetPeer client, out ClientAvatarChangeMessage message)
         {
             message = avatarChangeStates.GetPulse(client.Id);
-            return message != null;
+            return !message.Equals(default);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Basis.Network.Server.Generic
         public static bool GetLastPlayerMetaData(NetPeer client, out PlayerMetaDataMessage message)
         {
             message = playerMetaDataMessages.GetPulse(client.Id);
-            return message != null;
+            return !message.Equals(default);
         }
 
         /// <summary>
@@ -94,12 +94,12 @@ namespace Basis.Network.Server.Generic
         public static bool GetLastVoiceReceivers(NetPeer client, out VoiceReceiversMessage message)
         {
             message = voiceReceiversMessages.GetPulse(client.Id);
-            return message != null;
+            return !message.Equals(default);
         }
     }
 
     // Generic implementation of ChunkedSyncedToPlayerPulseArray
-    public class ChunkedSyncedToPlayerPulseArray<T> where T : class
+    public class ChunkedSyncedToPlayerPulseArray<T> where T : struct
     {
         private readonly object[] _chunkLocks;
         private readonly T[][] _chunks;

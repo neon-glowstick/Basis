@@ -1,7 +1,7 @@
 using LiteNetLib.Utils;
 public static partial class SerializableBasis
 {
-    public class LocalAvatarSyncMessage
+    public struct LocalAvatarSyncMessage
     {
         public byte[] array;
         public const int AvatarSyncSize = 202;

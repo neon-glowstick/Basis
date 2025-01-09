@@ -16,7 +16,7 @@ public static partial class SerializableBasis
             clientAvatarChangeMessage.Serialize(Writer);
         }
     }
-    public class ClientAvatarChangeMessage
+    public struct ClientAvatarChangeMessage
     {
         // Downloading - attempts to download from a URL, make sure a hash also exists.
         // BuiltIn - loads as an addressable in Unity.
