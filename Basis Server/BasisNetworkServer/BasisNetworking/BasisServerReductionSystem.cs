@@ -12,7 +12,7 @@ public partial class BasisServerReductionSystem
 {
     // Default interval in milliseconds for the timer
     public static Configuration Configuration;
-    public static ConcurrentDictionary<int, SyncedToPlayerPulse> PlayerSync = new ConcurrentDictionary<int, SyncedToPlayerPulse>();
+    public static ChunkedSyncedToPlayerPulseArray PlayerSync = new ChunkedSyncedToPlayerPulseArray(64);
     /// <summary>
     /// add the new client
     /// then update all existing clients arrays
@@ -22,14 +22,16 @@ public partial class BasisServerReductionSystem
     /// <param name="serverSideSyncPlayer"></param>
     public static void AddOrUpdatePlayer(NetPeer playerID, ServerSideSyncPlayerMessage playerToUpdate, NetPeer serverSideSyncPlayer)
     {
+        SyncedToPlayerPulse playerData =  PlayerSync.GetPulse(serverSideSyncPlayer.Id);
         //stage 1 lets update whoever send us this datas last player information
-        if (PlayerSync.TryGetValue(serverSideSyncPlayer.Id, out SyncedToPlayerPulse playerData))
+        if (playerData != null)
         {
             playerData.lastPlayerInformation = playerToUpdate;
             playerData.Position = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerToUpdate);
         }
+        playerData = PlayerSync.GetPulse(playerID.Id);
         //ok now we can try to schedule sending out this data!
-        if (PlayerSync.TryGetValue(playerID.Id, out playerData))
+        if (playerData != null)
         {
             // Update the player's message
             playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
@@ -43,36 +45,37 @@ public partial class BasisServerReductionSystem
                 lastPlayerInformation = playerToUpdate,
                 Position = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerToUpdate),
             };
-            //ok now we can try to schedule sending out this data!
-            if (PlayerSync.TryAdd(playerID.Id, playerData))
-            {  // Update the player's message
-                playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
-            }
+            PlayerSync.SetPulse(playerID.Id, playerData);
+            playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
         }
     }
     public static void RemovePlayer(NetPeer playerID)
     {
-        if (PlayerSync.TryRemove(playerID.Id, out SyncedToPlayerPulse pulse))
+        SyncedToPlayerPulse Pulse = PlayerSync.GetPulse(playerID.Id);
+        PlayerSync.SetPulse(playerID.Id, null);
+        if (Pulse != null)
         {
             for (int i = 0; i < 1024; i++)
             {
-                ServerSideReducablePlayer player = pulse.ChunkedServerSideReducablePlayerArray.GetPlayer(i);
+                ServerSideReducablePlayer player = Pulse.ChunkedServerSideReducablePlayerArray.GetPlayer(i);
                 if (player != null)
                 {
                     player.timer.Dispose();
-                    pulse.ChunkedServerSideReducablePlayerArray.SetPlayer(i, null);
+                    Pulse.ChunkedServerSideReducablePlayerArray.SetPlayer(i, null);
                 }
             }
         }
-        SyncedToPlayerPulse[] Index = PlayerSync.Values.ToArray();
-        for (int i = 0; i < Index.Length; i++)
+        for (int i = 0; i < 1024; i++)
         {
-            SyncedToPlayerPulse player = Index[i];
-            ServerSideReducablePlayer SSRP = player.ChunkedServerSideReducablePlayerArray.GetPlayer(i);
-            if (SSRP != null)
+            SyncedToPlayerPulse player = PlayerSync.GetPulse(i);
+            if (player != null)
             {
-                SSRP.timer.Dispose();
-                pulse.ChunkedServerSideReducablePlayerArray.SetPlayer(i, null);
+                ServerSideReducablePlayer SSRP = player.ChunkedServerSideReducablePlayerArray.GetPlayer(i);
+                if (SSRP != null)
+                {
+                    SSRP.timer.Dispose();
+                    Pulse.ChunkedServerSideReducablePlayerArray.SetPlayer(i, null);
+                }
             }
         }
     }
@@ -157,7 +160,8 @@ public partial class BasisServerReductionSystem
                 ServerSideReducablePlayer playerData = ChunkedServerSideReducablePlayerArray.GetPlayer(playerID.dataCameFromThisUser);
                 if (playerData != null)
                 {
-                    if (PlayerSync.TryGetValue(playerID.localClient.Id, out SyncedToPlayerPulse pulse))
+                    SyncedToPlayerPulse pulse = PlayerSync.GetPulse(playerID.localClient.Id);
+                    if (pulse != null)
                     {
                         try
                         {
