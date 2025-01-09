@@ -78,7 +78,7 @@ public class BasisServerReductionSystem
         /// Key: Player ID, Value: Server-side player data
         /// </summary>
         public ConcurrentDictionary<NetPeer, ServerSideReducablePlayer> queuedPlayerMessages = new ConcurrentDictionary<NetPeer, ServerSideReducablePlayer>();
-
+        public BasisBoolArray SyncBoolArray = new BasisBoolArray();
         /// <summary>
         /// Supply new data to a specific player.
         /// </summary>
@@ -91,7 +91,7 @@ public class BasisServerReductionSystem
             {
                 // Update the player's message
                 playerData.serverSideSyncPlayerMessage = serverSideSyncPlayerMessage;
-                playerData.newDataExists = true;
+                SyncBoolArray.SetBool(serverSidePlayer.Id, true);
                 queuedPlayerMessages[serverSidePlayer] = playerData;
             }
             else
@@ -117,10 +117,9 @@ public class BasisServerReductionSystem
             ServerSideReducablePlayer newPlayer = new ServerSideReducablePlayer
             {
                 serverSideSyncPlayerMessage = serverSideSyncPlayerMessage,
-                newDataExists = true,
                 timer = new System.Threading.Timer(SendPlayerData, clientPayload, Configuration.BSRSMillisecondDefaultInterval, Configuration.BSRSMillisecondDefaultInterval)
             };
-
+            SyncBoolArray.SetBool(serverSidePlayer.Id, true);
             queuedPlayerMessages[serverSidePlayer] = newPlayer;
         }
 
@@ -147,49 +146,41 @@ public class BasisServerReductionSystem
         /// <param name="state">The player ID (passed from the timer)</param>
         private void SendPlayerData(object state)
         {
-            if (state is ClientPayload playerID && queuedPlayerMessages.TryGetValue(playerID.dataCameFromThisUser, out ServerSideReducablePlayer playerData))
+            if (state is ClientPayload playerID)
             {
-                if (playerData.newDataExists)
+                if (SyncBoolArray.GetBool(playerID.dataCameFromThisUser.Id))
                 {
-                    try
+                    if (queuedPlayerMessages.TryGetValue(playerID.dataCameFromThisUser, out ServerSideReducablePlayer playerData))
                     {
                         if (PlayerSync.TryGetValue(playerID.localClient, out SyncedToPlayerPulse pulse))
                         {
-                            Vector3 from = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(pulse.lastPlayerInformation);
-                            Vector3 to = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerData.serverSideSyncPlayerMessage);
-                            // Calculate the distance between the two points
-                            float activeDistance = Distance(from, to);
-                            // Adjust the timer interval based on the new syncRateMultiplier
-                            int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
-                            if (adjustedInterval > byte.MaxValue)
+                            try
                             {
-                                adjustedInterval = byte.MaxValue;
+                                Vector3 from = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(pulse.lastPlayerInformation);
+                                Vector3 to = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerData.serverSideSyncPlayerMessage);
+                                // Calculate the distance between the two points
+                                float activeDistance = Distance(from, to);
+                                // Adjust the timer interval based on the new syncRateMultiplier
+                                int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
+                                if (adjustedInterval > byte.MaxValue)
+                                {
+                                    adjustedInterval = byte.MaxValue;
+                                }
+                                //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
+                                playerData.timer.Change(adjustedInterval, adjustedInterval);
+                                //how long does this data need to last for
+                                playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
+                                NetDataWriter Writer = NetDataWriterPool.GetWriter();
+                                playerData.serverSideSyncPlayerMessage.Serialize(Writer);
+                                playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
+                                NetDataWriterPool.ReturnWriter(Writer);
                             }
-                            //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
-                            playerData.timer.Change(adjustedInterval, adjustedInterval);
-                            //how long does this data need to last for
-                            playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
+                            catch (Exception e)
+                            {
+                                BNL.LogError("Server Reduction System Encounter Isssue " + e.Message + " " + e.StackTrace);
+                            }
                         }
-                        else
-                        {
-                            BNL.Log("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
-                        }
-                        NetDataWriter Writer = NetDataWriterPool.GetWriter();
-                        if (playerData.serverSideSyncPlayerMessage.avatarSerialization.array == null || playerData.serverSideSyncPlayerMessage.avatarSerialization.array.Length == 0)
-                        {
-                            BNL.Log("Unable to send out Avatar Data Was null or Empty!");
-                        }
-                        else
-                        {
-                            playerData.serverSideSyncPlayerMessage.Serialize(Writer);
-                            playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
-                        }
-                        NetDataWriterPool.ReturnWriter(Writer);
-                        playerData.newDataExists = false;
-                    }
-                    catch (Exception e)
-                    {
-                        BNL.LogError("Server Reduction System Encounter Isssue " + e.Message + " " + e.StackTrace);
+                        SyncBoolArray.SetBool(playerID.dataCameFromThisUser.Id, false);
                     }
                 }
             }
@@ -206,7 +197,39 @@ public class BasisServerReductionSystem
     public struct ServerSideReducablePlayer
     {
         public System.Threading.Timer timer;//create a new timer
-        public bool newDataExists;
         public ServerSideSyncPlayerMessage serverSideSyncPlayerMessage;
+    }
+    public class BasisBoolArray
+    {
+        private readonly object BoolArrayLock = new object();
+        private  bool[] BoolArray = new bool[1024];
+
+        // Set the value of a specific bool at the given index
+        public void SetBool(int index, bool value)
+        {
+            if (index < 0 || index >= BoolArray.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index), "Index must be between 0 and 1023.");
+            }
+
+            lock (BoolArrayLock)
+            {
+                BoolArray[index] = value;
+            }
+        }
+
+        // Get the value of a specific bool at the given index
+        public bool GetBool(int index)
+        {
+            if (index < 0 || index >= BoolArray.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index), "Index must be between 0 and 1023.");
+            }
+
+            lock (BoolArrayLock)
+            {
+                return BoolArray[index];
+            }
+        }
     }
 }
