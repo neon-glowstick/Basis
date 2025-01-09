@@ -53,11 +53,10 @@
       "dependencies": {}
     },
     "com.basis.tests": {
-      "version": "https://github.com/BasisVR/BasisTests.git",
+      "version": "file:com.basis.tests",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "f232ec073b7f8bd0812c486c28d53e0d0c3382c9"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.basis.visualtrackers": {
       "version": "https://github.com/BasisVR/BasisVisualTrackers.git",
