@@ -277,7 +277,7 @@ public static class BasisMenuItemsEditor
         };
         serverSideSyncPlayerMessage.localReadyMessage.clientAvatarChangeMessage = new ClientAvatarChangeMessage();
         serverSideSyncPlayerMessage.localReadyMessage.localAvatarSyncMessage = new LocalAvatarSyncMessage();
-        if(BasisNetworkManagement.Players.TryGetValue((ushort)BasisNetworkManagement.LocalPlayerPeer.Id, out BasisNetworkSendBase Player))
+        if(BasisNetworkManagement.Players.TryGetValue((ushort)BasisNetworkManagement.LocalPlayerPeer.Id, out BasisNetworkPlayer Player))
         {
           BasisNetworkTransmitter Transmitter = (BasisNetworkTransmitter)Player;
             if (Transmitter != null)

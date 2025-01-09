@@ -27,6 +27,7 @@ namespace Basis.Scripts.Device_Management.Devices.OpenXR
         public new void OnDestroy()
         {
             BasisVirtualSpine.DeInitialize();
+            BasisOpenXRInputEye.Shutdown();
             base.OnDestroy();
         }
         public override void DoPollData()

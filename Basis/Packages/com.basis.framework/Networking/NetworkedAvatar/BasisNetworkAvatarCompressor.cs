@@ -43,13 +43,13 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             Handler.GetHumanPose(ref PoseHandler);
 
             // Copy muscles [0..14]
-            Array.Copy(PoseHandler.muscles, 0, FloatArray, 0, BasisNetworkSendBase.FirstBuffer);
+            Array.Copy(PoseHandler.muscles, 0, FloatArray, 0, BasisNetworkPlayer.FirstBuffer);
 
             // Copy muscles [21..end]
-            Array.Copy(PoseHandler.muscles, BasisNetworkSendBase.SecondBuffer, FloatArray, BasisNetworkSendBase.FirstBuffer, BasisNetworkSendBase.SizeAfterGap);
+            Array.Copy(PoseHandler.muscles, BasisNetworkPlayer.SecondBuffer, FloatArray, BasisNetworkPlayer.FirstBuffer, BasisNetworkPlayer.SizeAfterGap);
             //we write position first so we can use that on the server
             BasisUnityBitPackerExtensions.WriteVectorFloatToBytes(Anim.bodyPosition, ref LocalAvatarSyncMessage.array, ref Offset);
-            BasisUnityBitPackerExtensions.WriteQuaternionToBytes(Anim.bodyRotation, ref LocalAvatarSyncMessage.array, ref Offset, BasisNetworkSendBase.RotationCompression);
+            BasisUnityBitPackerExtensions.WriteQuaternionToBytes(Anim.bodyRotation, ref LocalAvatarSyncMessage.array, ref Offset, BasisNetworkPlayer.RotationCompression);
 
             if(NetworkSend == null)
             {
@@ -66,7 +66,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             var FloatArrayCopy = FloatArray;
             Parallel.For(0, LocalAvatarSyncMessage.StoredBones, Index =>
             {
-                NetworkOutData[Index] = Compress(FloatArrayCopy[Index], BasisNetworkSendBase.MinMuscle[Index], BasisNetworkSendBase.MaxMuscle[Index], BasisNetworkSendBase.RangeMuscle[Index]);
+                NetworkOutData[Index] = Compress(FloatArrayCopy[Index], BasisNetworkPlayer.MinMuscle[Index], BasisNetworkPlayer.MaxMuscle[Index], BasisNetworkPlayer.RangeMuscle[Index]);
             });
 
             BasisUnityBitPackerExtensions.WriteUShortsToBytes(NetworkOutData, ref LocalAvatarSyncMessage.array, ref Offset);

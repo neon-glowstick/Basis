@@ -1,7 +1,6 @@
 using Basis.Network.Core;
 using Basis.Scripts.BasisSdk;
 using Basis.Scripts.BasisSdk.Players;
-using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
 using Basis.Scripts.TransformBinders.BoneControl;
 using LiteNetLib;
@@ -17,12 +16,28 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
     /// the goal of this script is to be the glue of consistent data between remote and local
     /// </summary>
     [System.Serializable]
-    public abstract class BasisNetworkSendBase
+    public abstract class BasisNetworkPlayer
     {
         public bool Ready;
         private readonly object _lock = new object(); // Lock object for thread-safety
         private bool _hasReasonToSendAudio;
         public int Offset = 0;
+        public static BasisRangedUshortFloatData RotationCompression = new BasisRangedUshortFloatData(-1f, 1f, 0.001f);
+        [SerializeField]
+        public HumanPose HumanPose = new HumanPose();
+        [SerializeField]
+        public HumanPoseHandler PoseHandler;
+        public const int SizeAfterGap = 95 - SecondBuffer;
+        public const int FirstBuffer = 15;
+        public const int SecondBuffer = 21;
+        public static float[] MinMuscle;
+        public static float[] MaxMuscle;
+        public static float[] RangeMuscle;
+        public BasisBoneControl MouthBone;
+        public BasisPlayer Player;
+        [SerializeField]
+        public PlayerIdMessage PlayerIDMessage;
+        public bool hasID = false;
         public bool HasReasonToSendAudio
         {
             get
@@ -40,22 +55,6 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                 }
             }
         }
-        public static BasisRangedUshortFloatData RotationCompression = new BasisRangedUshortFloatData(-1f, 1f, 0.001f);
-        [SerializeField]
-        public HumanPose HumanPose = new HumanPose();
-        [SerializeField]
-        public HumanPoseHandler PoseHandler;
-        public const int SizeAfterGap = 95 - SecondBuffer;
-        public const int FirstBuffer = 15;
-        public const int SecondBuffer = 21;
-        public static float[] MinMuscle;
-        public static float[] MaxMuscle;
-        public static float[] RangeMuscle;
-        public BasisBoneControl MouthBone;
-        public BasisPlayer Player;
-        [SerializeField]
-        public PlayerIdMessage PlayerIDMessage;
-        public bool hasID = false;
         public ushort NetId
         {
             get
@@ -110,7 +109,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
 
         public void AvatarCalibrationSetup()
         {
-            if (CheckAble())
+            if (CheckForAvatar())
             {
                 BasisAvatar basisAvatar = Player.BasisAvatar;
                 // All checks passed
@@ -129,7 +128,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                 basisAvatar.OnAvatarNetworkReady?.Invoke(Player.IsLocal);
             }
         }
-        public bool CheckAble()
+        public bool CheckForAvatar()
         {
             if (Player == null)
             {
@@ -191,48 +190,6 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
         {
             PlayerIDMessage.playerID = PlayerID;
             hasID = true;
-        }
-        public void LocalInitalize(BasisLocalPlayer BasisLocalPlayer)
-        {
-            Player = BasisLocalPlayer;
-            if (BasisLocalPlayer.AvatarDriver != null)
-            {
-                if (BasisLocalPlayer.AvatarDriver.HasEvents == false)
-                {
-                    BasisLocalPlayer.AvatarDriver.CalibrationComplete += OnAvatarCalibrationLocal;
-                    BasisLocalPlayer.AvatarDriver.HasEvents = true;
-                }
-                BasisLocalPlayer.LocalBoneDriver.FindBone(out MouthBone, BasisBoneTrackedRole.Mouth);
-            }
-            else
-            {
-                BasisDebug.LogError("Missing CharacterIKCalibration");
-            }
-            BasisNetworkManagement.Instance.Transmitter = (BasisNetworkTransmitter)this;
-        }
-        public void RemoteInitalization(BasisRemotePlayer RemotePlayer)
-        {
-            Player = RemotePlayer;
-            if (RemotePlayer.RemoteAvatarDriver != null)
-            {
-                if (RemotePlayer.RemoteAvatarDriver.HasEvents == false)
-                {
-                    RemotePlayer.RemoteAvatarDriver.CalibrationComplete += OnAvatarCalibrationRemote;
-                    RemotePlayer.RemoteAvatarDriver.HasEvents = true;
-                }
-                RemotePlayer.RemoteBoneDriver.FindBone(out MouthBone, BasisBoneTrackedRole.Mouth);
-            }
-            else
-            {
-                BasisDebug.LogError("Missing CharacterIKCalibration");
-            }
-            if (RemotePlayer.RemoteAvatarDriver != null)
-            {
-            }
-            else
-            {
-                BasisDebug.LogError("Missing CharacterIKCalibration");
-            }
         }
     }
 }

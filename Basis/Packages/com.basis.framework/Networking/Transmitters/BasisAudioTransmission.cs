@@ -15,7 +15,7 @@ namespace Basis.Scripts.Networking.Transmitters
     public class BasisAudioTransmission
     {
         public Encoder encoder;
-        public BasisNetworkSendBase NetworkedPlayer;
+        public BasisNetworkPlayer NetworkedPlayer;
         public BasisOpusSettings settings;
         public BasisLocalPlayer Local;
         public MicrophoneRecorder Recorder;
@@ -24,7 +24,7 @@ namespace Basis.Scripts.Networking.Transmitters
         public AudioSegmentDataMessage AudioSegmentData = new AudioSegmentDataMessage();
         public AudioSegmentDataMessage audioSilentSegmentData = new AudioSegmentDataMessage();
         public bool HasEvents = false;
-        public void OnEnable(BasisNetworkSendBase networkedPlayer)
+        public void OnEnable(BasisNetworkPlayer networkedPlayer)
         {
             if (!IsInitalized)
             {

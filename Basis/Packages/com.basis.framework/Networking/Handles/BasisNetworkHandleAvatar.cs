@@ -34,7 +34,7 @@ public static class BasisNetworkHandleAvatar
         ServerAvatarChangeMessage ServerAvatarChangeMessage = new ServerAvatarChangeMessage();
         ServerAvatarChangeMessage.Deserialize(reader);
         ushort PlayerID = ServerAvatarChangeMessage.uShortPlayerId.playerID;
-        if (BasisNetworkManagement.Players.TryGetValue(PlayerID, out BasisNetworkSendBase Player))
+        if (BasisNetworkManagement.Players.TryGetValue(PlayerID, out BasisNetworkPlayer Player))
         {
             BasisNetworkReceiver networkReceiver = (BasisNetworkReceiver)Player;
             networkReceiver.ReceiveAvatarChangeRequest(ServerAvatarChangeMessage);

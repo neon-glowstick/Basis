@@ -19,7 +19,7 @@ namespace Basis.Scripts.Networking.Transmitters
 {
     [DefaultExecutionOrder(15001)]
     [System.Serializable]
-    public partial class BasisNetworkTransmitter : BasisNetworkSendBase
+    public partial class BasisNetworkTransmitter : BasisNetworkPlayer
     {
         public bool HasEvents = false;
         public float timer = 0f;

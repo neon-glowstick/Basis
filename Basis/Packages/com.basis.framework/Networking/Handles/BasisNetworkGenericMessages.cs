@@ -58,7 +58,7 @@ public static class BasisNetworkGenericMessages
         ServerAvatarDataMessage serverAvatarDataMessage = new ServerAvatarDataMessage();
         serverAvatarDataMessage.Deserialize(reader);
         ushort avatarLinkID = serverAvatarDataMessage.avatarDataMessage.PlayerIdMessage.playerID; // destination
-        if (BasisNetworkManagement.Players.TryGetValue(avatarLinkID, out BasisNetworkSendBase player))
+        if (BasisNetworkManagement.Players.TryGetValue(avatarLinkID, out BasisNetworkPlayer player))
         {
             if (player.Player == null)
             {

@@ -12,7 +12,7 @@ namespace Basis.Scripts.Networking.Recievers
     public class BasisAudioReceiver : BasisAudioReceiverBase
     {
         public BasisRemoteAudioDriver BasisRemoteVisemeAudioDriver;
-        public void OnEnable(BasisNetworkSendBase networkedPlayer)
+        public void OnEnable(BasisNetworkPlayer networkedPlayer)
         {
             // Initialize settings and audio source
             settings = BasisDeviceManagement.Instance.BasisOpusSettings;
@@ -68,7 +68,7 @@ namespace Basis.Scripts.Networking.Recievers
                 GameObject.Destroy(visemeDriver);
             }
         }
-        public void OnCalibration(BasisNetworkSendBase networkedPlayer)
+        public void OnCalibration(BasisNetworkPlayer networkedPlayer)
         {
             // Ensure viseme driver is initialized for audio processing
             if (visemeDriver == null)

@@ -7,7 +7,11 @@ namespace Basis.Scripts.Device_Management.Devices.OpenVR
     {
         public override void Initalize()
         {
-
+          //  SteamVRFrustumAdjust.OnEnable();
+        }
+        public override void Shutdown()
+        {
+          //  SteamVRFrustumAdjust.OnDisable();
         }
         public override void Simulate()
         {
@@ -15,6 +19,7 @@ namespace Basis.Scripts.Device_Management.Devices.OpenVR
             RightPosition = SteamVR.instance.eyes[1].pos; //1 = right
             if (BasisLocalCameraDriver.HasInstance)
             {
+              //  SteamVRFrustumAdjust.Camera = BasisLocalCameraDriver.Instance.Camera;
                 BasisLocalCameraDriver.LeftEye = LeftPosition;
                 BasisLocalCameraDriver.RightEye = RightPosition;
             }

@@ -14,7 +14,7 @@ namespace Basis.Scripts.Networking.Recievers
 {
     [DefaultExecutionOrder(15001)]
     [System.Serializable]
-    public partial class BasisNetworkReceiver : BasisNetworkSendBase
+    public partial class BasisNetworkReceiver : BasisNetworkPlayer
     {
         public float[] silentData;
         public ushort[] CopyData = new ushort[LocalAvatarSyncMessage.StoredBones];

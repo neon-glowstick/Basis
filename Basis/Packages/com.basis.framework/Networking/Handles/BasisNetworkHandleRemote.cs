@@ -2,7 +2,7 @@ using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Networking.NetworkedAvatar;
 using Basis.Scripts.Networking.Recievers;
 using Basis.Scripts.Player;
-
+using Basis.Scripts.TransformBinders.BoneControl;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -38,7 +38,7 @@ namespace Basis.Scripts.Networking
             // Await all tasks at once
             await Task.WhenAll(tasks);
         }
-        public static async Task<BasisNetworkSendBase> CreateRemotePlayer(ServerReadyMessage ServerReadyMessage, InstantiationParameters instantiationParameters)
+        public static async Task<BasisNetworkPlayer> CreateRemotePlayer(ServerReadyMessage ServerReadyMessage, InstantiationParameters instantiationParameters)
         {
 
             ClientAvatarChangeMessage avatarID = ServerReadyMessage.localReadyMessage.clientAvatarChangeMessage;
@@ -55,7 +55,7 @@ namespace Basis.Scripts.Networking
                 // Retrieve the results
                 BasisRemotePlayer remote = await createRemotePlayerTask;
                 // Continue with the rest of the code
-                BasisNetworkReceiver.RemoteInitalization(remote);
+                RemoteInitalization(BasisNetworkReceiver, remote);
                 if (BasisNetworkManagement.AddPlayer(BasisNetworkReceiver))
                 {
                     BasisDebug.Log("Added Player AT " + BasisNetworkReceiver.NetId);
@@ -81,7 +81,31 @@ namespace Basis.Scripts.Networking
                 return null;
             }
         }
-        public static async Task<BasisNetworkSendBase> CreateRemotePlayer(ServerReadyMessage ServerReadyMessage,Transform Parent)
+        public static void RemoteInitalization(BasisNetworkReceiver BasisNetworkReceiver, BasisRemotePlayer RemotePlayer)
+        {
+            BasisNetworkReceiver.Player = RemotePlayer;
+            if (RemotePlayer.RemoteAvatarDriver != null)
+            {
+                if (RemotePlayer.RemoteAvatarDriver.HasEvents == false)
+                {
+                    RemotePlayer.RemoteAvatarDriver.CalibrationComplete += BasisNetworkReceiver.OnAvatarCalibrationRemote;
+                    RemotePlayer.RemoteAvatarDriver.HasEvents = true;
+                }
+                RemotePlayer.RemoteBoneDriver.FindBone(out BasisNetworkReceiver.MouthBone, BasisBoneTrackedRole.Mouth);
+            }
+            else
+            {
+                BasisDebug.LogError("Missing CharacterIKCalibration");
+            }
+            if (RemotePlayer.RemoteAvatarDriver != null)
+            {
+            }
+            else
+            {
+                BasisDebug.LogError("Missing CharacterIKCalibration");
+            }
+        }
+        public static async Task<BasisNetworkPlayer> CreateRemotePlayer(ServerReadyMessage ServerReadyMessage,Transform Parent)
         {
             InstantiationParameters instantiationParameters = new InstantiationParameters(Vector3.zero, Quaternion.identity, Parent);
             return await CreateRemotePlayer(ServerReadyMessage, instantiationParameters);

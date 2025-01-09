@@ -6,6 +6,7 @@ using Basis.Scripts.Networking.NetworkedAvatar;
 using Basis.Scripts.Networking.Recievers;
 using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
+using Basis.Scripts.TransformBinders.BoneControl;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -34,7 +35,7 @@ namespace Basis.Scripts.Networking
         /// fire when ownership is changed for a unique string
         /// </summary>
         public static OnNetworkMessageReceiveOwnershipTransfer OnOwnershipTransfer;
-        public static ConcurrentDictionary<ushort, BasisNetworkSendBase> Players = new ConcurrentDictionary<ushort, BasisNetworkSendBase>();
+        public static ConcurrentDictionary<ushort, BasisNetworkPlayer> Players = new ConcurrentDictionary<ushort, BasisNetworkPlayer>();
         public static ConcurrentDictionary<ushort, BasisNetworkReceiver> RemotePlayers = new ConcurrentDictionary<ushort, BasisNetworkReceiver>();
         public static HashSet<ushort> JoiningPlayers = new HashSet<ushort>();
         public static BasisNetworkReceiver[] ReceiverArray => BasisNetworkManagement.Instance.receiverArray;
@@ -47,20 +48,20 @@ namespace Basis.Scripts.Networking
         /// <summary>
         /// this occurs after the localplayer has been approved by the network and setup
         /// </summary>
-        public static Action<BasisNetworkSendBase, BasisLocalPlayer> OnLocalPlayerJoined;
+        public static Action<BasisNetworkPlayer, BasisLocalPlayer> OnLocalPlayerJoined;
         public static bool HasSentOnLocalPlayerJoin = false;
         /// <summary>
         /// this occurs after a remote user has been authenticated and joined & spawned
         /// </summary>
-        public static Action<BasisNetworkSendBase, BasisRemotePlayer> OnRemotePlayerJoined;
+        public static Action<BasisNetworkPlayer, BasisRemotePlayer> OnRemotePlayerJoined;
         /// <summary>
         /// this occurs after the localplayer has removed
         /// </summary>
-        public static Action<BasisNetworkSendBase, BasisLocalPlayer> OnLocalPlayerLeft;
+        public static Action<BasisNetworkPlayer, BasisLocalPlayer> OnLocalPlayerLeft;
         /// <summary>
         /// this occurs after a remote user has removed
         /// </summary>
-        public static Action<BasisNetworkSendBase, BasisRemotePlayer> OnRemotePlayerLeft;
+        public static Action<BasisNetworkPlayer, BasisRemotePlayer> OnRemotePlayerLeft;
 
         public static Action OnEnableInstanceCreate;
         public static BasisNetworkManagement Instance;
@@ -69,7 +70,7 @@ namespace Basis.Scripts.Networking
         /// allows a local host to be the server
         /// </summary>
         public BasisNetworkServerRunner BasisNetworkServerRunner = null;
-        public static bool AddPlayer(BasisNetworkSendBase NetPlayer)
+        public static bool AddPlayer(BasisNetworkPlayer NetPlayer)
         {
             if (Instance != null)
             {
@@ -113,7 +114,7 @@ namespace Basis.Scripts.Networking
             {
                 Instance = this;
             }
-            NetworkedAvatar.BasisNetworkSendBase.SetupData();
+            BasisNetworkPlayer.SetupData();
             MainThreadContext = SynchronizationContext.Current;
             // Initialize AvatarBuffer
             BasisAvatarBufferPool.AvatarBufferPool(30);
@@ -279,7 +280,7 @@ namespace Basis.Scripts.Networking
             BasisDebug.Log("Success! Now setting up Networked Local Player");
 
             // Wrap the main logic in a task for thread safety and asynchronous execution.
-            await Task.Run((Action)(() =>
+            await Task.Run(() =>
             {
                 BasisNetworkManagement.MainThreadContext.Post((SendOrPostCallback)(_ =>
                 {
@@ -289,12 +290,12 @@ namespace Basis.Scripts.Networking
                         ushort LocalPlayerID = (ushort)peer.RemoteId;
                         // Create the local networked player asynchronously.
                         this.transform.GetPositionAndRotation(out Vector3 Position, out Quaternion Rotation);
-                        BasisNetworkSendBase LocalNetworkedPlayer = new BasisNetworkTransmitter();
+                        BasisNetworkPlayer LocalNetworkedPlayer = new BasisNetworkTransmitter();
                         BasisDebug.Log("Network Id Updated " + LocalPlayerPeer.RemoteId);
 
                         LocalNetworkedPlayer.ProvideNetworkKey(LocalPlayerID);
                         // Initialize the local networked player.
-                        LocalNetworkedPlayer.LocalInitalize(BasisLocalPlayer.Instance);
+                        LocalInitalize(LocalNetworkedPlayer, BasisLocalPlayer.Instance);
                         if (AddPlayer(LocalNetworkedPlayer))
                         {
                             BasisDebug.Log($"Added local player {LocalPlayerID}");
@@ -313,7 +314,25 @@ namespace Basis.Scripts.Networking
                         BasisDebug.LogError($"Error setting up the local player: {ex.Message}");
                     }
                 }), null);
-            }));
+            });
+        }
+        public static void LocalInitalize(BasisNetworkPlayer BasisNetworkPlayer, BasisLocalPlayer BasisLocalPlayer)
+        {
+            BasisNetworkPlayer.Player = BasisLocalPlayer;
+            if (BasisLocalPlayer.AvatarDriver != null)
+            {
+                if (BasisLocalPlayer.AvatarDriver.HasEvents == false)
+                {
+                    BasisLocalPlayer.AvatarDriver.CalibrationComplete += BasisNetworkPlayer.OnAvatarCalibrationLocal;
+                    BasisLocalPlayer.AvatarDriver.HasEvents = true;
+                }
+                BasisLocalPlayer.LocalBoneDriver.FindBone(out BasisNetworkPlayer.MouthBone, BasisBoneTrackedRole.Mouth);
+            }
+            else
+            {
+                BasisDebug.LogError("Missing CharacterIKCalibration");
+            }
+            BasisNetworkManagement.Instance.Transmitter = (BasisNetworkTransmitter)BasisNetworkPlayer;
         }
         public bool IsRunning = true;
         private async void PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
@@ -325,7 +344,7 @@ namespace Basis.Scripts.Networking
                 {
                     BasisNetworkManagement.MainThreadContext.Post(async _ =>
                 {
-                    if (BasisNetworkManagement.Players.TryGetValue((ushort)LocalPlayerPeer.RemoteId, out BasisNetworkSendBase NetworkedPlayer))
+                    if (BasisNetworkManagement.Players.TryGetValue((ushort)LocalPlayerPeer.RemoteId, out BasisNetworkPlayer NetworkedPlayer))
                     {
                         BasisNetworkManagement.OnLocalPlayerLeft?.Invoke(NetworkedPlayer, (Basis.Scripts.BasisSdk.Players.BasisLocalPlayer)NetworkedPlayer.Player);
                     }
@@ -472,7 +491,7 @@ namespace Basis.Scripts.Networking
             BasisNetworkProfiler.RequestOwnershipTransferMessageCounter.Sample(netDataWriter.Length);
         }
 
-        public static bool AvatarToPlayer(BasisAvatar Avatar, out BasisPlayer BasisPlayer, out BasisNetworkSendBase NetworkedPlayer)
+        public static bool AvatarToPlayer(BasisAvatar Avatar, out BasisPlayer BasisPlayer, out BasisNetworkPlayer NetworkedPlayer)
         {
             if (Instance == null)
             {
@@ -490,7 +509,7 @@ namespace Basis.Scripts.Networking
             }
             if (Avatar.TryGetLinkedPlayer(out ushort id))
             {
-                BasisNetworkSendBase output = Players[id];
+                BasisNetworkPlayer output = Players[id];
                 NetworkedPlayer = output;
                 BasisPlayer = output.Player;
                 return true;
@@ -525,9 +544,9 @@ namespace Basis.Scripts.Networking
             }
             if (Avatar.TryGetLinkedPlayer(out ushort id))
             {
-                if (Players.TryGetValue(id, out BasisNetworkSendBase player))
+                if (Players.TryGetValue(id, out BasisNetworkPlayer player))
                 {
-                    BasisNetworkSendBase output = Players[id];
+                    BasisNetworkPlayer output = Players[id];
                     BasisPlayer = output.Player;
                     return true;
                 }
@@ -550,7 +569,7 @@ namespace Basis.Scripts.Networking
             BasisPlayer = null;
             return false;
         }
-        public static bool PlayerToNetworkedPlayer(BasisPlayer BasisPlayer, out BasisNetworkSendBase NetworkedPlayer)
+        public static bool PlayerToNetworkedPlayer(BasisPlayer BasisPlayer, out BasisNetworkPlayer NetworkedPlayer)
         {
             if (Instance == null)
             {
@@ -565,7 +584,7 @@ namespace Basis.Scripts.Networking
                 return false;
             }
             int BasisPlayerInstance = BasisPlayer.GetInstanceID();
-            foreach (BasisNetworkSendBase NPlayer in Players.Values)
+            foreach (BasisNetworkPlayer NPlayer in Players.Values)
             {
                 if (NPlayer == null)
                 {
