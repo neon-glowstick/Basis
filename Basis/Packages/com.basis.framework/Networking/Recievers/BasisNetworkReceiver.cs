@@ -112,7 +112,7 @@ namespace Basis.Scripts.Networking.Recievers
                     // Muscle interpolation job
                     musclesJob.Time = interpolationTime;
                     musclesHandle = musclesJob.Schedule(LocalAvatarSyncMessage.StoredBones, 64, AvatarHandle);
-                    if(ForceUpdateFilters)
+                    if(updateFilters)
                     {
                         ForceUpdateFilters();
                     }
