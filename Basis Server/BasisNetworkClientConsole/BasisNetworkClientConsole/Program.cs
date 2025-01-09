@@ -106,11 +106,9 @@ namespace Basis
                     ServerSideSyncPlayerMessage SSM = new ServerSideSyncPlayerMessage();
                     SSM.Deserialize(Reader);
                     Reader.Recycle();
-                    NetDataWriter Writer = NetDataWriterPool.GetWriter();
+                    NetDataWriter Writer = new NetDataWriter(true, 202);
                     SSM.avatarSerialization.Serialize(Writer);
                     LocalPLayer.Send(Writer, BasisNetworkCommons.MovementChannel, deliveryMethod);
-                    
-                    NetDataWriterPool.ReturnWriter(Writer);
                 }
                 else
                 {

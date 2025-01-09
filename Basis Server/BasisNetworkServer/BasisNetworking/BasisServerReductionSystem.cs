@@ -7,7 +7,7 @@ using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using static SerializableBasis;
-public class BasisServerReductionSystem
+public partial class BasisServerReductionSystem
 {
     // Default interval in milliseconds for the timer
     public static Configuration Configuration;
@@ -78,7 +78,7 @@ public class BasisServerReductionSystem
         /// Key: Player ID, Value: Server-side player data
         /// </summary>
         public ConcurrentDictionary<NetPeer, ServerSideReducablePlayer> queuedPlayerMessages = new ConcurrentDictionary<NetPeer, ServerSideReducablePlayer>();
-        public BasisBoolArray SyncBoolArray = new BasisBoolArray();
+        public ChunkedBoolArray SyncBoolArray = new ChunkedBoolArray(64);
         /// <summary>
         /// Supply new data to a specific player.
         /// </summary>
@@ -117,7 +117,8 @@ public class BasisServerReductionSystem
             ServerSideReducablePlayer newPlayer = new ServerSideReducablePlayer
             {
                 serverSideSyncPlayerMessage = serverSideSyncPlayerMessage,
-                timer = new System.Threading.Timer(SendPlayerData, clientPayload, Configuration.BSRSMillisecondDefaultInterval, Configuration.BSRSMillisecondDefaultInterval)
+                timer = new System.Threading.Timer(SendPlayerData, clientPayload, Configuration.BSRSMillisecondDefaultInterval, Configuration.BSRSMillisecondDefaultInterval),
+                Writer = new NetDataWriter(true, 204),
             };
             SyncBoolArray.SetBool(serverSidePlayer.Id, true);
             queuedPlayerMessages[serverSidePlayer] = newPlayer;
@@ -170,10 +171,9 @@ public class BasisServerReductionSystem
                                 playerData.timer.Change(adjustedInterval, adjustedInterval);
                                 //how long does this data need to last for
                                 playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
-                                NetDataWriter Writer = NetDataWriterPool.GetWriter();
-                                playerData.serverSideSyncPlayerMessage.Serialize(Writer);
-                                playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
-                                NetDataWriterPool.ReturnWriter(Writer);
+                                playerData.serverSideSyncPlayerMessage.Serialize(playerData.Writer);
+                                playerID.localClient.Send(playerData.Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
+                                playerData.Writer.Reset();
                             }
                             catch (Exception e)
                             {
@@ -198,38 +198,6 @@ public class BasisServerReductionSystem
     {
         public System.Threading.Timer timer;//create a new timer
         public ServerSideSyncPlayerMessage serverSideSyncPlayerMessage;
-    }
-    public class BasisBoolArray
-    {
-        private readonly object BoolArrayLock = new object();
-        private  bool[] BoolArray = new bool[1024];
-
-        // Set the value of a specific bool at the given index
-        public void SetBool(int index, bool value)
-        {
-            if (index < 0 || index >= BoolArray.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), "Index must be between 0 and 1023.");
-            }
-
-            lock (BoolArrayLock)
-            {
-                BoolArray[index] = value;
-            }
-        }
-
-        // Get the value of a specific bool at the given index
-        public bool GetBool(int index)
-        {
-            if (index < 0 || index >= BoolArray.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), "Index must be between 0 and 1023.");
-            }
-
-            lock (BoolArrayLock)
-            {
-                return BoolArray[index];
-            }
-        }
+        public NetDataWriter Writer;
     }
 }
