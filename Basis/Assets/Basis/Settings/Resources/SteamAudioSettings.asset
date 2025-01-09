@@ -13,13 +13,14 @@ MonoBehaviour:
   m_Name: SteamAudioSettings
   m_EditorClassIdentifier: 
   audioEngine: 0
+  hrtfDisabled: 0
   perspectiveCorrection: 0
   perspectiveCorrectionFactor: 1
   hrtfVolumeGainDB: 1
   hrtfNormalizationType: 0
   SOFAFiles: []
   defaultMaterial: {fileID: 11400000, guid: a086f686223eed942816c70be67841b0, type: 2}
-  sceneType: 1
+  sceneType: 0
   layerMask:
     serializedVersion: 2
     m_Bits: 0

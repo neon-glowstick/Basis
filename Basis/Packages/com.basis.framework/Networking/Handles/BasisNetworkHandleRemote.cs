@@ -84,6 +84,7 @@ namespace Basis.Scripts.Networking
         public static void RemoteInitalization(BasisNetworkReceiver BasisNetworkReceiver, BasisRemotePlayer RemotePlayer)
         {
             BasisNetworkReceiver.Player = RemotePlayer;
+            RemotePlayer.NetworkReceiver = BasisNetworkReceiver;
             if (RemotePlayer.RemoteAvatarDriver != null)
             {
                 if (RemotePlayer.RemoteAvatarDriver.HasEvents == false)

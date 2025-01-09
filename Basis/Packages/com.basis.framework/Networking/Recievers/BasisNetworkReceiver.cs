@@ -228,13 +228,14 @@ namespace Basis.Scripts.Networking.Recievers
             filteredMuscles.CopyTo(MuscleFinalStageOutput);
             // First, copy the first 14 elements directly
             Array.Copy(MuscleFinalStageOutput, 0, HumanPose.muscles, 0, FirstBuffer);
-
             // Then, copy the remaining elements from index 15 onwards into the pose.muscles array, starting from index 21
             Array.Copy(MuscleFinalStageOutput, FirstBuffer, HumanPose.muscles, SecondBuffer, SizeAfterGap);
 
+            Array.Copy(Eyes, 0, HumanPose.muscles, 15, 4);
             // Adjust the local scale of the animator's transform
             animator.transform.localScale = Scale;  // Directly adjust scale with output scaling
         }
+        public float[] Eyes = new float[4];
         public static Vector3 Divide(Vector3 a, Vector3 b)
         {
             // Define a small epsilon to avoid division by zero, using a flexible value based on magnitude

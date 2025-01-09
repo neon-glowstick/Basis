@@ -17,7 +17,7 @@ namespace Basis
         private static readonly object nameLock = new object(); // To synchronize name generation
         public static NetPeer LocalPLayer;
 
-        public static string Ip = "localhost";//server1.basisvr.org
+        public static string Ip = "server1.basisvr.org";//server1.basisvr.org //localhost
         public static int Port = 4296;
         public static void Main(string[] args)
         {
