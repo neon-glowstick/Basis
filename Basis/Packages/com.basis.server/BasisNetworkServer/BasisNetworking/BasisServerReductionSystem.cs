@@ -1,17 +1,16 @@
 using System;
-using System.Collections.Concurrent;
+using System.Threading;
 using Basis.Network.Core;
 using Basis.Network.Core.Compression;
 using Basis.Scripts.Networking.Compression;
-using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using static SerializableBasis;
-public class BasisServerReductionSystem
+public partial class BasisServerReductionSystem
 {
     // Default interval in milliseconds for the timer
     public static Configuration Configuration;
-    public static ConcurrentDictionary<NetPeer, SyncedToPlayerPulse> PlayerSync = new ConcurrentDictionary<NetPeer, SyncedToPlayerPulse>();
+    public static ChunkedSyncedToPlayerPulseArray PlayerSync = new ChunkedSyncedToPlayerPulseArray(64);
     /// <summary>
     /// add the new client
     /// then update all existing clients arrays
@@ -21,13 +20,16 @@ public class BasisServerReductionSystem
     /// <param name="serverSideSyncPlayer"></param>
     public static void AddOrUpdatePlayer(NetPeer playerID, ServerSideSyncPlayerMessage playerToUpdate, NetPeer serverSideSyncPlayer)
     {
+        SyncedToPlayerPulse playerData =  PlayerSync.GetPulse(serverSideSyncPlayer.Id);
         //stage 1 lets update whoever send us this datas last player information
-        if (PlayerSync.TryGetValue(serverSideSyncPlayer, out SyncedToPlayerPulse playerData))
+        if (playerData != null)
         {
             playerData.lastPlayerInformation = playerToUpdate;
+            playerData.Position = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerToUpdate);
         }
+        playerData = PlayerSync.GetPulse(playerID.Id);
         //ok now we can try to schedule sending out this data!
-        if (PlayerSync.TryGetValue(playerID, out playerData))
+        if (playerData != null)
         {
             // Update the player's message
             playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
@@ -37,31 +39,41 @@ public class BasisServerReductionSystem
             //first time request create said data!
             playerData = new SyncedToPlayerPulse
             {
-             //   playerID = playerID,
-                queuedPlayerMessages = new ConcurrentDictionary<NetPeer, ServerSideReducablePlayer>(),
+                //   playerID = playerID,
                 lastPlayerInformation = playerToUpdate,
+                Position = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerToUpdate),
             };
-            //ok now we can try to schedule sending out this data!
-            if (PlayerSync.TryAdd(playerID, playerData))
-            {  // Update the player's message
-                playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
-            }
+            PlayerSync.SetPulse(playerID.Id, playerData);
+            playerData.SupplyNewData(playerID, playerToUpdate, serverSideSyncPlayer);
         }
     }
     public static void RemovePlayer(NetPeer playerID)
     {
-        if (PlayerSync.TryRemove(playerID, out SyncedToPlayerPulse pulse))
+        SyncedToPlayerPulse Pulse = PlayerSync.GetPulse(playerID.Id);
+        PlayerSync.SetPulse(playerID.Id, null);
+        if (Pulse != null)
         {
-            foreach (ServerSideReducablePlayer player in pulse.queuedPlayerMessages.Values)
+            for (int i = 0; i < 1024; i++)
             {
-                player.timer.Dispose();
+                ServerSideReducablePlayer player = Pulse.ChunkedServerSideReducablePlayerArray.GetPlayer(i);
+                if (player != null)
+                {
+                    player.timer.Dispose();
+                    Pulse.ChunkedServerSideReducablePlayerArray.SetPlayer(i, null);
+                }
             }
         }
-        foreach (SyncedToPlayerPulse player in PlayerSync.Values)
+        for (int i = 0; i < 1024; i++)
         {
-            if (player.queuedPlayerMessages.TryRemove(playerID, out ServerSideReducablePlayer reduceablePlayer))
+            SyncedToPlayerPulse player = PlayerSync.GetPulse(i);
+            if (player != null)
             {
-                reduceablePlayer.timer.Dispose();
+                ServerSideReducablePlayer SSRP = player.ChunkedServerSideReducablePlayerArray.GetPlayer(i);
+                if (SSRP != null)
+                {
+                    SSRP.timer.Dispose();
+                    Pulse.ChunkedServerSideReducablePlayerArray.SetPlayer(i, null);
+                }
             }
         }
     }
@@ -71,14 +83,15 @@ public class BasisServerReductionSystem
     public class SyncedToPlayerPulse
     {
         // The player ID to which the data is being sent
-       // public NetPeer playerID;
+        // public NetPeer playerID;
         public ServerSideSyncPlayerMessage lastPlayerInformation;
+        public Vector3 Position;
         /// <summary>
         /// Dictionary to hold queued messages for each player.
         /// Key: Player ID, Value: Server-side player data
         /// </summary>
-        public ConcurrentDictionary<NetPeer, ServerSideReducablePlayer> queuedPlayerMessages = new ConcurrentDictionary<NetPeer, ServerSideReducablePlayer>();
-
+        public ChunkedBoolArray SyncBoolArray = new ChunkedBoolArray(64);
+        public ChunkedServerSideReducablePlayerArray ChunkedServerSideReducablePlayerArray = new ChunkedServerSideReducablePlayerArray(64);
         /// <summary>
         /// Supply new data to a specific player.
         /// </summary>
@@ -87,12 +100,14 @@ public class BasisServerReductionSystem
         /// <param name="serverSidePlayer"></param>
         public void SupplyNewData(NetPeer playerID, ServerSideSyncPlayerMessage serverSideSyncPlayerMessage, NetPeer serverSidePlayer)
         {
-            if (queuedPlayerMessages.TryGetValue(serverSidePlayer, out ServerSideReducablePlayer playerData))
+            ServerSideReducablePlayer playerData = ChunkedServerSideReducablePlayerArray.GetPlayer(serverSidePlayer.Id);
+            if (playerData != null)
             {
                 // Update the player's message
                 playerData.serverSideSyncPlayerMessage = serverSideSyncPlayerMessage;
-                playerData.newDataExists = true;
-                queuedPlayerMessages[serverSidePlayer] = playerData;
+                playerData.Position = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(serverSideSyncPlayerMessage);
+                SyncBoolArray.SetBool(serverSidePlayer.Id, true);
+                ChunkedServerSideReducablePlayerArray.SetPlayer(serverSidePlayer.Id, playerData);
             }
             else
             {
@@ -112,34 +127,24 @@ public class BasisServerReductionSystem
             ClientPayload clientPayload = new ClientPayload
             {
                 localClient = playerID,
-                dataCameFromThisUser = serverSidePlayer
+                dataCameFromThisUser = serverSidePlayer.Id
             };
+            serverSideSyncPlayerMessage.interval = (byte)Configuration.BSRSMillisecondDefaultInterval;
             ServerSideReducablePlayer newPlayer = new ServerSideReducablePlayer
             {
                 serverSideSyncPlayerMessage = serverSideSyncPlayerMessage,
-                newDataExists = true,
-                timer = new System.Threading.Timer(SendPlayerData, clientPayload, Configuration.BSRSMillisecondDefaultInterval, Configuration.BSRSMillisecondDefaultInterval)
+                timer = new ManagedTimer(SendPlayerData, clientPayload, Configuration.BSRSMillisecondDefaultInterval, Configuration.BSRSMillisecondDefaultInterval),
+                Writer = new NetDataWriter(true, 204),
+                Position = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(serverSideSyncPlayerMessage),
             };
-
-            queuedPlayerMessages[serverSidePlayer] = newPlayer;
-        }
-
-        /// <summary>
-        /// Removes a player from the queue and disposes of their timer.
-        /// </summary>
-        /// <param name="playerID">The ID of the player to remove</param>
-        public void RemovePlayer(NetPeer playerID)
-        {
-            if (queuedPlayerMessages.TryRemove(playerID, out ServerSideReducablePlayer playerData))
-            {
-                // Dispose of the timer to free resources
-                playerData.timer.Dispose();
-            }
+            SendPlayerData(clientPayload);
+            SyncBoolArray.SetBool(serverSidePlayer.Id, true);
+            ChunkedServerSideReducablePlayerArray.SetPlayer(serverSidePlayer.Id, newPlayer);
         }
         public struct ClientPayload
         {
             public NetPeer localClient;
-            public NetPeer dataCameFromThisUser;
+            public int dataCameFromThisUser;
         }
         /// <summary>
         /// Callback function to send player data at regular intervals.
@@ -147,44 +152,43 @@ public class BasisServerReductionSystem
         /// <param name="state">The player ID (passed from the timer)</param>
         private void SendPlayerData(object state)
         {
-            if (state is ClientPayload playerID && queuedPlayerMessages.TryGetValue(playerID.dataCameFromThisUser, out ServerSideReducablePlayer playerData))
+            var playerID = (ClientPayload)state;
+            if (SyncBoolArray.GetBool(playerID.dataCameFromThisUser))
             {
-                if (playerData.newDataExists)
+                ServerSideReducablePlayer playerData = ChunkedServerSideReducablePlayerArray.GetPlayer(playerID.dataCameFromThisUser);
+                if (playerData != null)
                 {
-                    if (PlayerSync.TryGetValue(playerID.localClient, out SyncedToPlayerPulse pulse))
+                    SyncedToPlayerPulse pulse = PlayerSync.GetPulse(playerID.localClient.Id);
+                    if (pulse != null)
                     {
-                        Vector3 from = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(pulse.lastPlayerInformation);
-                        Vector3 to = BasisNetworkCompressionExtensions.DecompressAndProcessAvatar(playerData.serverSideSyncPlayerMessage);
-                        // Calculate the distance between the two points
-                        float activeDistance = Distance(from, to);
-                        // Adjust the timer interval based on the new syncRateMultiplier
-                        int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
-                        if (adjustedInterval > byte.MaxValue)
+                        try
                         {
-                            adjustedInterval = byte.MaxValue;
+                            // Calculate the distance between the two points
+                            float activeDistance = Distance(pulse.Position, playerData.Position);
+                            // Adjust the timer interval based on the new syncRateMultiplier
+                            int adjustedInterval = (int)(Configuration.BSRSMillisecondDefaultInterval * (Configuration.BSRBaseMultiplier + (activeDistance * Configuration.BSRSIncreaseRate)));
+                            if (adjustedInterval > byte.MaxValue)
+                            {
+                                adjustedInterval = byte.MaxValue;
+                            }
+                            if (playerData.serverSideSyncPlayerMessage.interval != adjustedInterval)
+                            {
+                                //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
+                                playerData.timer.Change(adjustedInterval, adjustedInterval);
+                            }
+                            //how long does this data need to last for
+                            playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
+                            playerData.serverSideSyncPlayerMessage.Serialize(playerData.Writer);
+                            playerID.localClient.Send(playerData.Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
+                            playerData.Writer.Reset();
                         }
-                        //  Console.WriteLine("Adjusted Interval is" + adjustedInterval);
-                        playerData.timer.Change(adjustedInterval, adjustedInterval);
-                        //how long does this data need to last for
-                        playerData.serverSideSyncPlayerMessage.interval = (byte)adjustedInterval;
+                        catch (Exception e)
+                        {
+                            BNL.LogError("Server Reduction System Encounter Isssue " + e.Message + " " + e.StackTrace);
+                        }
                     }
-                    else
-                    {
-                        BNL.Log("Unable to find Pulse for LocalClient Wont Do Interval Adjust");
-                    }
-                    NetDataWriter Writer = NetDataWriterPool.GetWriter();
-                    if (playerData.serverSideSyncPlayerMessage.avatarSerialization.array == null || playerData.serverSideSyncPlayerMessage.avatarSerialization.array.Length == 0)
-                    {
-                        BNL.Log("Unable to send out Avatar Data Was null or Empty!");
-                    }
-                    else
-                    {
-                        playerData.serverSideSyncPlayerMessage.Serialize(Writer);
-                        playerID.localClient.Send(Writer, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
-                    }
-                    NetDataWriterPool.ReturnWriter(Writer);
-                    playerData.newDataExists = false;
                 }
+                SyncBoolArray.SetBool(playerID.dataCameFromThisUser, false);
             }
         }
     }
@@ -196,10 +200,38 @@ public class BasisServerReductionSystem
     /// <summary>
     /// Structure representing a player's server-side data that can be reduced.
     /// </summary>
-    public struct ServerSideReducablePlayer
+    public class ServerSideReducablePlayer
     {
-        public System.Threading.Timer timer;//create a new timer
-        public bool newDataExists;
+        public ManagedTimer timer;//create a new timer
         public ServerSideSyncPlayerMessage serverSideSyncPlayerMessage;
+        public NetDataWriter Writer;
+        public Vector3 Position;
+    }
+    public class ManagedTimer : IDisposable
+    {
+        private Timer _timer;
+        public bool IsDisposed = false;
+
+        public ManagedTimer(TimerCallback callback, object state, int dueTime, int period)
+        {
+            _timer = new System.Threading.Timer(callback, state, dueTime, period);
+        }
+        public void Dispose()
+        {
+            if (!IsDisposed)
+            {
+                _timer.Dispose();
+                IsDisposed = true;
+            }
+        }
+
+        public bool Change(int dueTime, int period)
+        {
+            if (IsDisposed)
+            {
+                throw new ObjectDisposedException(nameof(ManagedTimer));
+            }
+            return _timer.Change(dueTime, period);
+        }
     }
 }

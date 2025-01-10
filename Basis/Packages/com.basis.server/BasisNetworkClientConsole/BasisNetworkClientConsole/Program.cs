@@ -17,7 +17,7 @@ namespace Basis
         private static readonly object nameLock = new object(); // To synchronize name generation
         public static NetPeer LocalPLayer;
 
-        public static string Ip = "localhost";//server1.basisvr.org
+        public static string Ip = "localhost";//server1.basisvr.org //localhost
         public static int Port = 4296;
         public static void Main(string[] args)
         {
@@ -106,11 +106,9 @@ namespace Basis
                     ServerSideSyncPlayerMessage SSM = new ServerSideSyncPlayerMessage();
                     SSM.Deserialize(Reader);
                     Reader.Recycle();
-                    NetDataWriter Writer = NetDataWriterPool.GetWriter();
+                    NetDataWriter Writer = new NetDataWriter(true, 202);
                     SSM.avatarSerialization.Serialize(Writer);
                     LocalPLayer.Send(Writer, BasisNetworkCommons.MovementChannel, deliveryMethod);
-                    
-                    NetDataWriterPool.ReturnWriter(Writer);
                 }
                 else
                 {
