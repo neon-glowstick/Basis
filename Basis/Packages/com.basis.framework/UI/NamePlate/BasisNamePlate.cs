@@ -8,24 +8,20 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-
 namespace Basis.Scripts.UI.NamePlate
 {
     public abstract class BasisNamePlate : MonoBehaviour
     {
-        public BasisUIComponent BasisUIComponent;
         public Transform LocalCameraDriver;
         public Vector3 directionToCamera;
         public BasisBoneControl HipTarget;
         public BasisBoneControl MouthTarget;
-        public TextMeshProUGUI Text;
-        public Image Loadingbar;
-        public TextMeshProUGUI Loadingtext;
+        public TextMeshPro Text;
+        public SpriteRenderer Loadingbar;
+        public TextMeshPro Loadingtext;
         public float YHeightMultiplier = 1.25f;
         public BasisRemotePlayer BasisRemotePlayer;
-        public Button NamePlateButton;
-        public Image namePlateImage;
+        public SpriteRenderer namePlateImage;
         public Color NormalColor;
         public Color IsTalkingColor;
 
@@ -214,14 +210,14 @@ namespace Basis.Scripts.UI.NamePlate
             lock (actions)
             {
                 actions.Enqueue(action);
-            }
+            } 
         }
 
         public void UpdateProgressBar(float progress)
         {
-            Vector3 scale = Loadingbar.rectTransform.localScale;
-            scale.x = progress / 100;
-            Loadingbar.rectTransform.localScale = scale;
+            Vector2 scale = Loadingbar.size;
+            scale.x = progress/2;
+            Loadingbar.size = scale;
         }
 
         private void LateUpdate()
