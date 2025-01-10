@@ -19,8 +19,6 @@ namespace Basis.Scripts.Drivers
         [SerializeField]
         public BasisBoneTrackedRole[] trackedRoles;
         public bool HasControls = false;
-        public double ProvidedTime;
-        public float DeltaTime;
         public delegate void SimulationHandler();
         public event SimulationHandler OnSimulate;
         public event SimulationHandler OnPostSimulate;
@@ -32,28 +30,21 @@ namespace Basis.Scripts.Drivers
         /// <summary>
         /// call this after updating the bone data
         /// </summary>
-        public void Simulate(double timeAsDouble,float deltaTime)
+        public void Simulate(float deltaTime)
         {
             // sequence all other devices to run at the same time
-            ProvidedTime = timeAsDouble;
-            DeltaTime = deltaTime;
-            if (float.IsNaN(DeltaTime))
-            {
-                return;
-            }
-
             OnSimulate?.Invoke();
             for (int Index = 0; Index < ControlsLength; Index++)
             {
-                Controls[Index].ComputeMovement(DeltaTime);
+                Controls[Index].ComputeMovement(deltaTime);
             }
             OnPostSimulate?.Invoke();
         }
         public void SimulateWithoutLerp()
         {
             // sequence all other devices to run at the same time
-            ProvidedTime = Time.timeAsDouble;
-            DeltaTime = Time.deltaTime;
+            double ProvidedTime = Time.timeAsDouble;
+            float DeltaTime = Time.deltaTime;
             OnSimulate?.Invoke();
             for (int Index = 0; Index < ControlsLength; Index++)
             {
@@ -78,9 +69,9 @@ namespace Basis.Scripts.Drivers
                 }
             }
         }
-        public void SimulateAndApply(double timeAsDouble, float deltaTime)
+        public void SimulateAndApply( float deltaTime)
         {
-            Simulate( timeAsDouble, deltaTime);
+            Simulate(deltaTime);
             ApplyMovement();
         }
         public void SimulateAndApplyWithoutLerp()

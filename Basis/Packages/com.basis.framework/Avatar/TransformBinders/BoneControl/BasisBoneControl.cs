@@ -1,4 +1,4 @@
-﻿using Basis.Scripts.Avatar;
+using Basis.Scripts.Avatar;
 using Basis.Scripts.Common;
 using System;
 using Unity.Burst;
@@ -35,6 +35,7 @@ namespace Basis.Scripts.TransformBinders.BoneControl
         public float trackersmooth = 25;
 
         public bool IsHintRoleIgnoreRotation = false;
+        [BurstCompile]
         public void ComputeMovement(float DeltaTime)
         {
             NotProcessing = !HasBone || Cullable;
@@ -48,15 +49,15 @@ namespace Basis.Scripts.TransformBinders.BoneControl
                 {
                     if (IsHintRoleIgnoreRotation == false)
                     {                    // Update the position of the secondary transform to maintain the initial offset
-                        OutGoingData.position = Vector3.Lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
+                        OutGoingData.position = math.lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
                         // Update the rotation of the secondary transform to maintain the initial offset
-                        OutGoingData.rotation = Quaternion.Slerp(OutGoingData.rotation, math.mul(IncomingData.rotation, InverseOffsetFromBone.rotation), trackersmooth);
+                        OutGoingData.rotation = math.slerp(OutGoingData.rotation, math.mul(IncomingData.rotation, InverseOffsetFromBone.rotation), trackersmooth);
                     }
                     else
                     {
                         OutGoingData.rotation = Quaternion.identity;
                         // Update the position of the secondary transform to maintain the initial offset
-                        OutGoingData.position = Vector3.Lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
+                        OutGoingData.position = math.lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
                     }
                 }
                 else
@@ -134,7 +135,7 @@ namespace Basis.Scripts.TransformBinders.BoneControl
             // Perform spherical interpolation (slerp) with the optimized factor
             return math.slerp(CurrentRotation, FutureRotation, lerpFactor);
         }
-
+        [BurstCompile]
         private float ClampInterpolationFactor(float lerpAmount, float DeltaTime)
         {
             // Clamp the interpolation factor to ensure it stays between 0 and 1
