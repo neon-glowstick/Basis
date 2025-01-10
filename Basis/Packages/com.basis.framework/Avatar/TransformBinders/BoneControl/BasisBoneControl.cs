@@ -11,8 +11,20 @@ namespace Basis.Scripts.TransformBinders.BoneControl
     [BurstCompile]
     public class BasisBoneControl
     {
-        [SerializeField]
-        public BasisTargetControl TargetControl = new BasisTargetControl();
+        [NonSerialized]
+        public BasisBoneControl Target;
+
+        public float LerpAmountNormal;
+        public float LerpAmountFastMovement;
+        public float AngleBeforeSpeedup;
+        public bool HasRotationalTarget;
+
+        public bool HasLineDraw;
+        public int LineDrawIndex;
+        public bool HasTarget;
+        public float3 Offset;
+        public float LerpAmount;
+
         [SerializeField]
         public BasisCalibratedCoords OutGoingData = new BasisCalibratedCoords();
         [SerializeField]
@@ -77,20 +89,20 @@ namespace Basis.Scripts.TransformBinders.BoneControl
                 {
                     //this is essentially the default behaviour, most of it is normally Virtually Overriden
                     //relying on a one size fits all shoe is wrong and as of such we barely use this anymore.
-                    if (TargetControl.HasRotationalTarget)
+                    if (HasRotationalTarget)
                     {
-                        OutGoingData.rotation = ApplyLerpToQuaternion(DeltaTime, LastRunData.rotation, TargetControl.Target.OutGoingData.rotation);
+                        OutGoingData.rotation = ApplyLerpToQuaternion(DeltaTime, LastRunData.rotation, Target.OutGoingData.rotation);
                     }
 
-                    if (TargetControl.HasTarget)
+                    if (HasTarget)
                     {
                         // Apply the rotation offset using math.mul
-                        float3 customDirection = math.mul(TargetControl.Target.OutGoingData.rotation, TargetControl.Offset);
+                        float3 customDirection = math.mul(Target.OutGoingData.rotation, Offset);
 
                         // Calculate the target outgoing position with the rotated offset
-                        float3 targetPosition = TargetControl.Target.OutGoingData.position + customDirection;
+                        float3 targetPosition = Target.OutGoingData.position + customDirection;
 
-                        float lerpFactor = ClampInterpolationFactor(TargetControl.LerpAmount, DeltaTime);
+                        float lerpFactor = ClampInterpolationFactor(LerpAmount, DeltaTime);
 
                         // Interpolate between the last position and the target position
                         OutGoingData.position = math.lerp(LastRunData.position, targetPosition, lerpFactor);
@@ -120,11 +132,11 @@ namespace Basis.Scripts.TransformBinders.BoneControl
             }
 
             // Cached LerpAmount values for normal and fast movement
-            float lerpAmountNormal = TargetControl.LerpAmountNormal;
-            float lerpAmountFastMovement = TargetControl.LerpAmountFastMovement;
+            float lerpAmountNormal = LerpAmountNormal;
+            float lerpAmountFastMovement = LerpAmountFastMovement;
 
             // Timing factor for speed-up
-            float timing = math.min(angleDifference / TargetControl.AngleBeforeSpeedup, 1f);
+            float timing = math.min(angleDifference / AngleBeforeSpeedup, 1f);
 
             // Interpolate between normal and fast movement rates based on angle
             float lerpAmount = lerpAmountNormal + (lerpAmountFastMovement - lerpAmountNormal) * timing;

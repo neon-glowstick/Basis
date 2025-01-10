@@ -207,11 +207,11 @@ namespace Basis.Scripts.Drivers
                     }
                     else
                     {
-                        if (Control.TargetControl.HasTarget)
+                        if (Control.HasTarget)
                         {
-                            if (BasisGizmoManager.CreateLineGizmo(out Control.TargetControl.LineDrawIndex, BonePosition, Control.TargetControl.Target.OutgoingWorldData.position, 0.03f, Control.Color))
+                            if (BasisGizmoManager.CreateLineGizmo(out Control.LineDrawIndex, BonePosition, Control.Target.OutgoingWorldData.position, 0.03f, Control.Color))
                             {
-                                Control.TargetControl.HasLineDraw = true;
+                                Control.HasLineDraw = true;
                             }
                         }
                         if (BasisGizmoManager.CreateSphereGizmo(out Control.GizmoReference, BonePosition, DefaultGizmoSize * BasisLocalPlayer.Instance.EyeRatioAvatarToAvatarDefaultScale, Control.Color))
@@ -246,15 +246,15 @@ namespace Basis.Scripts.Drivers
         }
         public void CreateRotationalLock(BasisBoneControl addToBone, BasisBoneControl target, float lerpAmount, float positional = 40)
         {
-            addToBone.TargetControl.Target = target;
-            addToBone.TargetControl.LerpAmountNormal = lerpAmount;
-            addToBone.TargetControl.LerpAmountFastMovement = lerpAmount * 4;
-            addToBone.TargetControl.AngleBeforeSpeedup = 25f;
-            addToBone.TargetControl.HasRotationalTarget = target != null;
-            addToBone.TargetControl.Offset = addToBone.TposeLocal.position - target.TposeLocal.position;
-            addToBone.TargetControl.Target = target;
-            addToBone.TargetControl.LerpAmount = positional;
-            addToBone.TargetControl.HasTarget = target != null;
+            addToBone.Target = target;
+            addToBone.LerpAmountNormal = lerpAmount;
+            addToBone.LerpAmountFastMovement = lerpAmount * 4;
+            addToBone.AngleBeforeSpeedup = 25f;
+            addToBone.HasRotationalTarget = target != null;
+            addToBone.Offset = addToBone.TposeLocal.position - target.TposeLocal.position;
+            addToBone.Target = target;
+            addToBone.LerpAmount = positional;
+            addToBone.HasTarget = target != null;
         }
         public static Vector3 ConvertToAvatarSpaceInital(Animator animator, Vector3 WorldSpace, float AvatarHeightOffset)// out Vector3 FloorPosition
         {
@@ -285,11 +285,11 @@ namespace Basis.Scripts.Drivers
             if (Control.HasBone)
             {
                 Vector3 BonePosition = Control.OutgoingWorldData.position;
-                if (Control.TargetControl.HasTarget)
+                if (Control.HasTarget)
                 {
-                    if (Control.TargetControl.HasLineDraw)
+                    if (Control.HasLineDraw)
                     {
-                        BasisGizmoManager.UpdateLineGizmo(Control.TargetControl.LineDrawIndex, BonePosition, Control.TargetControl.Target.OutgoingWorldData.position);
+                        BasisGizmoManager.UpdateLineGizmo(Control.LineDrawIndex, BonePosition, Control.Target.OutgoingWorldData.position);
                     }
                 }
                 if (BasisLocalPlayer.Instance.LocalBoneDriver.FindTrackedRole(Control, out BasisBoneTrackedRole Role))
