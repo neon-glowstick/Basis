@@ -50,7 +50,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
         /// <param name="baseReceiver"></param>
         /// <param name="syncMessage"></param>
         /// <exception cref="ArgumentException"></exception>
-        public static void DecompressAndProcessAvatar(BasisNetworkReceiver baseReceiver, LocalAvatarSyncMessage syncMessage,ushort PlayerId)
+        public static void DecompressAndProcessAvatar(BasisNetworkReceiver baseReceiver, LocalAvatarSyncMessage syncMessage, ushort PlayerId)
         {
             if (syncMessage.array == null)
             {
@@ -84,7 +84,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                 for (int Index = 0; Index < Count; Index++)
                 {
                     AdditionalAvatarData Data = syncMessage.AdditionalAvatarDatas[Index];
-                    baseReceiver.Player.BasisAvatar.OnNetworkMessageReceived?.Invoke(PlayerId, Data.messageIndex, Data.array, LiteNetLib.DeliveryMethod.Sequenced);
+                    //wont ever work    baseReceiver.Player.BasisAvatar.OnNetworkMessageReceived?.Invoke(PlayerId, Data.messageIndex, Data.array, LiteNetLib.DeliveryMethod.Sequenced);
                 }
             }
         }
