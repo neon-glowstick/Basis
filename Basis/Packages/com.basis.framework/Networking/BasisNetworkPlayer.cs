@@ -146,12 +146,19 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
         }
         private void OnServerReductionSystemMessageSend(byte MessageIndex, byte[] buffer = null)
         {
-            AdditionalAvatarData AAD = new AdditionalAvatarData
+            if (BasisNetworkManagement.Instance != null && BasisNetworkManagement.Instance.Transmitter != null)
             {
-                array = buffer,
-                messageIndex = MessageIndex
-            };
-            BasisNetworkManagement.Instance.Transmitter.AddAdditonal(AAD);
+                AdditionalAvatarData AAD = new AdditionalAvatarData
+                {
+                    array = buffer,
+                    messageIndex = MessageIndex
+                };
+                BasisNetworkManagement.Instance.Transmitter.AddAdditonal(AAD);
+            }
+            else
+            {
+                BasisDebug.LogError("Missing Transmitter or Network Management", BasisDebug.LogTag.Networking);
+            }
         }
         private void OnNetworkMessageSend(byte MessageIndex, byte[] buffer = null, DeliveryMethod DeliveryMethod = DeliveryMethod.Sequenced, ushort[] Recipients = null)
         {
