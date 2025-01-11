@@ -32,7 +32,8 @@ public static partial class SerializableBasis
             }
             else
             {
-               byte Size = (byte)array.Length;
+                Writer.Put(messageIndex);
+                byte Size = (byte)array.Length;
                 Writer.Put(Size);
                 Writer.Put(array);
             }
