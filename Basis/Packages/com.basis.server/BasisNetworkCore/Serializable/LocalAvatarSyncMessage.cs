@@ -20,6 +20,7 @@ public static partial class SerializableBasis
                 Writer.GetBytes(array, AvatarSyncSize);
                 if (Writer.EndOfData)
                 {
+                    AdditionalAvatarDatas = null;
                     hasAdditionalAvatarData = false;
                 }
                 else
@@ -27,7 +28,7 @@ public static partial class SerializableBasis
                     List<AdditionalAvatarData> list = new List<AdditionalAvatarData>();
                     while (Writer.AvailableBytes != 0)
                     {
-                        BNL.Log("Deserialize AAD");
+                       // BNL.Log("Deserialize AAD");
                         AdditionalAvatarData AAD = new AdditionalAvatarData();
                         AAD.Deserialize(Writer);
                         list.Add(AAD);
@@ -53,9 +54,11 @@ public static partial class SerializableBasis
             }
             if (hasAdditionalAvatarData)
             {
-                BNL.Log("Serialize AAD");
-                foreach (AdditionalAvatarData AAD in AdditionalAvatarDatas)
+                // BNL.Log("Serialize AAD");
+                int count = AdditionalAvatarDatas.Length;
+                for (int Index = 0; Index < count; Index++)
                 {
+                    AdditionalAvatarData AAD = AdditionalAvatarDatas[Index];
                     AAD.Serialize(Writer);
                 }
             }
