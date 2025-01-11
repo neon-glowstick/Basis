@@ -74,7 +74,7 @@ public static class BasisNetworkGenericMessages
                 }
                 else
                 {
-                    player.Player.BasisAvatar.OnNetworkMessageReceived.Invoke(serverAvatarDataMessage.playerIdMessage.playerID, output.messageIndex, output.payload, Method);
+                    player.Player.BasisAvatar.OnNetworkMessageReceived?.Invoke(serverAvatarDataMessage.playerIdMessage.playerID, output.messageIndex, output.payload, Method);
                 }
             }
             else
