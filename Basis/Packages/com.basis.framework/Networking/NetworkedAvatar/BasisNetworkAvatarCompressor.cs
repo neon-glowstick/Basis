@@ -27,7 +27,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             {
                 Transmit.LASM.AdditionalAvatarDatas = Transmit.SendingOutAvatarData.Values.ToArray();
                 Transmit.LASM.hasAdditionalAvatarData = true;
-                BasisDebug.Log("Sending out AvatarData " + Transmit.SendingOutAvatarData.Count);
+              //  BasisDebug.Log("Sending out AvatarData " + Transmit.SendingOutAvatarData.Count);
             }
             Transmit.LASM.Serialize(Transmit.AvatarSendWriter);
             BasisNetworkProfiler.LocalAvatarSyncMessageCounter.Sample(Transmit.AvatarSendWriter.Length);

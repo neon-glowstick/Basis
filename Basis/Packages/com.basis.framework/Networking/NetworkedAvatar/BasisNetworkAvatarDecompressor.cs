@@ -36,7 +36,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             if (syncMessage.avatarSerialization.hasAdditionalAvatarData)
             {
                 int Count = syncMessage.avatarSerialization.AdditionalAvatarDatas.Length;
-                BasisDebug.Log("Rec out AvatarData " + Count);
+              //  BasisDebug.Log("Rec out AvatarData " + Count);
                 for (int Index = 0; Index < Count; Index++)
                 {
                     AdditionalAvatarData Data = syncMessage.avatarSerialization.AdditionalAvatarDatas[Index];
@@ -80,7 +80,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             if (syncMessage.hasAdditionalAvatarData)
             {
                 int Count = syncMessage.AdditionalAvatarDatas.Length;
-                BasisDebug.Log("Rec out AvatarData " + Count);
+               //BasisDebug.Log("Rec out AvatarData " + Count);
                 for (int Index = 0; Index < Count; Index++)
                 {
                     AdditionalAvatarData Data = syncMessage.AdditionalAvatarDatas[Index];
