@@ -18,7 +18,7 @@ public static partial class SerializableBasis
                 //now 178 for muscles, 3*4 for position 12, 4*4 for rotation 16-2 (W is half) = 204
                 array ??= new byte[AvatarSyncSize];
                 Writer.GetBytes(array, AvatarSyncSize);
-                if (Writer.EndOfData == false)
+                if (Writer.EndOfData)
                 {
                     hasAdditionalAvatarData = false;
                 }
@@ -27,6 +27,7 @@ public static partial class SerializableBasis
                     List<AdditionalAvatarData> list = new List<AdditionalAvatarData>();
                     while (Writer.AvailableBytes != 0)
                     {
+                        BNL.Log("Deserialize AAD");
                         AdditionalAvatarData AAD = new AdditionalAvatarData();
                         AAD.Deserialize(Writer);
                         list.Add(AAD);
@@ -52,6 +53,7 @@ public static partial class SerializableBasis
             }
             if (hasAdditionalAvatarData)
             {
+                BNL.Log("Serialize AAD");
                 foreach (AdditionalAvatarData AAD in AdditionalAvatarDatas)
                 {
                     AAD.Serialize(Writer);
