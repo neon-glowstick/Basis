@@ -47,11 +47,13 @@ namespace Basis
                     RM.clientAvatarChangeMessage = new ClientAvatarChangeMessage
                     {
                         byteArray = new byte[0],
-                        loadMode = 2
+                        loadMode = 2,
                     };
                     RM.localAvatarSyncMessage = new LocalAvatarSyncMessage
                     {
                         array = AvatarMessage,
+                        hasAdditionalAvatarData = false,
+                        AdditionalAvatarDatas = null,
                     };
                     AuthenticationMessage Authmessage = new AuthenticationMessage
                     {

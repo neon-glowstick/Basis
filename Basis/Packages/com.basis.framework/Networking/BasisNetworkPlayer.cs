@@ -121,6 +121,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                 if (!basisAvatar.HasSendEvent)
                 {
                     basisAvatar.OnNetworkMessageSend += OnNetworkMessageSend;
+                    basisAvatar.OnServerReductionSystemMessageSend += OnServerReductionSystemMessageSend;
                     basisAvatar.HasSendEvent = true;
                 }
 
@@ -142,6 +143,15 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                 return false;
             }
             return true;
+        }
+        private void OnServerReductionSystemMessageSend(byte MessageIndex, byte[] buffer = null)
+        {
+            AdditionalAvatarData AAD = new AdditionalAvatarData
+            {
+                array = buffer,
+                messageIndex = MessageIndex
+            };
+            BasisNetworkManagement.Instance.Transmitter.AddAdditonal(AAD);
         }
         private void OnNetworkMessageSend(byte MessageIndex, byte[] buffer = null, DeliveryMethod DeliveryMethod = DeliveryMethod.Sequenced, ushort[] Recipients = null)
         {

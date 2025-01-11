@@ -1,4 +1,5 @@
 using LiteNetLib.Utils;
+using System.Collections.Generic;
 public static partial class SerializableBasis
 {
     public struct LocalAvatarSyncMessage
@@ -6,15 +7,33 @@ public static partial class SerializableBasis
         public byte[] array;
         public const int AvatarSyncSize = 202;
         public const int StoredBones = 89;
+        public AdditionalAvatarData[] AdditionalAvatarDatas;
+        public bool hasAdditionalAvatarData;
         public void Deserialize(NetDataReader Writer)
         {
             int Bytes = Writer.AvailableBytes;
             if (Bytes >= AvatarSyncSize)
             {
-                array ??= new byte[AvatarSyncSize];
-                Writer.GetBytes(array, AvatarSyncSize);
                 //89 * 2 = 178 + 12 + 14 = 204
                 //now 178 for muscles, 3*4 for position 12, 4*4 for rotation 16-2 (W is half) = 204
+                array ??= new byte[AvatarSyncSize];
+                Writer.GetBytes(array, AvatarSyncSize);
+                if (Writer.EndOfData == false)
+                {
+                    hasAdditionalAvatarData = false;
+                }
+                else
+                {
+                    List<AdditionalAvatarData> list = new List<AdditionalAvatarData>();
+                    while (Writer.AvailableBytes != 0)
+                    {
+                        AdditionalAvatarData AAD = new AdditionalAvatarData();
+                        AAD.Deserialize(Writer);
+                        list.Add(AAD);
+                    }
+                    AdditionalAvatarDatas = list.ToArray();
+                    hasAdditionalAvatarData = true;
+                }
             }
             else
             {
@@ -30,6 +49,13 @@ public static partial class SerializableBasis
             else
             {
                 Writer.Put(array);
+            }
+            if (hasAdditionalAvatarData)
+            {
+                foreach (AdditionalAvatarData AAD in AdditionalAvatarDatas)
+                {
+                    AAD.Serialize(Writer);
+                }
             }
         }
     }

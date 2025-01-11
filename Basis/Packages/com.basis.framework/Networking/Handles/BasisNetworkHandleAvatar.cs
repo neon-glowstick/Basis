@@ -16,7 +16,7 @@ public static class BasisNetworkHandleAvatar
         SSM.Deserialize(Reader);
         if (BasisNetworkManagement.RemotePlayers.TryGetValue(SSM.playerIdMessage.playerID, out BasisNetworkReceiver player))
         {
-            BasisNetworkAvatarDecompressor.DecompressAndProcessAvatar(player, SSM);
+            BasisNetworkAvatarDecompressor.DecompressAndProcessAvatar(player, SSM, SSM.playerIdMessage.playerID);
         }
         else
         {
@@ -29,7 +29,7 @@ public static class BasisNetworkHandleAvatar
             BasisDebug.LogError("Messages Exceeded 250! Resetting");
         }
     }
-    public static void HandleAvatarChangeMessage(LiteNetLib.NetPacketReader reader)
+    public static void HandleAvatarChangeMessage(NetPacketReader reader)
     {
         ServerAvatarChangeMessage ServerAvatarChangeMessage = new ServerAvatarChangeMessage();
         ServerAvatarChangeMessage.Deserialize(reader);

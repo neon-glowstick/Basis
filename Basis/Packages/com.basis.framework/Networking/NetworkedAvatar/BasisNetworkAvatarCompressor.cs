@@ -4,6 +4,7 @@ using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
 using LiteNetLib;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
@@ -13,13 +14,26 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
 {
     public static class BasisNetworkAvatarCompressor
     {
-        public static void Compress(BasisNetworkTransmitter NetworkSendBase, Animator Anim)
+        public static void Compress(BasisNetworkTransmitter Transmit, Animator Anim)
         {
-            CompressAvatarData(ref NetworkSendBase.Offset, ref NetworkSendBase.FloatArray, ref NetworkSendBase.UshortArray, ref NetworkSendBase.LASM, NetworkSendBase.PoseHandler, NetworkSendBase.HumanPose, Anim);
-            NetworkSendBase.LASM.Serialize(NetworkSendBase.AvatarSendWriter);
-            BasisNetworkProfiler.LocalAvatarSyncMessageCounter.Sample(NetworkSendBase.AvatarSendWriter.Length);
-            BasisNetworkManagement.LocalPlayerPeer.Send(NetworkSendBase.AvatarSendWriter, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
-            NetworkSendBase.AvatarSendWriter.Reset();
+            CompressAvatarData(ref Transmit.Offset, ref Transmit.FloatArray,ref Transmit.UshortArray, ref Transmit.LASM,Transmit.PoseHandler, Transmit.HumanPose, Anim);
+
+            if (Transmit.SendingOutAvatarData.Count == 0)
+            {
+                Transmit.LASM.AdditionalAvatarDatas = null;
+                Transmit.LASM.hasAdditionalAvatarData = false;
+            }
+            else
+            {
+                Transmit.LASM.AdditionalAvatarDatas = Transmit.SendingOutAvatarData.Values.ToArray();
+                Transmit.LASM.hasAdditionalAvatarData = true;
+                BasisDebug.Log("Sending out AvatarData " + Transmit.SendingOutAvatarData.Count);
+            }
+            Transmit.LASM.Serialize(Transmit.AvatarSendWriter);
+            BasisNetworkProfiler.LocalAvatarSyncMessageCounter.Sample(Transmit.AvatarSendWriter.Length);
+            BasisNetworkManagement.LocalPlayerPeer.Send(Transmit.AvatarSendWriter, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
+            Transmit.AvatarSendWriter.Reset();
+            Transmit.ClearAdditional();
         }
         public static void InitalAvatarData(Animator Anim, out LocalAvatarSyncMessage LocalAvatarSyncMessage)
         {

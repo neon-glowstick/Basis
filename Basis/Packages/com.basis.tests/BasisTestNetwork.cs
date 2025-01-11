@@ -46,6 +46,7 @@ public class BasisTestNetwork : MonoBehaviour
         }
         BasisScene.OnNetworkMessageReceived -= OnNetworkMessageReceived;
     }
+    public byte[] SendingOutBytes = new byte[3];
     public void LateUpdate()
     {
         if (Send)
@@ -56,7 +57,7 @@ public class BasisTestNetwork : MonoBehaviour
 
            // avatar.NetworkMessageSend(1, Method);
            // avatar.NetworkMessageSend(2, null, Method);
-            avatar.NetworkMessageSend(3, null, Method, Players);
+            avatar.ServerReductionSystemMessageSend(3, SendingOutBytes);
 
           //  avatar.NetworkMessageSend(4, null, Method, null);
 

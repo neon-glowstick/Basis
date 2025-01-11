@@ -55,6 +55,22 @@ namespace Basis.Scripts.Networking.Transmitters
         public bool[] HearingIndex;
         public bool[] AvatarIndex;
         public ushort[] HearingIndexToId;
+
+        public AdditionalAvatarData[] AdditionalAvatarDatas;
+        public Dictionary<byte, AdditionalAvatarData> SendingOutAvatarData = new Dictionary<byte, AdditionalAvatarData>();
+        /// <summary>
+        /// schedules data going out. replaces existing byte index.
+        /// </summary>
+        /// <param name="AvatarData"></param>
+        public void AddAdditonal(AdditionalAvatarData AvatarData)
+        {
+            SendingOutAvatarData[AvatarData.messageIndex] = AvatarData;
+        }
+        public void ClearAdditional()
+        {
+            SendingOutAvatarData.Clear();
+        }
+
         void SendOutLatest()
         {
             timer += Time.deltaTime;
@@ -220,7 +236,7 @@ namespace Basis.Scripts.Networking.Transmitters
                 {
                     Player.OnAvatarSwitchedFallBack += OnAvatarCalibrationLocal;
                     Player.OnAvatarSwitched += OnAvatarCalibrationLocal;
-                    Player.OnAvatarSwitched += SendOutLatestAvatar;
+                    Player.OnAvatarSwitched += SendOutAvatarChange;
                     BasisLocalInputActions.AfterAvatarChanges += SendOutLatest;
                     HasEvents = true;
                 }
@@ -314,7 +330,7 @@ namespace Basis.Scripts.Networking.Transmitters
             {
                 Player.OnAvatarSwitchedFallBack -= OnAvatarCalibrationLocal;
                 Player.OnAvatarSwitched -= OnAvatarCalibrationLocal;
-                Player.OnAvatarSwitched -= SendOutLatestAvatar;
+                Player.OnAvatarSwitched -= SendOutAvatarChange;
                 BasisLocalInputActions.AfterAvatarChanges -= SendOutLatest;
                 if (targetPositions.IsCreated) targetPositions.Dispose();
                 if (distances.IsCreated) distances.Dispose();
@@ -337,7 +353,7 @@ namespace Basis.Scripts.Networking.Transmitters
                 HasEvents = false;
             }
         }
-        public void SendOutLatestAvatar()
+        public void SendOutAvatarChange()
         {
             NetDataWriter Writer = new NetDataWriter();
             ClientAvatarChangeMessage ClientAvatarChangeMessage = new ClientAvatarChangeMessage

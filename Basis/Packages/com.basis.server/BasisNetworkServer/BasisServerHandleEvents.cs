@@ -487,7 +487,7 @@ namespace BasisServerHandle
 
                 if (!BasisSavedState.GetLastAvatarSyncState(peer, out var syncState))
                 {
-                    syncState = new LocalAvatarSyncMessage() { array = new byte[386] };
+                    syncState = new LocalAvatarSyncMessage() { array = new byte[386], hasAdditionalAvatarData = false, AdditionalAvatarDatas = null };
                 }
 
                 if (!BasisSavedState.GetLastPlayerMetaData(peer, out var metaData))

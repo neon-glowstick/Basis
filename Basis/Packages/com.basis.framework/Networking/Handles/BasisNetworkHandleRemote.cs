@@ -67,7 +67,7 @@ namespace Basis.Scripts.Networking
                 }
                 BasisNetworkReceiver.Initialize();//fires events and makes us network compatible
                 BasisDebug.Log("Added Player " + ServerReadyMessage.playerIdMessage.playerID);
-                BasisNetworkAvatarDecompressor.DecompressAndProcessAvatar(BasisNetworkReceiver, ServerReadyMessage.localReadyMessage.localAvatarSyncMessage);
+                BasisNetworkAvatarDecompressor.DecompressAndProcessAvatar(BasisNetworkReceiver, ServerReadyMessage.localReadyMessage.localAvatarSyncMessage, ServerReadyMessage.playerIdMessage.playerID);
                 BasisNetworkManagement.OnRemotePlayerJoined?.Invoke(BasisNetworkReceiver, remote);
 
                 BasisNetworkManagement.JoiningPlayers.Remove(ServerReadyMessage.playerIdMessage.playerID);
