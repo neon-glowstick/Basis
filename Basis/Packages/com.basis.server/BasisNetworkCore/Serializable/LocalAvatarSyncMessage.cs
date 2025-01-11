@@ -5,7 +5,7 @@ public static partial class SerializableBasis
     public struct LocalAvatarSyncMessage
     {
         public byte[] array;
-        public const int AvatarSyncSize = 202;
+        public const int AvatarSyncSize = 204;
         public const int StoredBones = 89;
         public AdditionalAvatarData[] AdditionalAvatarDatas;
         public bool hasAdditionalAvatarData;
