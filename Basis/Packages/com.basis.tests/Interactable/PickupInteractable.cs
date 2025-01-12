@@ -30,7 +30,7 @@ public class PickupInteractable : InteractableObject
     private bool previousKinematicValue = true;
     
     // constants
-    const string k_LoadMaterialAddress = "Assets/Interactable/InteractHighlightMat.mat";
+    const string k_LoadMaterialAddress = "Interactable/InteractHighlightMat.mat";
     const string k_CloneName = "HighlightClone";
     private static Quaternion rotCapsuleX;
     private static Quaternion rotCapsuleZ;

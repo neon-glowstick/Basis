@@ -2,7 +2,6 @@
 
 using UnityEngine;
 using Basis.Scripts.UI;
-using Basis.Scripts.Networking.NetworkedPlayer;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management;
 using System.Collections.Generic;
@@ -51,7 +50,7 @@ public class PlayerInteract : MonoBehaviour
     public bool renderInteractLine = true;
 
     // TODO: load with addressable.  
-    public static string LoadMaterialAddress = "Assets/Interactable/InteractLineMat.mat";
+    public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
 
 
     void Start()
