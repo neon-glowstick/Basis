@@ -33,6 +33,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             BasisNetworkProfiler.ServerSideSyncPlayerMessageCounter.Sample(Length);
             avatarBuffer.SecondsInterval = syncMessage.interval / 1000.0f;
             baseReceiver.EnQueueAvatarBuffer(ref avatarBuffer);
+            /*
             if (syncMessage.avatarSerialization.hasAdditionalAvatarData)
             {
                 int Count = syncMessage.avatarSerialization.AdditionalAvatarDatas.Length;
@@ -43,6 +44,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                     baseReceiver.Player.BasisAvatar.OnNetworkMessageReceived?.Invoke(PlayerId, Data.messageIndex, Data.array, LiteNetLib.DeliveryMethod.Sequenced);
                 }
             }
+            */
         }
         /// <summary>
         /// Inital Payload
@@ -77,6 +79,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             BasisNetworkProfiler.ServerSideSyncPlayerMessageCounter.Sample(Length);
             avatarBuffer.SecondsInterval = 0.01f;
             baseReceiver.EnQueueAvatarBuffer(ref avatarBuffer);
+            /*
             if (syncMessage.hasAdditionalAvatarData)
             {
                 int Count = syncMessage.AdditionalAvatarDatas.Length;
@@ -87,6 +90,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                     //wont ever work    baseReceiver.Player.BasisAvatar.OnNetworkMessageReceived?.Invoke(PlayerId, Data.messageIndex, Data.array, LiteNetLib.DeliveryMethod.Sequenced);
                 }
             }
+            */
         }
         public static float Decompress(ushort value, float MinValue, float MaxValue)
         {

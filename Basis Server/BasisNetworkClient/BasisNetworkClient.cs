@@ -42,7 +42,7 @@ public static class BasisNetworkClient
             //this is the only time we dont put key!
             Writer.Put(BasisNetworkVersion.ServerVersion);
             AuthenticationMessage.Serialize(Writer);
-            ReadyMessage.Serialize(Writer);
+            ReadyMessage.Serialize(Writer,false);
             peer = client.Connect(IP, port, Writer);
             return peer;
         }

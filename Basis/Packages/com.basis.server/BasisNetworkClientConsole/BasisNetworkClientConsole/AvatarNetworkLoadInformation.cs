@@ -1,6 +1,4 @@
 using System.IO.Compression;
-using System.IO;
-using System;
 
 namespace Basis.Scripts.BasisSdk.Players
 {

@@ -1,7 +1,7 @@
 using Basis.Network.Core;
+using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Networking.Compression;
 using BasisNetworkClientConsole;
-using BasisNetworkCore;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Text;
@@ -19,6 +19,16 @@ namespace Basis
 
         public static string Ip = "localhost";//server1.basisvr.org //localhost
         public static int Port = 4296;
+
+        public static byte[] AvatarMessage = new byte[LocalAvatarSyncMessage.AvatarSyncSize];
+        public static Vector3 Position = new Vector3(0, 0, 0);
+        public static Quaternion Rotation = new Quaternion(0, 0, 0, 1);
+        public static float[] FloatArray = new float[LocalAvatarSyncMessage.StoredBones];
+        public static ushort[] UshortArray = new ushort[LocalAvatarSyncMessage.StoredBones];
+        private const ushort UShortMin = ushort.MinValue; // 0
+        private const ushort UShortMax = ushort.MaxValue; // 65535
+        private const ushort ushortRangeDifference = UShortMax - UShortMin;
+        public static BasisRangedUshortFloatData RotationCompression = new BasisRangedUshortFloatData(-1f, 1f, 0.001f);
         public static void Main(string[] args)
         {
             // Set up global exception handlers
@@ -44,16 +54,25 @@ namespace Basis
                     };
                     RM.playerMetaDataMessage.playerDisplayName = randomPlayerName;
                     RM.playerMetaDataMessage.playerUUID = randomUUID;
+
+                    AvatarNetworkLoadInformation ANLI = new AvatarNetworkLoadInformation
+                    {
+                        AvatarMetaUrl = "",
+                        AvatarBundleUrl = "",
+                        UnlockPassword = ""
+                    };
+                    byte[] Bytes = ANLI.EncodeToBytes();
+                    //0 downloading 1 local
                     RM.clientAvatarChangeMessage = new ClientAvatarChangeMessage
                     {
-                        byteArray = new byte[0],
-                        loadMode = 2,
+                        byteArray = Bytes,
+                        loadMode = 2,//0 is normal 
                     };
                     RM.localAvatarSyncMessage = new LocalAvatarSyncMessage
                     {
                         array = AvatarMessage,
                         hasAdditionalAvatarData = false,
-                        AdditionalAvatarDatas = null,
+                       AdditionalAvatarDatas = null,
                     };
                     AuthenticationMessage Authmessage = new AuthenticationMessage
                     {
@@ -61,7 +80,7 @@ namespace Basis
                     };
                     BasisNetworkClient.AuthenticationMessage = Authmessage;
                     LocalPLayer = BasisNetworkClient.StartClient(Ip, Port, RM, true);
-                 //   BasisNetworkClient.listener.NetworkReceiveEvent += NetworkReceiveEvent;
+                    //   BasisNetworkClient.listener.NetworkReceiveEvent += NetworkReceiveEvent;
                     BNL.Log($"Connecting! Player Name: {randomPlayerName}, UUID: {randomUUID}");
                 }
                 catch (Exception ex)
@@ -92,11 +111,10 @@ namespace Basis
             // Keep the application running
             while (true)
             {
-               SendMovement();
+                SendMovement();
                 Thread.Sleep(33);
             }
         }
-
         private static void NetworkReceiveEvent(NetPeer peer, NetPacketReader Reader, byte channel, DeliveryMethod deliveryMethod)
         {
 
@@ -106,10 +124,10 @@ namespace Basis
                 if (BasisNetworkCommons.MovementChannel == channel)
                 {
                     ServerSideSyncPlayerMessage SSM = new ServerSideSyncPlayerMessage();
-                    SSM.Deserialize(Reader);
+                    SSM.Deserialize(Reader,true);
                     Reader.Recycle();
                     NetDataWriter Writer = new NetDataWriter(true, 202);
-                    SSM.avatarSerialization.Serialize(Writer);
+                    SSM.avatarSerialization.Serialize(Writer, true);
                     LocalPLayer.Send(Writer, BasisNetworkCommons.MovementChannel, deliveryMethod);
                 }
                 else
@@ -138,12 +156,6 @@ namespace Basis
 
             }
         }
-
-        public static byte[] AvatarMessage = new byte[LocalAvatarSyncMessage.AvatarSyncSize];
-        public static Vector3 Position = new Vector3(0,0,0);
-        public static Quaternion Rotation = new Quaternion(0,0,0,1);
-        public static float[] FloatArray = new float[LocalAvatarSyncMessage.StoredBones];
-        public static ushort[] UshortArray = new ushort[LocalAvatarSyncMessage.StoredBones];
         public static void SendMovement()
         {
             if (LocalPLayer != null)
@@ -166,10 +178,6 @@ namespace Basis
             float normalized = (value - MinValue) / (valueDiffence); // 0..1
             return (ushort)(normalized * ushortRangeDifference);//+ UShortMin (its always zero)
         }
-        private const ushort UShortMin = ushort.MinValue; // 0
-        private const ushort UShortMax = ushort.MaxValue; // 65535
-        private const ushort ushortRangeDifference = UShortMax - UShortMin;
-        public static BasisRangedUshortFloatData RotationCompression = new BasisRangedUshortFloatData(-1f, 1f, 0.001f);
         public static void WriteUShortsToBytes(ushort[] values, ref byte[] bytes, ref int offset)
         {
             EnsureSize(ref bytes, offset + LengthUshortBytes);

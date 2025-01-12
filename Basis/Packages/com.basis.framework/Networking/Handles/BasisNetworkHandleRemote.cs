@@ -17,13 +17,13 @@ namespace Basis.Scripts.Networking
         {
             BasisDebug.Log("Handling Create Remote Player!");
             ServerReadyMessage ServerReadyMessage = new ServerReadyMessage();
-            ServerReadyMessage.Deserialize(reader);
+            ServerReadyMessage.Deserialize(reader, true);
             await CreateRemotePlayer(ServerReadyMessage, Parent);
         }
         public static async Task HandleCreateAllRemoteClients(LiteNetLib.NetPacketReader reader, Transform Parent)
         {
             CreateAllRemoteMessage createAllRemoteMessage = new CreateAllRemoteMessage();
-            createAllRemoteMessage.Deserialize(reader);
+            createAllRemoteMessage.Deserialize(reader,false);
             int RemoteLength = createAllRemoteMessage.serverSidePlayer.Length;
             BasisDebug.Log("Handling Create All Remote Players! Total Connections To Create " + RemoteLength);
             // Create a list to hold the tasks

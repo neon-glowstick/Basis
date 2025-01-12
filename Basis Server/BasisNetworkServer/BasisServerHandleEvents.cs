@@ -153,7 +153,7 @@ namespace BasisServerHandle
                     BasisPlayerArray.AddPlayer(newPeer);
                     BNL.Log($"Peer connected: {newPeer.Id}");
                     ReadyMessage readyMessage = new ReadyMessage();
-                    readyMessage.Deserialize(request.Data);
+                    readyMessage.Deserialize(request.Data,false);
                     if (readyMessage.WasDeserializedCorrectly())
                     {
                         SendRemoteSpawnMessage(newPeer, readyMessage);
@@ -275,7 +275,7 @@ namespace BasisServerHandle
         public static void HandleAvatarMovement(NetPacketReader Reader, NetPeer Peer)
         {
             LocalAvatarSyncMessage LocalAvatarSyncMessage = new LocalAvatarSyncMessage();
-            LocalAvatarSyncMessage.Deserialize(Reader);
+            LocalAvatarSyncMessage.Deserialize(Reader, true);
             Reader.Recycle();
             BasisSavedState.AddLastData(Peer, LocalAvatarSyncMessage);
             ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
@@ -405,7 +405,7 @@ namespace BasisServerHandle
         public static void NotifyExistingClients(ServerReadyMessage serverSideSyncPlayerMessage, NetPeer authClient)
         {
             NetDataWriter Writer = new NetDataWriter(true, 2);
-            serverSideSyncPlayerMessage.Serialize(Writer);
+            serverSideSyncPlayerMessage.Serialize(Writer, false);
             ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
 
             foreach (NetPeer client in Peers)
@@ -467,7 +467,7 @@ namespace BasisServerHandle
                 };
 
                 NetDataWriter writer = new NetDataWriter(true, 2);
-                remoteMessages.Serialize(writer);
+                remoteMessages.Serialize(writer, false);
                 authClient.Send(writer, BasisNetworkCommons.CreateRemotePlayers, DeliveryMethod.ReliableOrdered);
                 BNL.Log($"Sent client list ({serverReadyMessages.Count} clients) to new peer {authClient.Id}.");
             }

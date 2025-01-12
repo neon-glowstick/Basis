@@ -440,7 +440,7 @@ namespace Basis.Scripts.Networking
                     Reader.Recycle();
                     break;
                 case BasisNetworkCommons.MovementChannel:
-                     BasisNetworkHandleAvatar.HandleAvatarUpdate(Reader);
+                     BasisNetworkHandleAvatar.HandleAvatarUpdate(Reader,true);
                     Reader.Recycle();
                     break;
                 case BasisNetworkCommons.SceneChannel:

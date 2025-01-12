@@ -29,7 +29,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
                 Transmit.LASM.hasAdditionalAvatarData = true;
               //  BasisDebug.Log("Sending out AvatarData " + Transmit.SendingOutAvatarData.Count);
             }
-            Transmit.LASM.Serialize(Transmit.AvatarSendWriter);
+            Transmit.LASM.Serialize(Transmit.AvatarSendWriter,true);
             BasisNetworkProfiler.LocalAvatarSyncMessageCounter.Sample(Transmit.AvatarSendWriter.Length);
             BasisNetworkManagement.LocalPlayerPeer.Send(Transmit.AvatarSendWriter, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
             Transmit.AvatarSendWriter.Reset();
