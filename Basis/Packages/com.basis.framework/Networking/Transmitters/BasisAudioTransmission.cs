@@ -1,10 +1,6 @@
-using System;
 using UnityEngine;
 using UnityOpus;
-
-
 using LiteNetLib;
-using Basis.Scripts.Networking.NetworkedPlayer;
 using Basis.Scripts.Networking.NetworkedAvatar;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management;
@@ -19,8 +15,7 @@ namespace Basis.Scripts.Networking.Transmitters
     public class BasisAudioTransmission
     {
         public Encoder encoder;
-        public BasisNetworkedPlayer NetworkedPlayer;
-        public BasisNetworkSendBase Base;
+        public BasisNetworkPlayer NetworkedPlayer;
         public BasisOpusSettings settings;
         public BasisLocalPlayer Local;
         public MicrophoneRecorder Recorder;
@@ -29,13 +24,12 @@ namespace Basis.Scripts.Networking.Transmitters
         public AudioSegmentDataMessage AudioSegmentData = new AudioSegmentDataMessage();
         public AudioSegmentDataMessage audioSilentSegmentData = new AudioSegmentDataMessage();
         public bool HasEvents = false;
-        public void OnEnable(BasisNetworkedPlayer networkedPlayer)
+        public void OnEnable(BasisNetworkPlayer networkedPlayer)
         {
             if (!IsInitalized)
             {
                 // Assign the networked player and base network send functionality
                 NetworkedPlayer = networkedPlayer;
-                Base = networkedPlayer.NetworkSend;
 
                 // Retrieve the Opus settings from the singleton instance
                 settings = BasisDeviceManagement.Instance.BasisOpusSettings;
@@ -89,7 +83,7 @@ namespace Basis.Scripts.Networking.Transmitters
         }
         public void OnAudioReady()
         {
-            if (Base.HasReasonToSendAudio)
+            if (NetworkedPlayer.HasReasonToSendAudio)
             {
                 // UnityEngine.BasisDebug.Log("Sending out Audio");
                 if (Recorder.PacketSize != AudioSegmentData.buffer.Length)
@@ -106,12 +100,12 @@ namespace Basis.Scripts.Networking.Transmitters
             }
             else
             {
-              //  UnityEngine.BasisDebug.Log("Rejecting out going Audio");
+                //  UnityEngine.BasisDebug.Log("Rejecting out going Audio");
             }
         }
         private void SendSilenceOverNetwork()
         {
-            if (Base.HasReasonToSendAudio)
+            if (NetworkedPlayer.HasReasonToSendAudio)
             {
                 NetDataWriter writer = new NetDataWriter();
                 audioSilentSegmentData.LengthUsed = 0;

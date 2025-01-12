@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Basis.Scripts.Eye_Follow
 {
     [DefaultExecutionOrder(15002)]
-    public class BasisEyeFollowBase : MonoBehaviour
+    public class BasisLocalEyeFollowBase : MonoBehaviour
     {
         public quaternion leftEyeInitialRotation;
         public quaternion rightEyeInitialRotation;

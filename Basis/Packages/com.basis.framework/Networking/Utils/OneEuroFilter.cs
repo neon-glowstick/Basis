@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * OneEuroFilter.cs
  * Author: Dario Mazzanti (dario.mazzanti@iit.it), 2016
  * 
@@ -7,9 +7,11 @@
  *
  */
 
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
-using System;
-using System.Collections.Generic;
 
 class LowPassFilter 
 {
@@ -152,10 +154,12 @@ public class OneEuroFilter
 	public float Filter(float value, float timestamp = -1.0f) 
 	{
 		prevValue = currValue;
-		
+
 		// update the sampling frequency based on timestamps
-		if (lasttime!=-1.0f && timestamp != -1.0f)
-			freq = 1.0f/(timestamp-lasttime);
+		if (lasttime != -1.0f && timestamp != -1.0f)
+		{
+			freq = 1.0f / (timestamp - lasttime);
+		}
 		lasttime = timestamp;
 		// estimate the current variation per second 
 		float dvalue = x.hasLastRawValue() ? (value - x.lastRawValue())*freq : 0.0f; // FIXME: 0.0 or value? 
@@ -167,139 +171,75 @@ public class OneEuroFilter
 
 		return currValue;
 	}
-} ;
-	
-
-// this class instantiates an array of OneEuroFilter objects to filter each component of Vector2, Vector3, Vector4 or Quaternion types
-public class OneEuroFilter<T> where T : struct
+}
+// A struct for the LowPassFilter
+[BurstCompile]
+public struct ThreadedLowPassFilter
 {
-	// containst the type of T
-	Type type;
-	// the array of filters
-	OneEuroFilter[] oneEuroFilters;
+    public float Alpha;
+    public float LastValue;
+    public bool Initialized;
 
-	// filter parameters
-	public float freq {get; protected set;}
-	public float mincutoff {get; protected set;}
-	public float beta {get; protected set;}
-	public float dcutoff {get; protected set;}
+    public void Initialize(float alpha, float initialValue = 0.0f)
+    {
+        Alpha = alpha;
+        LastValue = initialValue;
+        Initialized = false;
+    }
 
-	// currValue contains the latest value which have been succesfully filtered
-	// prevValue contains the previous filtered value
-	public T currValue {get; protected set;}
-	public T prevValue {get; protected set;}
+    public float Filter(float value)
+    {
+        if (!Initialized)
+        {
+            Initialized = true;
+            LastValue = value;
+        }
+        else
+        {
+            LastValue = Alpha * value + (1.0f - Alpha) * LastValue;
+        }
+        return LastValue;
+    }
 
-	// initialization of our filter(s)
-	public OneEuroFilter(float _freq, float _mincutoff = 1.0f, float _beta = 0.0f, float _dcutoff = 1.0f)
-	{
-		type = typeof(T);
-		currValue = new T();
-		prevValue = new T();
+    public float FilterWithAlpha(float value, float alpha)
+    {
+        Alpha = alpha;
+        return Filter(value);
+    }
+}
 
-		freq = _freq;
-		mincutoff = _mincutoff;
-		beta = _beta;
-		dcutoff = _dcutoff;
+// A job struct for processing OneEuroFilter in parallel
+[BurstCompile]
+public struct OneEuroFilterParallelJob : IJobParallelFor
+{
+    [ReadOnly] public NativeArray<float> InputValues;
+    [WriteOnly] public NativeArray<float> OutputValues;
 
-		if(type == typeof(Vector2))
-			oneEuroFilters = new OneEuroFilter[2];
+    public float Frequency;
+    public float MinCutoff;
+    public float Beta;
+    public float DerivativeCutoff;
+    public NativeArray<ThreadedLowPassFilter> PositionFilters;
+    public NativeArray<ThreadedLowPassFilter> DerivativeFilters;
 
-		else if(type == typeof(Vector3))
-			oneEuroFilters = new OneEuroFilter[3];
+    public void Execute(int index)
+    {
+        // Estimate variation
+        float inputValue = InputValues[index];
+        float dValue = PositionFilters[index].Initialized ? (inputValue - PositionFilters[index].LastValue) * Frequency: 0.0f;
+        float edValue = DerivativeFilters[index].FilterWithAlpha(dValue, Alpha(DerivativeCutoff, Frequency));
 
-		else if(type == typeof(Vector4) || type == typeof(Quaternion))
-			oneEuroFilters = new OneEuroFilter[4];
-		else
-		{
-			Debug.LogError(type + " is not a supported type");
-			return;
-		}
+        // Update cutoff frequency
+        float cutoff = MinCutoff + Beta * Mathf.Abs(edValue);
 
-		for(int i = 0; i < oneEuroFilters.Length; i++)
-			oneEuroFilters[i] = new OneEuroFilter(freq, mincutoff, beta, dcutoff);		
-	}
+        // Filter input value
+        OutputValues[index] = PositionFilters[index].FilterWithAlpha(inputValue, Alpha(cutoff, Frequency));
+    }
 
-	// updates the filter parameters
-	public void UpdateParams(float _freq, float _mincutoff = 1.0f, float _beta = 0.0f, float _dcutoff = 1.0f)
-	{
-		freq = _freq;
-		mincutoff = _mincutoff;
-		beta = _beta;
-		dcutoff = _dcutoff;
-		
-		for(int i = 0; i < oneEuroFilters.Length; i++)
-			oneEuroFilters[i].UpdateParams(freq, mincutoff, beta, dcutoff);
-	}
-
-
-	// filters the provided _value and returns the result.
-	// Note: a timestamp can also be provided - will override filter frequency.
-	public T Filter<U>(U _value, float timestamp = -1.0f) where U : struct
-	{
-		prevValue = currValue;
-		
-		if(typeof(U) != type)
-		{
-			Debug.LogError("WARNING! " + typeof(U) + " when " + type + " is expected!\nReturning previous filtered value" );
-			currValue = prevValue;
-	
-			return (T) Convert.ChangeType(currValue, typeof(T));
-		}
-
-		if(type == typeof(Vector2))
-		{
-			Vector2 output = Vector2.zero;
-			Vector2 input = (Vector2) Convert.ChangeType(_value, typeof(Vector2));
-
-			for(int i = 0; i < oneEuroFilters.Length; i++)
-				output[i] = oneEuroFilters[i].Filter(input[i], timestamp);
-
-			currValue = (T) Convert.ChangeType(output, typeof(T));
-		}
-
-		else if(type == typeof(Vector3))
-		{
-			Vector3 output = Vector3.zero;
-			Vector3 input = (Vector3) Convert.ChangeType(_value, typeof(Vector3));
-
-			for(int i = 0; i < oneEuroFilters.Length; i++)
-				output[i] = oneEuroFilters[i].Filter(input[i], timestamp);
-
-			currValue = (T) Convert.ChangeType(output, typeof(T));
-		}
-
-		else if(type == typeof(Vector4))
-		{
-			Vector4 output = Vector4.zero;
-			Vector4 input = (Vector4) Convert.ChangeType(_value, typeof(Vector4));
-
-			for(int i = 0; i < oneEuroFilters.Length; i++)
-				output[i] = oneEuroFilters[i].Filter(input[i], timestamp);
-
-			currValue = (T) Convert.ChangeType(output, typeof(T));
-		}
-
-		else
-		{
-			Quaternion output = Quaternion.identity;
-			Quaternion input = (Quaternion) Convert.ChangeType(_value, typeof(Quaternion));
-            
-            // Workaround that take into account that some input device sends
-            // quaternion that represent only a half of all possible values.
-            // this piece of code does not affect normal behaviour (when the
-            // input use the full range of possible values).
-            if (Vector4.SqrMagnitude(new Vector4(oneEuroFilters[0].currValue, oneEuroFilters[1].currValue, oneEuroFilters[2].currValue, oneEuroFilters[3].currValue).normalized
-                - new Vector4(input[0], input[1], input[2], input[3]).normalized) > 2)
-            {
-                input = new Quaternion(-input.x, -input.y, -input.z, -input.w);
-            }
-
-			for(int i = 0; i < oneEuroFilters.Length; i++)
-				output[i] = oneEuroFilters[i].Filter(input[i], timestamp);
-
-			currValue = (T) Convert.ChangeType(output, typeof(T));
-		}
-
-		return (T) Convert.ChangeType(currValue, typeof(T));
-	}
+    private float Alpha(float cutoff, float freq)
+    {
+        float te = 1.0f / freq;
+        float tau = 1.0f / (2.0f * Mathf.PI * cutoff);
+        return 1.0f / (1.0f + tau / te);
+    }
 }

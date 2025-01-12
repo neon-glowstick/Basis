@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using UnityEngine.XR;
 
 namespace Basis.Scripts.Drivers
@@ -216,17 +217,8 @@ namespace Basis.Scripts.Drivers
                 return Vector3.zero;
             }
         }
-        public static Vector3 Position()
-        {
-            if (HasInstance)
-            {
-                return Instance.transform.position;
-            }
-            else
-            {
-                return Vector3.zero;
-            }
-        }
+        public static Vector3 Position;
+        public static Quaternion Rotation;
         public static Vector3 LeftEyePosition()
         {
             if (BasisDeviceManagement.IsUserInDesktop())
@@ -247,17 +239,6 @@ namespace Basis.Scripts.Drivers
             else
             {
                 return RightEye;
-            }
-        }
-        public static Quaternion Rotation()
-        {
-            if (HasInstance)
-            {
-                return Instance.transform.rotation;
-            }
-            else
-            {
-                return Quaternion.identity;
             }
         }
         public static void GetPositionAndRotation(out Vector3 Position,out Quaternion Rotation)
@@ -297,6 +278,7 @@ namespace Basis.Scripts.Drivers
             {
                 if (Camera.GetInstanceID() == CameraInstanceID)
                 {
+                    transform.GetPositionAndRotation(out Position,out Rotation);
                     ScaleheadToZero();
                     if (CameraData.allowXRRendering)
                     {

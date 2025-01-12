@@ -26,12 +26,11 @@ namespace Basis.Network.Server.Ownership
                 //the goal here is to make it so ownership understanding has to be requested.
                 //once a ownership has been requested there good for life or when a ownership switch happens.
                 NetworkRequestNewOrExisting(ownershipTransferMessage, out ushort currentOwner);
-                NetDataWriter Writer = NetDataWriterPool.GetWriter();
+                NetDataWriter Writer = new NetDataWriter(true, 2);
                 ownershipTransferMessage.playerIdMessage.playerID = currentOwner;
                 ownershipTransferMessage.Serialize(Writer);
                 BNL.Log("OwnershipResponse " + currentOwner + " for " + ownershipTransferMessage.playerIdMessage);
                 Peer.Send(Writer, BasisNetworkCommons.OwnershipResponse, DeliveryMethod.ReliableSequenced);
-                NetDataWriterPool.ReturnWriter(Writer);
             }
             catch (Exception ex)
             {
@@ -50,7 +49,7 @@ namespace Basis.Network.Server.Ownership
                 Reader.Recycle();
 
                 ushort ClientId = (ushort)Peer.Id;
-                NetDataWriter Writer = NetDataWriterPool.GetWriter();
+                NetDataWriter Writer = new NetDataWriter(true, 2);
                 //all clients need to know about a ownership switch
                 if (SwitchOwnership(ownershipTransferMessage.ownershipID, ClientId))
                 {
@@ -69,7 +68,6 @@ namespace Basis.Network.Server.Ownership
                     ownershipTransferMessage.Serialize(Writer);
                     Peer.Send(Writer, BasisNetworkCommons.OwnershipTransfer, DeliveryMethod.ReliableSequenced);
                 }
-                NetDataWriterPool.ReturnWriter(Writer);
             }
             catch (Exception ex)
             {

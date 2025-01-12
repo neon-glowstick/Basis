@@ -2,7 +2,6 @@ using System;
 using System.Net.Sockets;
 using System.Net;
 using LiteNetLib;
-using System.Collections.Concurrent;
 using BasisNetworkCore;
 using LiteNetLib.Utils;
 using Basis.Network.Core;
@@ -11,13 +10,12 @@ using Basis.Network.Server.Ownership;
 using Basis.Network.Server.Generic;
 using static SerializableBasis;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Threading;
+using static BasisNetworkServer;
 
 namespace BasisServerHandle
 {
-    public static class BasisServerHandleEvents
+    public static class BasisServerHandleEvents 
     {
         #region Server Events Setup
         public static void SubscribeServerEvents()
@@ -57,7 +55,7 @@ namespace BasisServerHandle
             try
             {
                 ushort id = (ushort)peer.Id;
-                ClientDisconnect(id, BasisNetworkServer.Peers);
+                ClientDisconnect(id);
 
                 BasisPlayerArray.RemovePlayer(peer);
                 if (BasisNetworkServer.Peers.TryRemove(id, out _))
@@ -68,6 +66,7 @@ namespace BasisServerHandle
                 {
                     BNL.LogError($"Failed to remove peer: {id}");
                 }
+                chunkedNetPeerArray.SetPeer(id,null);
                 CleanupPlayerData(id, peer);
             }
             catch (Exception e)
@@ -87,26 +86,25 @@ namespace BasisServerHandle
         #region Utility Methods
         private static void RejectWithReason(ConnectionRequest request, string reason)
         {
-            NetDataWriter writer = NetDataWriterPool.GetWriter();
+            NetDataWriter writer = new NetDataWriter(true, 2);
             writer.Put(reason);
             request.Reject(writer);
             BNL.LogError($"Rejected: {reason}");
-            NetDataWriterPool.ReturnWriter(writer);
         }
 
-        public static void ClientDisconnect(ushort leaving, ConcurrentDictionary<ushort, NetPeer> authenticatedClients)
+        public static void ClientDisconnect(ushort leaving)
         {
-            NetDataWriter writer = NetDataWriterPool.GetWriter(sizeof(ushort));
+            NetDataWriter writer = new NetDataWriter(true,sizeof(ushort));
             writer.Put(leaving);
 
-            foreach (var client in authenticatedClients.Values)
+           ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
+            foreach (var client in Peers)
             {
                 if (client.Id != leaving)
                 {
                     client.Send(writer, BasisNetworkCommons.Disconnection, DeliveryMethod.ReliableOrdered);
                 }
             }
-            NetDataWriterPool.ReturnWriter(writer);
         }
         #endregion
 
@@ -148,19 +146,21 @@ namespace BasisServerHandle
                 BNL.Log("Player approved. Current count: " + ServerCount);
 
                 NetPeer newPeer = request.Accept();
-                if (BasisNetworkServer.Peers.TryAdd((ushort)newPeer.Id, newPeer))
+                ushort PeerId = (ushort)newPeer.Id;
+                if (BasisNetworkServer.Peers.TryAdd(PeerId, newPeer))
                 {
+                    chunkedNetPeerArray.SetPeer(PeerId, newPeer);
                     BasisPlayerArray.AddPlayer(newPeer);
                     BNL.Log($"Peer connected: {newPeer.Id}");
                     ReadyMessage readyMessage = new ReadyMessage();
-                    readyMessage.Deserialize(request.Data);
+                    readyMessage.Deserialize(request.Data,false);
                     if (readyMessage.WasDeserializedCorrectly())
                     {
                         SendRemoteSpawnMessage(newPeer, readyMessage);
                     }
                     else
                     {
-                        BasisNetworkServer.Peers.Remove((ushort)newPeer.Id,out _);
+                        BasisNetworkServer.Peers.Remove(PeerId, out _);
                         BasisPlayerArray.RemovePlayer(newPeer);
                         RejectWithReason(request, "Payload Provided was invalid!");
                     }
@@ -179,15 +179,10 @@ namespace BasisServerHandle
         #endregion
 
         #region Network Receive Handlers
-        private static readonly SemaphoreSlim TaskLimiter = new SemaphoreSlim(300); // Limit to 300 concurrent tasks
-        private static readonly ConcurrentBag<Task> ActiveTasks = new ConcurrentBag<Task>();
-
-        private static async void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        private static void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
         {
             try
             {
-                await TaskLimiter.WaitAsync(); // Wait if the limit is reached
-
                 var task = Task.Run(() =>
                 {
                     try
@@ -248,14 +243,7 @@ namespace BasisServerHandle
                         BNL.LogError($"{e.Message} : {e.StackTrace}");
                         reader?.Recycle();
                     }
-                    finally
-                    {
-                        TaskLimiter.Release(); // Release semaphore when the task is done
-                    }
                 });
-
-                ActiveTasks.Add(task);
-                task.ContinueWith(t => ActiveTasks.TryTake(out _)); // Remove completed tasks from the bag
             }
             catch (Exception e)
             {
@@ -280,15 +268,14 @@ namespace BasisServerHandle
                 }
             };
             BasisSavedState.AddLastData(Peer, ClientAvatarChangeMessage);
-            NetDataWriter Writer = NetDataWriterPool.GetWriter();
+            NetDataWriter Writer = new NetDataWriter(true, 4);
             serverAvatarChangeMessage.Serialize(Writer);
             BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.AvatarChangeMessage, Peer, BasisPlayerArray.GetSnapshot());
-            NetDataWriterPool.ReturnWriter(Writer);
         }
         public static void HandleAvatarMovement(NetPacketReader Reader, NetPeer Peer)
         {
             LocalAvatarSyncMessage LocalAvatarSyncMessage = new LocalAvatarSyncMessage();
-            LocalAvatarSyncMessage.Deserialize(Reader);
+            LocalAvatarSyncMessage.Deserialize(Reader, true);
             Reader.Recycle();
             BasisSavedState.AddLastData(Peer, LocalAvatarSyncMessage);
             ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
@@ -328,30 +315,61 @@ namespace BasisServerHandle
         {
             if (BasisSavedState.GetLastVoiceReceivers(sender, out VoiceReceiversMessage data))
             {
+                // If no users are found or the array is empty, return early
                 if (data.users == null || data.users.Length == 0)
                 {
                     return;
                 }
+                int length = data.users.Length;
+                // Get the current snapshot of all peers
+                ReadOnlySpan<NetPeer> AllPeers = BasisPlayerArray.GetSnapshot();
+                int AllPeersLength = AllPeers.Length;
+                // Select valid clients based on the users list and corresponding NetPeer
+                List<NetPeer> endPoints = new List<NetPeer>(length);
 
-                List<NetPeer> endPoints = data.users.Select(user => BasisNetworkServer.Peers.GetValueOrDefault(user)).Where(client => client != null).ToList();
+                for (int i = 0; i < length; i++)
+                {
+                    // Find the NetPeer corresponding to the user
+                    NetPeer matchingPeer = null;
 
+                    for (int j = 0; j < AllPeersLength; j++)
+                    {
+                        if (AllPeers[j].Id == data.users[i])
+                        {
+                            matchingPeer = AllPeers[j];
+                            break;  // Found the peer, exit inner loop
+                        }
+                    }
+
+                    // If a matching peer was found, add it to the endPoints list
+                    if (matchingPeer != null)
+                    {
+                        endPoints.Add(matchingPeer);
+                    }
+                }
+
+                // If no valid endpoints were found, return early
                 if (endPoints.Count == 0)
                 {
                     return;
                 }
 
+                // Add player ID to the audio segment message
                 audioSegment.playerIdMessage = new PlayerIdMessage
                 {
                     playerID = (ushort)sender.Id
                 };
 
-                NetDataWriter NetDataWriter = NetDataWriterPool.GetWriter();
+                // Serialize the audio segment message
+                NetDataWriter NetDataWriter = new NetDataWriter(true, 2);
                 audioSegment.Serialize(NetDataWriter);
+
+                // Broadcast the message to the clients
                 BasisNetworkServer.BroadcastMessageToClients(NetDataWriter, channel, ref endPoints, DeliveryMethod.Sequenced);
-                NetDataWriterPool.ReturnWriter(NetDataWriter);
             }
             else
             {
+                // Log error if unable to find the sender in the data store
                 BNL.Log("Error unable to find " + sender.Id + " in the data store!");
             }
         }
@@ -386,8 +404,8 @@ namespace BasisServerHandle
 
         public static void NotifyExistingClients(ServerReadyMessage serverSideSyncPlayerMessage, NetPeer authClient)
         {
-            NetDataWriter Writer = NetDataWriterPool.GetWriter();
-            serverSideSyncPlayerMessage.Serialize(Writer);
+            NetDataWriter Writer = new NetDataWriter(true, 2);
+            serverSideSyncPlayerMessage.Serialize(Writer, false);
             ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
 
             foreach (NetPeer client in Peers)
@@ -397,48 +415,103 @@ namespace BasisServerHandle
                     client.Send(Writer, BasisNetworkCommons.CreateRemotePlayer, DeliveryMethod.ReliableOrdered);
                 }
             }
-            NetDataWriterPool.ReturnWriter(Writer);
         }
 
         public static void SendClientListToNewClient(NetPeer authClient)
         {
-            if (BasisNetworkServer.Peers.Count > ushort.MaxValue)
+            try
             {
-                BNL.Log($"authenticatedClients count exceeds {ushort.MaxValue}");
-                return;
-            }
+                // Fetch all peers into an array (up to 1024)
+                ReadOnlySpan<NetPeer> peers = BasisPlayerArray.GetSnapshot();
+                int peerCount = peers.Length;
 
-            List<ServerReadyMessage> copied = new List<ServerReadyMessage>();
-
-            IEnumerable<NetPeer> clientsToNotify = BasisNetworkServer.Peers.Values.Where(client => client != authClient);
-            BNL.Log("Notifing Newly Connected Client about " + clientsToNotify.Count());
-            foreach (NetPeer client in clientsToNotify)
-            {
-                ServerReadyMessage serverReadyMessage = new ServerReadyMessage();
-
-                if (!BasisSavedState.GetLastAvatarChangeState(client, out var ChangeState)) ChangeState = new ClientAvatarChangeMessage();
-                if (!BasisSavedState.GetLastAvatarSyncState(client, out var SyncState)) SyncState = new LocalAvatarSyncMessage() { array = new byte[386] };
-                if (!BasisSavedState.GetLastPlayerMetaData(client, out var MetaData)) MetaData = new PlayerMetaDataMessage() { playerDisplayName = "Error", playerUUID = string.Empty };
-
-                serverReadyMessage.localReadyMessage = new ReadyMessage
+                if (peerCount == 0)
                 {
-                    localAvatarSyncMessage = SyncState,
-                    clientAvatarChangeMessage = ChangeState,
-                    playerMetaDataMessage = MetaData,
-                };
-                serverReadyMessage.playerIdMessage = new PlayerIdMessage() { playerID = (ushort)client.Id };
-                copied.Add(serverReadyMessage);
-            }
+                    BNL.Log("No peers to notify.");
+                    return;
+                }
 
-            CreateAllRemoteMessage remoteMessages = new CreateAllRemoteMessage
+                if (peerCount > 1024)
+                {
+                    BNL.LogError("Peer count exceeds the maximum allowed limit (1024).");
+                    return;
+                }
+
+                // Pre-allocate list with a known capacity
+                List<ServerReadyMessage> serverReadyMessages = new List<ServerReadyMessage>(peerCount);
+
+                foreach (var peer in peers)
+                {
+                    if (peer == authClient)
+                    {
+                        continue;
+                    }
+
+                    if (CreateServerReadyMessageForPeer(peer, out ServerReadyMessage Message))
+                    {
+                        serverReadyMessages.Add(Message);
+                    }
+                }
+
+                // If no messages were created, return early
+                if (serverReadyMessages.Count == 0)
+                {
+                    BNL.Log("No valid peers to notify.");
+                    return;
+                }
+
+                // Create a batched message and send it to the new client
+                var remoteMessages = new CreateAllRemoteMessage
+                {
+                    serverSidePlayer = serverReadyMessages.ToArray()
+                };
+
+                NetDataWriter writer = new NetDataWriter(true, 2);
+                remoteMessages.Serialize(writer, false);
+                authClient.Send(writer, BasisNetworkCommons.CreateRemotePlayers, DeliveryMethod.ReliableOrdered);
+                BNL.Log($"Sent client list ({serverReadyMessages.Count} clients) to new peer {authClient.Id}.");
+            }
+            catch (Exception ex)
             {
-                serverSidePlayer = copied.ToArray(),
-            };
-            NetDataWriter Writer = NetDataWriterPool.GetWriter();
-            remoteMessages.Serialize(Writer);
-            BNL.Log($"Sending list of clients to {authClient.Id}");
-            authClient.Send(Writer, BasisNetworkCommons.CreateRemotePlayers, DeliveryMethod.ReliableOrdered);
-            NetDataWriterPool.ReturnWriter(Writer);
+                BNL.LogError($"Failed to send client list: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+        private static bool CreateServerReadyMessageForPeer(NetPeer peer,out ServerReadyMessage ServerReadyMessage)
+        {
+            try
+            {
+                if (!BasisSavedState.GetLastAvatarChangeState(peer, out var changeState))
+                {
+                    changeState = new ClientAvatarChangeMessage();
+                }
+
+                if (!BasisSavedState.GetLastAvatarSyncState(peer, out var syncState))
+                {
+                    syncState = new LocalAvatarSyncMessage() { array = new byte[386], hasAdditionalAvatarData = false, AdditionalAvatarDatas = null };
+                }
+
+                if (!BasisSavedState.GetLastPlayerMetaData(peer, out var metaData))
+                {
+                    metaData = new PlayerMetaDataMessage() { playerDisplayName = "Error", playerUUID = string.Empty };
+                }
+                ServerReadyMessage = new ServerReadyMessage
+                {
+                    localReadyMessage = new ReadyMessage
+                    {
+                        localAvatarSyncMessage = syncState,
+                        clientAvatarChangeMessage = changeState,
+                        playerMetaDataMessage = metaData
+                    },
+                    playerIdMessage = new PlayerIdMessage { playerID = (ushort)peer.Id }
+                };
+                return true;
+            }
+            catch (Exception ex)
+            {
+                BNL.LogError($"Failed to create ServerReadyMessage for peer {peer.Id}: {ex.Message}");
+                ServerReadyMessage = new ServerReadyMessage();
+                return false;
+            }
         }
         #endregion
     }

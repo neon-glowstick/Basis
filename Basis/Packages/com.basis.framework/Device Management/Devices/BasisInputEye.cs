@@ -8,5 +8,6 @@ namespace Basis.Scripts.Device_Management.Devices
         public Vector3 RightPosition;
         public abstract void Initalize();
         public abstract void Simulate();
+        public abstract void Shutdown();
     }
 }

@@ -1,5 +1,6 @@
 using Basis.Scripts.Avatar;
 using Basis.Scripts.Drivers;
+using Basis.Scripts.Networking.Recievers;
 using Basis.Scripts.TransformBinders.BoneControl;
 using Basis.Scripts.UI.NamePlate;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace Basis.Scripts.BasisSdk.Players
     {
         public BasisRemoteBoneDriver RemoteBoneDriver;
         public BasisRemoteAvatarDriver RemoteAvatarDriver;
+        public BasisNetworkReceiver NetworkReceiver;
         public Transform AudioSourceTransform;
         public BasisBoneControl MouthControl;
         public bool HasEvents = false;

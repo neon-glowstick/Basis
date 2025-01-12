@@ -19,8 +19,6 @@ namespace Basis.Scripts.Drivers
         [SerializeField]
         public BasisBoneTrackedRole[] trackedRoles;
         public bool HasControls = false;
-        public double ProvidedTime;
-        public float DeltaTime;
         public delegate void SimulationHandler();
         public event SimulationHandler OnSimulate;
         public event SimulationHandler OnPostSimulate;
@@ -32,28 +30,21 @@ namespace Basis.Scripts.Drivers
         /// <summary>
         /// call this after updating the bone data
         /// </summary>
-        public void Simulate(double timeAsDouble,float deltaTime)
+        public void Simulate(float deltaTime)
         {
             // sequence all other devices to run at the same time
-            ProvidedTime = timeAsDouble;
-            DeltaTime = deltaTime;
-            if (float.IsNaN(DeltaTime))
-            {
-                return;
-            }
-
             OnSimulate?.Invoke();
             for (int Index = 0; Index < ControlsLength; Index++)
             {
-                Controls[Index].ComputeMovement(DeltaTime);
+                Controls[Index].ComputeMovement(deltaTime);
             }
             OnPostSimulate?.Invoke();
         }
         public void SimulateWithoutLerp()
         {
             // sequence all other devices to run at the same time
-            ProvidedTime = Time.timeAsDouble;
-            DeltaTime = Time.deltaTime;
+            double ProvidedTime = Time.timeAsDouble;
+            float DeltaTime = Time.deltaTime;
             OnSimulate?.Invoke();
             for (int Index = 0; Index < ControlsLength; Index++)
             {
@@ -78,9 +69,9 @@ namespace Basis.Scripts.Drivers
                 }
             }
         }
-        public void SimulateAndApply(double timeAsDouble, float deltaTime)
+        public void SimulateAndApply( float deltaTime)
         {
-            Simulate( timeAsDouble, deltaTime);
+            Simulate(deltaTime);
             ApplyMovement();
         }
         public void SimulateAndApplyWithoutLerp()
@@ -216,11 +207,11 @@ namespace Basis.Scripts.Drivers
                     }
                     else
                     {
-                        if (Control.TargetControl.HasTarget)
+                        if (Control.HasTarget)
                         {
-                            if (BasisGizmoManager.CreateLineGizmo(out Control.TargetControl.LineDrawIndex, BonePosition, Control.TargetControl.Target.OutgoingWorldData.position, 0.03f, Control.Color))
+                            if (BasisGizmoManager.CreateLineGizmo(out Control.LineDrawIndex, BonePosition, Control.Target.OutgoingWorldData.position, 0.03f, Control.Color))
                             {
-                                Control.TargetControl.HasLineDraw = true;
+                                Control.HasLineDraw = true;
                             }
                         }
                         if (BasisGizmoManager.CreateSphereGizmo(out Control.GizmoReference, BonePosition, DefaultGizmoSize * BasisLocalPlayer.Instance.EyeRatioAvatarToAvatarDefaultScale, Control.Color))
@@ -255,15 +246,15 @@ namespace Basis.Scripts.Drivers
         }
         public void CreateRotationalLock(BasisBoneControl addToBone, BasisBoneControl target, float lerpAmount, float positional = 40)
         {
-            addToBone.TargetControl.Target = target;
-            addToBone.TargetControl.LerpAmountNormal = lerpAmount;
-            addToBone.TargetControl.LerpAmountFastMovement = lerpAmount * 4;
-            addToBone.TargetControl.AngleBeforeSpeedup = 25f;
-            addToBone.TargetControl.HasRotationalTarget = target != null;
-            addToBone.TargetControl.Offset = addToBone.TposeLocal.position - target.TposeLocal.position;
-            addToBone.TargetControl.Target = target;
-            addToBone.TargetControl.LerpAmount = positional;
-            addToBone.TargetControl.HasTarget = target != null;
+            addToBone.Target = target;
+            addToBone.LerpAmountNormal = lerpAmount;
+            addToBone.LerpAmountFastMovement = lerpAmount * 4;
+            addToBone.AngleBeforeSpeedup = 25f;
+            addToBone.HasRotationalTarget = target != null;
+            addToBone.Offset = addToBone.TposeLocal.position - target.TposeLocal.position;
+            addToBone.Target = target;
+            addToBone.LerpAmount = positional;
+            addToBone.HasTarget = target != null;
         }
         public static Vector3 ConvertToAvatarSpaceInital(Animator animator, Vector3 WorldSpace, float AvatarHeightOffset)// out Vector3 FloorPosition
         {
@@ -294,11 +285,11 @@ namespace Basis.Scripts.Drivers
             if (Control.HasBone)
             {
                 Vector3 BonePosition = Control.OutgoingWorldData.position;
-                if (Control.TargetControl.HasTarget)
+                if (Control.HasTarget)
                 {
-                    if (Control.TargetControl.HasLineDraw)
+                    if (Control.HasLineDraw)
                     {
-                        BasisGizmoManager.UpdateLineGizmo(Control.TargetControl.LineDrawIndex, BonePosition, Control.TargetControl.Target.OutgoingWorldData.position);
+                        BasisGizmoManager.UpdateLineGizmo(Control.LineDrawIndex, BonePosition, Control.Target.OutgoingWorldData.position);
                     }
                 }
                 if (BasisLocalPlayer.Instance.LocalBoneDriver.FindTrackedRole(Control, out BasisBoneTrackedRole Role))

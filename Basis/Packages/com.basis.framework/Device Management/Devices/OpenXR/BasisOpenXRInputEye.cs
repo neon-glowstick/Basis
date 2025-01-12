@@ -25,6 +25,12 @@ namespace Basis.Scripts.Device_Management.Devices.OpenXR
                     rightEyeState = nodeState;
                 }
             }
+           // OpenXRFrustumAdjust.OnEnable();
+        }
+
+        public override void Shutdown()
+        {
+          //  OpenXRFrustumAdjust.OnDisable();
         }
 
         public override void Simulate()
@@ -39,6 +45,8 @@ namespace Basis.Scripts.Device_Management.Devices.OpenXR
             {
                 BasisLocalCameraDriver.LeftEye = LeftPosition;
                 BasisLocalCameraDriver.RightEye = RightPosition;
+             //   OpenXRFrustumAdjust.Camera = BasisLocalCameraDriver.Instance.Camera;
+            //    OpenXRFrustumAdjust.Update();
             }
         }
     }

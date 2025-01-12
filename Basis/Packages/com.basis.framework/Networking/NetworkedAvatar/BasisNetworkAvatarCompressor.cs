@@ -4,6 +4,7 @@ using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
 using LiteNetLib;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
@@ -13,13 +14,26 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
 {
     public static class BasisNetworkAvatarCompressor
     {
-        public static void Compress(BasisNetworkTransmitter NetworkSendBase, Animator Anim)
+        public static void Compress(BasisNetworkTransmitter Transmit, Animator Anim)
         {
-            CompressAvatarData(ref NetworkSendBase.Offset, ref NetworkSendBase.FloatArray, ref NetworkSendBase.UshortArray, ref NetworkSendBase.LASM, NetworkSendBase.PoseHandler, NetworkSendBase.HumanPose, Anim);
-            NetworkSendBase.LASM.Serialize(NetworkSendBase.AvatarSendWriter);
-            BasisNetworkProfiler.LocalAvatarSyncMessageCounter.Sample(NetworkSendBase.AvatarSendWriter.Length);
-            BasisNetworkManagement.LocalPlayerPeer.Send(NetworkSendBase.AvatarSendWriter, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
-            NetworkSendBase.AvatarSendWriter.Reset();
+            CompressAvatarData(ref Transmit.Offset, ref Transmit.FloatArray,ref Transmit.UshortArray, ref Transmit.LASM,Transmit.PoseHandler, Transmit.HumanPose, Anim);
+
+            if (Transmit.SendingOutAvatarData.Count == 0)
+            {
+                Transmit.LASM.AdditionalAvatarDatas = null;
+                Transmit.LASM.hasAdditionalAvatarData = false;
+            }
+            else
+            {
+                Transmit.LASM.AdditionalAvatarDatas = Transmit.SendingOutAvatarData.Values.ToArray();
+                Transmit.LASM.hasAdditionalAvatarData = true;
+              //  BasisDebug.Log("Sending out AvatarData " + Transmit.SendingOutAvatarData.Count);
+            }
+            Transmit.LASM.Serialize(Transmit.AvatarSendWriter,true);
+            BasisNetworkProfiler.LocalAvatarSyncMessageCounter.Sample(Transmit.AvatarSendWriter.Length);
+            BasisNetworkManagement.LocalPlayerPeer.Send(Transmit.AvatarSendWriter, BasisNetworkCommons.MovementChannel, DeliveryMethod.Sequenced);
+            Transmit.AvatarSendWriter.Reset();
+            Transmit.ClearAdditional();
         }
         public static void InitalAvatarData(Animator Anim, out LocalAvatarSyncMessage LocalAvatarSyncMessage)
         {
@@ -43,13 +57,13 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             Handler.GetHumanPose(ref PoseHandler);
 
             // Copy muscles [0..14]
-            Array.Copy(PoseHandler.muscles, 0, FloatArray, 0, BasisNetworkSendBase.FirstBuffer);
+            Array.Copy(PoseHandler.muscles, 0, FloatArray, 0, BasisNetworkPlayer.FirstBuffer);
 
             // Copy muscles [21..end]
-            Array.Copy(PoseHandler.muscles, BasisNetworkSendBase.SecondBuffer, FloatArray, BasisNetworkSendBase.FirstBuffer, BasisNetworkSendBase.SizeAfterGap);
+            Array.Copy(PoseHandler.muscles, BasisNetworkPlayer.SecondBuffer, FloatArray, BasisNetworkPlayer.FirstBuffer, BasisNetworkPlayer.SizeAfterGap);
             //we write position first so we can use that on the server
             BasisUnityBitPackerExtensions.WriteVectorFloatToBytes(Anim.bodyPosition, ref LocalAvatarSyncMessage.array, ref Offset);
-            BasisUnityBitPackerExtensions.WriteQuaternionToBytes(Anim.bodyRotation, ref LocalAvatarSyncMessage.array, ref Offset, BasisNetworkSendBase.RotationCompression);
+            BasisUnityBitPackerExtensions.WriteQuaternionToBytes(Anim.bodyRotation, ref LocalAvatarSyncMessage.array, ref Offset, BasisNetworkPlayer.RotationCompression);
 
             if(NetworkSend == null)
             {
@@ -66,7 +80,7 @@ namespace Basis.Scripts.Networking.NetworkedAvatar
             var FloatArrayCopy = FloatArray;
             Parallel.For(0, LocalAvatarSyncMessage.StoredBones, Index =>
             {
-                NetworkOutData[Index] = Compress(FloatArrayCopy[Index], BasisNetworkSendBase.MinMuscle[Index], BasisNetworkSendBase.MaxMuscle[Index], BasisNetworkSendBase.RangeMuscle[Index]);
+                NetworkOutData[Index] = Compress(FloatArrayCopy[Index], BasisNetworkPlayer.MinMuscle[Index], BasisNetworkPlayer.MaxMuscle[Index], BasisNetworkPlayer.RangeMuscle[Index]);
             });
 
             BasisUnityBitPackerExtensions.WriteUShortsToBytes(NetworkOutData, ref LocalAvatarSyncMessage.array, ref Offset);

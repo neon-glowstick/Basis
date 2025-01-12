@@ -30,7 +30,7 @@ namespace HVR.Basis.Comms
         
         private bool _anyAddressUpdated;
         private bool _isWearer;
-        private BasisEyeFollowBase _eyeFollowDriverLateInit;
+        private BasisLocalEyeFollowBase _eyeFollowDriverLateInit;
         
 #region NetworkingFields
         private int _guidIndex;
@@ -60,7 +60,7 @@ namespace HVR.Basis.Comms
         {
             if (BasisNetworkManagement.AvatarToPlayer(avatar, out var player) && player is BasisRemotePlayer remote)
             {
-                _eyeFollowDriverLateInit = remote.RemoteAvatarDriver.BasisEyeFollowDriver;
+              //here LD this is wrong  _eyeFollowDriverLateInit = remote.RemoteAvatarDriver.BasisRemoteEyeFollowBase;
             }
         }
 

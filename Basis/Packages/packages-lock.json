@@ -53,11 +53,10 @@
       "dependencies": {}
     },
     "com.basis.tests": {
-      "version": "https://github.com/BasisVR/BasisTests.git",
+      "version": "file:com.basis.tests",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "f232ec073b7f8bd0812c486c28d53e0d0c3382c9"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.basis.visualtrackers": {
       "version": "https://github.com/BasisVR/BasisVisualTrackers.git",
@@ -358,7 +357,7 @@
       }
     },
     "com.unity.xr.core-utils": {
-      "version": "2.4.0",
+      "version": "2.5.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -389,12 +388,12 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.openxr": {
-      "version": "1.13.2",
+      "version": "1.14.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.inputsystem": "1.6.3",
-        "com.unity.xr.core-utils": "2.1.1",
+        "com.unity.xr.core-utils": "2.3.0",
         "com.unity.xr.management": "4.4.0",
         "com.unity.xr.legacyinputhelpers": "2.1.2"
       },

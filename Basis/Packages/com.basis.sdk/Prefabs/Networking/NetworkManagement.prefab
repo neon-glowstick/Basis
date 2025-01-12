@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4862434334352470906}
   - component: {fileID: 6889481598035836291}
+  - component: {fileID: 8243907643478635420}
   m_Layer: 0
   m_Name: NetworkManagement
   m_TagString: Untagged
@@ -51,230 +52,119 @@ MonoBehaviour:
   receiverArray: []
   Transmitter:
     Ready: 0
-    NetworkedPlayer:
-      MouthBone:
-        TargetControl:
-          LerpAmountNormal: 0
-          LerpAmountFastMovement: 0
-          AngleBeforeSpeedup: 0
-          HasRotationalTarget: 0
-          HasLineDraw: 0
-          LineDrawIndex: 0
-          HasTarget: 0
-          Offset:
-            x: 0
-            y: 0
-            z: 0
-          LerpAmount: 0
-        OutGoingData:
-          rotation:
-            value:
-              x: 0
-              y: 0
-              z: 0
-              w: 0
-          position:
-            x: 0
-            y: 0
-            z: 0
-        LastRunData:
-          rotation:
-            value:
-              x: 0
-              y: 0
-              z: 0
-              w: 0
-          position:
-            x: 0
-            y: 0
-            z: 0
-        TposeLocal:
-          rotation:
-            value:
-              x: 0
-              y: 0
-              z: 0
-              w: 0
-          position:
-            x: 0
-            y: 0
-            z: 0
-        InverseOffsetFromBone:
-          Use: 0
-          rotation:
-            value:
-              x: 0
-              y: 0
-              z: 0
-              w: 0
-          position:
-            x: 0
-            y: 0
-            z: 0
-        IncomingData:
-          rotation:
-            value:
-              x: 0
-              y: 0
-              z: 0
-              w: 0
-          position:
-            x: 0
-            y: 0
-            z: 0
-        OutgoingWorldData:
-          rotation:
-            value:
-              x: 0
-              y: 0
-              z: 0
-              w: 0
-          position:
-            x: 0
-            y: 0
-            z: 0
-        GizmoReference: -1
-        HasGizmo: 0
-        TposeGizmoReference: -1
-        TposeHasGizmo: 0
-        HasVirtualOverride: 0
-        trackersmooth: 25
-        IsHintRoleIgnoreRotation: 0
-        Cullable: 0
-        Name: 
-        gizmoColor: {r: 0, g: 0, b: 1, a: 1}
-        HasBone: 0
-        BoneTransform: {fileID: 0}
-        HasEvents: 0
-        hasTrackerDriver: 1
-        NotProcessing: 0
-        OnHasRigChanged:
-          m_PersistentCalls:
-            m_Calls: []
-        WeightsChanged:
-          m_PersistentCalls:
-            m_Calls: []
-        hasRigLayer: 1
-        positionWeight: 1
-        rotationWeight: 1
-        GeneralLocation: 0
-      Player: {fileID: 0}
-      hasID: 0
     Offset: 0
+    MouthBone:
+      LerpAmountNormal: 0
+      LerpAmountFastMovement: 0
+      AngleBeforeSpeedup: 0
+      HasRotationalTarget: 0
+      HasLineDraw: 0
+      LineDrawIndex: 0
+      HasTarget: 0
+      Offset:
+        x: 0
+        y: 0
+        z: 0
+      LerpAmount: 0
+      OutGoingData:
+        rotation:
+          value:
+            x: 0
+            y: 0
+            z: 0
+            w: 0
+        position:
+          x: 0
+          y: 0
+          z: 0
+      LastRunData:
+        rotation:
+          value:
+            x: 0
+            y: 0
+            z: 0
+            w: 0
+        position:
+          x: 0
+          y: 0
+          z: 0
+      TposeLocal:
+        rotation:
+          value:
+            x: 0
+            y: 0
+            z: 0
+            w: 0
+        position:
+          x: 0
+          y: 0
+          z: 0
+      InverseOffsetFromBone:
+        Use: 0
+        rotation:
+          value:
+            x: 0
+            y: 0
+            z: 0
+            w: 0
+        position:
+          x: 0
+          y: 0
+          z: 0
+      IncomingData:
+        rotation:
+          value:
+            x: 0
+            y: 0
+            z: 0
+            w: 0
+        position:
+          x: 0
+          y: 0
+          z: 0
+      OutgoingWorldData:
+        rotation:
+          value:
+            x: 0
+            y: 0
+            z: 0
+            w: 0
+        position:
+          x: 0
+          y: 0
+          z: 0
+      GizmoReference: -1
+      HasGizmo: 0
+      TposeGizmoReference: -1
+      TposeHasGizmo: 0
+      HasVirtualOverride: 0
+      trackersmooth: 25
+      IsHintRoleIgnoreRotation: 0
+      Cullable: 0
+      Name: 
+      gizmoColor: {r: 0, g: 0, b: 1, a: 1}
+      HasBone: 0
+      BoneTransform: {fileID: 0}
+      HasEvents: 0
+      hasTrackerDriver: 1
+      NotProcessing: 0
+      OnHasRigChanged:
+        m_PersistentCalls:
+          m_Calls: []
+      WeightsChanged:
+        m_PersistentCalls:
+          m_Calls: []
+      hasRigLayer: 1
+      positionWeight: 1
+      rotationWeight: 1
+      GeneralLocation: 0
+    Player: {fileID: 0}
+    hasID: 0
     HasEvents: 0
     timer: 0
     interval: 0.033333335
     SmallestDistanceToAnotherPlayer: 0
     AudioTransmission:
-      NetworkedPlayer:
-        MouthBone:
-          TargetControl:
-            LerpAmountNormal: 0
-            LerpAmountFastMovement: 0
-            AngleBeforeSpeedup: 0
-            HasRotationalTarget: 0
-            HasLineDraw: 0
-            LineDrawIndex: 0
-            HasTarget: 0
-            Offset:
-              x: 0
-              y: 0
-              z: 0
-            LerpAmount: 0
-          OutGoingData:
-            rotation:
-              value:
-                x: 0
-                y: 0
-                z: 0
-                w: 0
-            position:
-              x: 0
-              y: 0
-              z: 0
-          LastRunData:
-            rotation:
-              value:
-                x: 0
-                y: 0
-                z: 0
-                w: 0
-            position:
-              x: 0
-              y: 0
-              z: 0
-          TposeLocal:
-            rotation:
-              value:
-                x: 0
-                y: 0
-                z: 0
-                w: 0
-            position:
-              x: 0
-              y: 0
-              z: 0
-          InverseOffsetFromBone:
-            Use: 0
-            rotation:
-              value:
-                x: 0
-                y: 0
-                z: 0
-                w: 0
-            position:
-              x: 0
-              y: 0
-              z: 0
-          IncomingData:
-            rotation:
-              value:
-                x: 0
-                y: 0
-                z: 0
-                w: 0
-            position:
-              x: 0
-              y: 0
-              z: 0
-          OutgoingWorldData:
-            rotation:
-              value:
-                x: 0
-                y: 0
-                z: 0
-                w: 0
-            position:
-              x: 0
-              y: 0
-              z: 0
-          GizmoReference: -1
-          HasGizmo: 0
-          TposeGizmoReference: -1
-          TposeHasGizmo: 0
-          HasVirtualOverride: 0
-          trackersmooth: 25
-          IsHintRoleIgnoreRotation: 0
-          Cullable: 0
-          Name: 
-          gizmoColor: {r: 0, g: 0, b: 1, a: 1}
-          HasBone: 0
-          BoneTransform: {fileID: 0}
-          HasEvents: 0
-          hasTrackerDriver: 1
-          NotProcessing: 0
-          OnHasRigChanged:
-            m_PersistentCalls:
-              m_Calls: []
-          WeightsChanged:
-            m_PersistentCalls:
-              m_Calls: []
-          hasRigLayer: 1
-          positionWeight: 1
-          rotationWeight: 1
-          GeneralLocation: 0
-        Player: {fileID: 0}
-        hasID: 0
       settings: {fileID: 0}
       Local: {fileID: 0}
       Recorder: {fileID: 0}
@@ -389,3 +279,15 @@ MonoBehaviour:
     AvatarIndex: 
     HearingIndexToId: 
   IsRunning: 1
+--- !u!114 &8243907643478635420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6628459906978635983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 161554c19f252554381f719b6d345b97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

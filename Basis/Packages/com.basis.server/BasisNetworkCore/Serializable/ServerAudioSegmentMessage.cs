@@ -20,7 +20,6 @@ public static partial class SerializableBasis
     public struct VoiceReceiversMessage
     {
         public ushort[] users;
-
         public void Deserialize(NetDataReader Writer)
         {
             // Calculate the number of ushorts based on the remaining bytes
