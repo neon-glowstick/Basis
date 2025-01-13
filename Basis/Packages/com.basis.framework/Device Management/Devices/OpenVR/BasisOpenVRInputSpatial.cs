@@ -28,6 +28,7 @@ namespace Basis.Scripts.Device_Management.Devices.Unity_Spatial_Tracking
         public new void OnDestroy()
         {
             BasisVirtualSpine.DeInitialize();
+            BasisOpenVRInputEye.Shutdown();
             base.OnDestroy();
         }
         public override void DoPollData()

@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using UnityEngine.XR;
 
 namespace Basis.Scripts.Drivers
@@ -27,11 +28,12 @@ namespace Basis.Scripts.Drivers
         public BasisLockToInput BasisLockToInput;
         public bool HasEvents = false;
         public Canvas MicrophoneCanvas;
+        public Transform CanvasTransform;
         public RawImage MicrophoneMutedIcon;
         public RawImage MicrophoneUnMutedIcon;
         public Transform MicrophoneUnMutedIconTransform;
 
-        public Vector3 DesktopMicrophoneOffset = new Vector3(-0.001f, -0.0015f, 2f); // Adjust as needed for canvas position and depth
+        public Vector3 DesktopMicrophoneViewportPosition = new(0.2f, 0.15f, 1f); // Adjust as needed for canvas position and depth
         public Vector3 VRMicrophoneOffset = new Vector3(-0.0004f, -0.0015f, 2f);
 
         public AudioClip MuteSound;
@@ -216,17 +218,8 @@ namespace Basis.Scripts.Drivers
                 return Vector3.zero;
             }
         }
-        public static Vector3 Position()
-        {
-            if (HasInstance)
-            {
-                return Instance.transform.position;
-            }
-            else
-            {
-                return Vector3.zero;
-            }
-        }
+        public static Vector3 Position;
+        public static Quaternion Rotation;
         public static Vector3 LeftEyePosition()
         {
             if (BasisDeviceManagement.IsUserInDesktop())
@@ -249,17 +242,6 @@ namespace Basis.Scripts.Drivers
                 return RightEye;
             }
         }
-        public static Quaternion Rotation()
-        {
-            if (HasInstance)
-            {
-                return Instance.transform.rotation;
-            }
-            else
-            {
-                return Quaternion.identity;
-            }
-        }
         public static void GetPositionAndRotation(out Vector3 Position,out Quaternion Rotation)
         {
             if (HasInstance)
@@ -274,7 +256,7 @@ namespace Basis.Scripts.Drivers
         }
         public void OnHeightChanged()
         {
-            this.gameObject.transform.localScale = Vector3.one * LocalPlayer.EyeRatioAvatarToAvatarDefaultScale;
+            this.transform.localScale = Vector3.one * LocalPlayer.EyeRatioAvatarToAvatarDefaultScale;
         }
         public void OnDisable()
         {
@@ -297,15 +279,18 @@ namespace Basis.Scripts.Drivers
             {
                 if (Camera.GetInstanceID() == CameraInstanceID)
                 {
+                    transform.GetPositionAndRotation(out Position,out Rotation);
                     ScaleheadToZero();
                     if (CameraData.allowXRRendering)
                     {
                         Vector2 EyeTextureSize = new Vector2(XRSettings.eyeTextureWidth, XRSettings.eyeTextureHeight);
-                        MicrophoneCanvas.transform.localPosition = CalculatePosition(EyeTextureSize, VRMicrophoneOffset);
+                        CanvasTransform.localPosition = CalculatePosition(EyeTextureSize, VRMicrophoneOffset);
                     }
                     else
                     {
-                        MicrophoneCanvas.transform.localPosition = Camera.ViewportToScreenPoint(DesktopMicrophoneOffset);
+                        Vector3 worldPoint = Camera.ViewportToWorldPoint(DesktopMicrophoneViewportPosition);
+                        Vector3 localPos = this.transform.InverseTransformPoint(worldPoint);//asume this transform is also camera position
+                        CanvasTransform.localPosition = localPos;
                     }
                 }
                 else

@@ -1,5 +1,6 @@
 using Basis.Scripts.Device_Management;
 using Basis.Scripts.TransformBinders.BoneControl;
+using UnityEngine;
 
 namespace Basis.Scripts.Drivers
 {
@@ -27,7 +28,17 @@ namespace Basis.Scripts.Drivers
                 }
             }
         }
+        public float DeltaTime;
+        public void Simulate()
+        {
+            DeltaTime = Time.deltaTime;
+            if (float.IsNaN(DeltaTime))
+            {
+                return;
+            }
 
+            SimulateAndApply(DeltaTime);
+        }
         public void OnDestroy()
         {
             BasisDeviceManagement.Instance.OnBootModeChanged -= OnBootModeChanged;

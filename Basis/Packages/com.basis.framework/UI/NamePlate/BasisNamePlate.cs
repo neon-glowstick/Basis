@@ -1,46 +1,34 @@
 using Basis.Scripts.BasisSdk.Players;
-using Basis.Scripts.Drivers;
 using Basis.Scripts.Networking;
 using Basis.Scripts.TransformBinders.BoneControl;
-using Basis.Scripts.UI.UI_Panels;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-
 namespace Basis.Scripts.UI.NamePlate
 {
     public abstract class BasisNamePlate : MonoBehaviour
     {
-        public BasisUIComponent BasisUIComponent;
-        public Transform LocalCameraDriver;
-        public Vector3 directionToCamera;
+        public Vector3 dirToCamera;
         public BasisBoneControl HipTarget;
         public BasisBoneControl MouthTarget;
-        public TextMeshProUGUI Text;
-        public Image Loadingbar;
-        public TextMeshProUGUI Loadingtext;
+        public TextMeshPro Text;
+        public SpriteRenderer Loadingbar;
+        public TextMeshPro Loadingtext;
         public float YHeightMultiplier = 1.25f;
         public BasisRemotePlayer BasisRemotePlayer;
-        public Button NamePlateButton;
-        public Image namePlateImage;
+        public SpriteRenderer namePlateImage;
         public Color NormalColor;
         public Color IsTalkingColor;
-
         public Color OutOfRangeColor;
-
-        [SerializeField] 
-        private float transitionDuration = 0.3f;
-        [SerializeField] 
-        private float returnDelay = 0.4f;
-
-        private Coroutine colorTransitionCoroutine;
-        private Coroutine returnToNormalCoroutine;
-        private static readonly Queue<Action> actions = new Queue<Action>();
-        private static Vector3 cachedDirection;
-        private static Quaternion cachedRotation;
+        [SerializeField]
+        public float transitionDuration = 0.3f;
+        [SerializeField]
+        public float returnDelay = 0.4f;
+        public Coroutine colorTransitionCoroutine;
+        public Coroutine returnToNormalCoroutine;
+        public Vector3 cachedDirection;
+        public Quaternion cachedRotation;
         public bool HasRendererCheckWiredUp = false;
         public bool IsVisible = true;
         public void Initalize(BasisBoneControl hipTarget, BasisRemotePlayer basisRemotePlayer)
@@ -48,7 +36,6 @@ namespace Basis.Scripts.UI.NamePlate
             BasisRemotePlayer = basisRemotePlayer;
             HipTarget = hipTarget;
             MouthTarget = BasisRemotePlayer.MouthControl;
-            LocalCameraDriver = BasisLocalCameraDriver.Instance.transform;
             Text.text = BasisRemotePlayer.DisplayName;
             BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport += ProgresReport;
             BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressComplete += OnProgressComplete;
@@ -56,6 +43,7 @@ namespace Basis.Scripts.UI.NamePlate
             BasisRemotePlayer.AudioReceived += OnAudioReceived;
             BasisRemotePlayer.OnAvatarSwitched += RebuildRenderCheck;
             BasisRemotePlayer.OnAvatarSwitchedFallBack += RebuildRenderCheck;
+            RemoteNamePlateDriver.Instance.AddNamePlate(this);
         }
         public void RebuildRenderCheck()
         {
@@ -158,14 +146,12 @@ namespace Basis.Scripts.UI.NamePlate
                 returnToNormalCoroutine = StartCoroutine(DelayedReturnToNormal());
             }
         }
-
         private IEnumerator DelayedReturnToNormal()
         {
             yield return new WaitForSeconds(returnDelay);
             yield return StartCoroutine(TransitionColor(NormalColor));
             returnToNormalCoroutine = null;
         }
-
         public void OnDestroy()
         {
             BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport -= ProgresReport;
@@ -173,6 +159,7 @@ namespace Basis.Scripts.UI.NamePlate
             BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressStart -= OnProgressStart;
             BasisRemotePlayer.AudioReceived -= OnAudioReceived;
             DeInitalizeCallToRender();
+            RemoteNamePlateDriver.Instance.RemoveNamePlate(this);
         }
         public void DeInitalizeCallToRender()
         {
@@ -190,7 +177,6 @@ namespace Basis.Scripts.UI.NamePlate
                 Loadingtext.gameObject.SetActive(true);
             });
         }
-
         private void OnProgressComplete()
         {
             EnqueueOnMainThread(() =>
@@ -199,7 +185,6 @@ namespace Basis.Scripts.UI.NamePlate
                 Loadingbar.gameObject.SetActive(false);
             });
         }
-
         public void ProgresReport(float progress, string info)
         {
             EnqueueOnMainThread(() =>
@@ -208,51 +193,18 @@ namespace Basis.Scripts.UI.NamePlate
                 UpdateProgressBar(progress);
             });
         }
-
         private static void EnqueueOnMainThread(Action action)
         {
-            lock (actions)
+            lock (RemoteNamePlateDriver.actions)
             {
-                actions.Enqueue(action);
-            }
+                RemoteNamePlateDriver.actions.Enqueue(action);
+            } 
         }
-
         public void UpdateProgressBar(float progress)
         {
-            Vector3 scale = Loadingbar.rectTransform.localScale;
-            scale.x = progress / 100;
-            Loadingbar.rectTransform.localScale = scale;
-        }
-
-        private void LateUpdate()
-        {
-            directionToCamera = LocalCameraDriver.position - transform.position;
-
-            cachedRotation = Quaternion.Euler(
-                transform.rotation.eulerAngles.x,
-                Mathf.Atan2(directionToCamera.x, directionToCamera.z) * Mathf.Rad2Deg,
-                transform.rotation.eulerAngles.z
-            );
-
-            transform.SetPositionAndRotation(GeneratePoint(), cachedRotation);
-
-            if (actions.Count > 0)
-            {
-                lock (actions)
-                {
-                    while (actions.Count > 0)
-                    {
-                        actions.Dequeue()?.Invoke();
-                    }
-                }
-            }
-        }
-
-        public Vector3 GeneratePoint()
-        {
-            cachedDirection = HipTarget.OutgoingWorldData.position;
-            cachedDirection.y += MouthTarget.TposeLocal.position.y / YHeightMultiplier;
-            return cachedDirection;
+            Vector2 scale = Loadingbar.size;
+            scale.x = progress/2;
+            Loadingbar.size = scale;
         }
     }
 }

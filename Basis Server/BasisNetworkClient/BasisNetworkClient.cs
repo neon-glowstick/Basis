@@ -38,13 +38,12 @@ public static class BasisNetworkClient
                 UnsyncedEvents = true,
             };
             client.Start();
-            NetDataWriter Writer = NetDataWriterPool.GetWriter();
+            NetDataWriter Writer = new NetDataWriter(true,12);
             //this is the only time we dont put key!
             Writer.Put(BasisNetworkVersion.ServerVersion);
             AuthenticationMessage.Serialize(Writer);
-            ReadyMessage.Serialize(Writer);
+            ReadyMessage.Serialize(Writer,false);
             peer = client.Connect(IP, port, Writer);
-            NetDataWriterPool.ReturnWriter(Writer);
             return peer;
         }
         else

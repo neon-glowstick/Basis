@@ -56,6 +56,7 @@ namespace Basis.Scripts.BasisSdk
         public bool HasSendEvent;
         public AvatarNetworkMessageReceiveEvent OnNetworkMessageReceived;
         public AvatarNetworkMessageSendEvent OnNetworkMessageSend;
+        public AvatarNetworkMessageSendEventServerReductionSystem OnServerReductionSystemMessageSend;
 
         public OnReady OnAvatarReady;
         /// <summary>
@@ -82,6 +83,10 @@ namespace Basis.Scripts.BasisSdk
         {
             OnNetworkMessageSend?.Invoke(MessageIndex, null, DeliveryMethod);
         }
+        public void ServerReductionSystemMessageSend(byte MessageIndex, byte[] buffer = null)
+        {
+            OnServerReductionSystemMessageSend?.Invoke(MessageIndex,buffer);
+        }
         /// <summary>
         /// this is used for Receiving Network Messages
         /// </summary>
@@ -98,5 +103,13 @@ namespace Basis.Scripts.BasisSdk
         /// <param name="DeliveryMethod"></param>
         /// <param name="Recipients">if null everyone but self, you can include yourself to make it loop back over the network</param>
         public delegate void AvatarNetworkMessageSendEvent(byte MessageIndex, byte[] buffer, DeliveryMethod DeliveryMethod = DeliveryMethod.Unreliable, ushort[] Recipients = null);
+
+        /// <summary>
+        /// this is used for sending Network Messages with mode sequence
+        /// is delivered through the avatar reduction system.
+        /// </summary>
+        /// <param name="MessageIndex"></param>
+        /// <param name="buffer"></param>
+        public delegate void AvatarNetworkMessageSendEventServerReductionSystem(byte MessageIndex, byte[] buffer);
     }
 }

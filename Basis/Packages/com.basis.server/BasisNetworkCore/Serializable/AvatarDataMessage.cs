@@ -51,7 +51,6 @@ public static partial class SerializableBasis
                 payload = null;
             }
         }
-
         public void Serialize(NetDataWriter Writer)
         {
             PlayerIdMessage.Serialize(Writer);

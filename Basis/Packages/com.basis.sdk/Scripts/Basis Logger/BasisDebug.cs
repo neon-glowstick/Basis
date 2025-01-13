@@ -5,11 +5,11 @@ public static class BasisDebug
 {
     public static void LogError(string message, LogTag logTag = LogTag.System)
     {
-        LogInternal(message, logTag, MessageType.Error);
+        Debug.unityLogger.LogError("",FormatMessage(message, logTag, MessageType.Error));
     }
     public static void LogError(Exception message, LogTag logTag = LogTag.System)
     {
-        LogInternal($"{message.Message} | {message.StackTrace}", logTag, MessageType.Error);
+        Debug.unityLogger.LogError("", FormatMessage($"{message.Message} {message.StackTrace}", logTag, MessageType.Error));
     }
 
     public static void LogWarning(string message, LogTag logTag = LogTag.System)
@@ -24,8 +24,7 @@ public static class BasisDebug
 
     public static void LogInternal(string message, LogTag logTag, MessageType messageType)
     {
-        Debug.unityLogger.Log(FormatMessage(message, logTag, messageType)
-        );
+        Debug.unityLogger.Log(FormatMessage(message, logTag, messageType));
     }
 
     public static string FormatMessage(string message, LogTag logTag, MessageType messageType)

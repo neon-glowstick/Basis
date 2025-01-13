@@ -6,17 +6,17 @@ public static partial class SerializableBasis
         public PlayerIdMessage playerIdMessage;
         public byte interval;
         public LocalAvatarSyncMessage avatarSerialization;
-        public void Deserialize(NetDataReader Writer)
+        public void Deserialize(NetDataReader Writer,bool AttemptAdditionalData)
         {
             playerIdMessage.Deserialize(Writer);//2bytes
             Writer.Get(out interval);//1 bytes
-            avatarSerialization.Deserialize(Writer);
+            avatarSerialization.Deserialize(Writer, AttemptAdditionalData);
         }
-        public void Serialize(NetDataWriter Writer)
+        public void Serialize(NetDataWriter Writer, bool AttemptAdditionalData)
         {
             playerIdMessage.Serialize(Writer);
             Writer.Put(interval);
-            avatarSerialization.Serialize(Writer);
+            avatarSerialization.Serialize(Writer, AttemptAdditionalData);
         }
     }
 }

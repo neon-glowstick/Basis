@@ -11,7 +11,11 @@ namespace BasisNetworkCore
 
         // Reusable snapshot buffer
         private static NetPeer[] SnapshotBuffer = new NetPeer[1024];
-
+        /// <summary>
+        /// slow operation but allows us to get a copy of the players quickly later.
+        /// slow operation can be out of order.
+        /// </summary>
+        /// <param name="player"></param>
         public static void AddPlayer(NetPeer player)
         {
             lock (PlayerArrayLock)
@@ -22,7 +26,10 @@ namespace BasisNetworkCore
                 }
             }
         }
-
+        /// <summary>
+        /// slow operation can be out of order.
+        /// </summary>
+        /// <param name="player"></param>
         public static void RemovePlayer(NetPeer player)
         {
             lock (PlayerArrayLock)
