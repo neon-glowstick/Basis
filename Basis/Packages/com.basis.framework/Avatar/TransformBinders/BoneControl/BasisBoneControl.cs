@@ -17,11 +17,11 @@ namespace Basis.Scripts.TransformBinders.BoneControl
         public float LerpAmountNormal;
         public float LerpAmountFastMovement;
         public float AngleBeforeSpeedup;
-        public bool HasRotationalTarget;
+        public bool HasRotationalTarget = false;
 
         public bool HasLineDraw;
         public int LineDrawIndex;
-        public bool HasTarget;
+        public bool HasTarget = false;
         public float3 Offset;
         public float LerpAmount;
 
@@ -61,15 +61,15 @@ namespace Basis.Scripts.TransformBinders.BoneControl
                 {
                     if (IsHintRoleIgnoreRotation == false)
                     {                    // Update the position of the secondary transform to maintain the initial offset
-                        OutGoingData.position = math.lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
+                        OutGoingData.position = Vector3.Lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
                         // Update the rotation of the secondary transform to maintain the initial offset
-                        OutGoingData.rotation = math.slerp(OutGoingData.rotation, math.mul(IncomingData.rotation, InverseOffsetFromBone.rotation), trackersmooth);
+                        OutGoingData.rotation = Quaternion.Slerp(OutGoingData.rotation, math.mul(IncomingData.rotation, InverseOffsetFromBone.rotation), trackersmooth);
                     }
                     else
                     {
                         OutGoingData.rotation = Quaternion.identity;
                         // Update the position of the secondary transform to maintain the initial offset
-                        OutGoingData.position = math.lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
+                        OutGoingData.position = Vector3.Lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);
                     }
                 }
                 else
