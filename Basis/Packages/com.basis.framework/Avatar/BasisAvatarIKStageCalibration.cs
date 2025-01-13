@@ -124,8 +124,6 @@ namespace Basis.Scripts.Avatar
                     BasisDebug.LogError("Missing Tracker for index " + Index + " with ID " + mapping);
                 }
             }
-            //do the roles after to stop the animator switch issue
-            BasisLocalPlayer.Instance.LocalBoneDriver.CalculateHeading();
 
             BasisLocalPlayer.Instance.AvatarDriver.ResetAvatarAnimator();
             BasisLocalPlayer.Instance.AvatarDriver.CalibrateRoles();//not needed but still doing just incase

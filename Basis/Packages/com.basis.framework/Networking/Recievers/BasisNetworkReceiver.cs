@@ -44,7 +44,7 @@ namespace Basis.Scripts.Networking.Recievers
         public double TimeInThePast;
         public bool HasAvatarInitalized;
 
-        public BasicOneEuroFilterParallelJob oneEuroFilterJob;
+        public BasisOneEuroFilterParallelJob oneEuroFilterJob;
         public  float MinCutoff = 0.001f;
         public  float Beta = 5f;
         public float DerivativeCutoff = 1.0f;
@@ -319,7 +319,7 @@ namespace Basis.Scripts.Networking.Recievers
                 derivativeFilters[i] = new float2(0,0);
             }
 
-            oneEuroFilterJob = new BasicOneEuroFilterParallelJob
+            oneEuroFilterJob = new BasisOneEuroFilterParallelJob
             {
                 InputValues = musclesPreEuro,
                 OutputValues = EuroValuesOutput,

@@ -105,7 +105,6 @@ namespace Basis.Scripts.Drivers
             Builder.enabled = false;
             Calibration(Player.BasisAvatar);
             BasisLocalPlayer.Instance.LocalBoneDriver.RemoveAllListeners();
-            BasisLocalPlayer.Instance.LocalBoneDriver.CalculateHeading();
             BasisLocalEyeFollowDriver = BasisHelpers.GetOrAddComponent<BasisLocalEyeFollowBase>(Player.BasisAvatar.gameObject);
             BasisLocalEyeFollowDriver.Initalize(this,Player);
             HeadScaledDown = Vector3.zero;

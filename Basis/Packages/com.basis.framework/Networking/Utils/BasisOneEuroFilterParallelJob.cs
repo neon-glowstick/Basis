@@ -15,7 +15,7 @@ using UnityEngine;
 
 // A job struct for processing OneEuroFilter in parallel
 [BurstCompile]
-public struct BasicOneEuroFilterParallelJob : IJobParallelFor
+public struct BasisOneEuroFilterParallelJob : IJobParallelFor
 {
     [ReadOnly]
     public NativeArray<float> InputValues;

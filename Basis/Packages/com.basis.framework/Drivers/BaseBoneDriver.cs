@@ -23,10 +23,6 @@ namespace Basis.Scripts.Drivers
         public event SimulationHandler OnSimulate;
         public event SimulationHandler OnPostSimulate;
         public OrderedDelegate ReadyToRead = new OrderedDelegate();
-
-        public Quaternion QatCalibrationHeading;
-        public Vector3 CalibrationHeading;
-        public float CalibrationHeadingY;
         /// <summary>
         /// call this after updating the bone data
         /// </summary>
@@ -78,18 +74,6 @@ namespace Basis.Scripts.Drivers
         {
             SimulateWithoutLerp();
             ApplyMovement();
-        }
-        public void CalculateHeading()
-        {
-            if (FindBone(out BasisBoneControl Head, BasisBoneTrackedRole.Head))
-            {
-                CalibrationHeadingY = Head.BoneTransform.localRotation.eulerAngles.y;
-                CalibrationHeading = new Vector3(0, CalibrationHeadingY, 0);
-                QatCalibrationHeading = Quaternion.Euler(CalibrationHeading);
-                Debug.DrawLine(Head.BoneTransform.position, Head.BoneTransform.position + (QatCalibrationHeading * new Vector3(0, 0, 1)), Color.black, 5f);
-                //  Head.BoneModelTransform.position = Head.BoneTransform.position;
-                //   Head.BoneModelTransform.rotation = Head.BoneTransform.rotation;
-            }
         }
         public void RemoveAllListeners()
         {

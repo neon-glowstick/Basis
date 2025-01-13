@@ -178,5 +178,6 @@ public class BasisVirtualSpineDriver
             float3 customDirection = math.mul(boneControl.Target.OutGoingData.rotation, boneControl.Offset);
             boneControl.OutGoingData.position = boneControl.Target.OutGoingData.position + customDirection;
         }
+
     }
 }
