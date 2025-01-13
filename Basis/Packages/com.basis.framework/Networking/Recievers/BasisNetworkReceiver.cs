@@ -45,7 +45,7 @@ namespace Basis.Scripts.Networking.Recievers
         public bool HasAvatarInitalized;
 
         public BasicOneEuroFilterParallelJob oneEuroFilterJob;
-        public  float MinCutoff = .05f;
+        public  float MinCutoff = 0.001f;
         public  float Beta = 5f;
         public float DerivativeCutoff = 1.0f;
 
@@ -119,6 +119,7 @@ namespace Basis.Scripts.Networking.Recievers
                         ForceUpdateFilters();
                     }
 
+                    oneEuroFilterJob.DeltaTime = interpolationTime;
                     EuroFilterHandle = oneEuroFilterJob.Schedule(LocalAvatarSyncMessage.StoredBones,64,musclesHandle);
                 }
             }
@@ -322,7 +323,7 @@ namespace Basis.Scripts.Networking.Recievers
             {
                 InputValues = musclesPreEuro,
                 OutputValues = EuroValuesOutput,
-                DeltaTime = Time.deltaTime,
+                DeltaTime = interpolationTime,
                 MinCutoff = MinCutoff,
                 Beta = Beta,
                 DerivativeCutoff = DerivativeCutoff,
@@ -332,7 +333,7 @@ namespace Basis.Scripts.Networking.Recievers
         }
         private float Alpha(float cutoff)
         {
-            float te = 1.0f / (1.0f / Time.deltaTime);
+            float te = 1.0f / (1.0f / interpolationTime);
             float tau = 1.0f / (2.0f * Mathf.PI * cutoff);
             return 1.0f / (1.0f + tau / te);
         }
