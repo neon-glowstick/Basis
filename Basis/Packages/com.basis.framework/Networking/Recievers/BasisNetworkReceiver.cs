@@ -9,7 +9,6 @@ using Unity.Mathematics;
 using UnityEngine;
 using static SerializableBasis;
 
-
 namespace Basis.Scripts.Networking.Recievers
 {
     [DefaultExecutionOrder(15001)]
@@ -45,12 +44,14 @@ namespace Basis.Scripts.Networking.Recievers
         public double TimeInThePast;
         public bool HasAvatarInitalized;
 
-        public OneEuroFilterParallelJob oneEuroFilterJob;
-        public  float Frequency = 120f;
+        public BasicOneEuroFilterParallelJob oneEuroFilterJob;
         public  float MinCutoff = .05f;
         public  float Beta = 5f;
         public float DerivativeCutoff = 1.0f;
+
         public bool updateFilters;
+        public bool enableEuroFilter = true;
+
         /// <summary>
         /// Perform computations to interpolate and update avatar state.
         /// </summary>
@@ -112,11 +113,24 @@ namespace Basis.Scripts.Networking.Recievers
                     // Muscle interpolation job
                     musclesJob.Time = interpolationTime;
                     musclesHandle = musclesJob.Schedule(LocalAvatarSyncMessage.StoredBones, 64, AvatarHandle);
+
                     if(updateFilters)
                     {
                         ForceUpdateFilters();
                     }
-                    EuroFilterHandle = oneEuroFilterJob.Schedule(LocalAvatarSyncMessage.StoredBones,64, musclesHandle);
+
+                    // oneEuroFilterJob = new BasicOneEuroFilterParallelJob
+                    // {
+                    //     InputValues = musclesPreEuro,
+                    //     OutputValues = EuroValuesOutput,
+                    //     DeltaTime = Time.deltaTime,
+                    //     MinCutoff = MinCutoff,
+                    //     Beta = Beta,
+                    //     DerivativeCutoff = DerivativeCutoff,
+                    //     PositionFilters = positionFilters,
+                    //     DerivativeFilters = derivativeFilters
+                    // };
+                    EuroFilterHandle = oneEuroFilterJob.Schedule(LocalAvatarSyncMessage.StoredBones,64,musclesHandle);
                 }
             }
         }
@@ -130,10 +144,11 @@ namespace Basis.Scripts.Networking.Recievers
                     if (HasAvatarInitalized)
                     {
                         OutputRotation = math.slerp(First.rotation, Last.rotation, interpolationTime);
+
                         // Complete the jobs and apply the results
                         EuroFilterHandle.Complete();
 
-                        ApplyPoseData(Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, EuroValuesOutput);
+                        ApplyPoseData(Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, enableEuroFilter ? EuroValuesOutput : musclesPreEuro);
                         PoseHandler.SetHumanPose(ref HumanPose);
 
                         RemotePlayer.RemoteBoneDriver.SimulateAndApply(DeltaTime);
@@ -217,8 +232,6 @@ namespace Basis.Scripts.Networking.Recievers
             HumanPose.bodyPosition = ScaledPosition;
             HumanPose.bodyRotation = Rotation;
 
-
-
             // Copy from job to MuscleFinalStageOutput
             Muscles.CopyTo(MuscleFinalStageOutput);
             // First, copy the first 14 elements directly
@@ -272,8 +285,8 @@ namespace Basis.Scripts.Networking.Recievers
 
             RemotePlayer.CreateAvatar(ServerAvatarChangeMessage.clientAvatarChangeMessage.loadMode, BasisLoadableBundle);
         }
-        private NativeArray<ThreadedLowPassFilter> positionFilters;
-        private NativeArray<ThreadedLowPassFilter> derivativeFilters;
+        private NativeArray<float2> positionFilters;
+        private NativeArray<float2> derivativeFilters;
         public override void Initialize()
         {
             if (!Ready)
@@ -285,8 +298,8 @@ namespace Basis.Scripts.Networking.Recievers
                 targetMuscles = new NativeArray<float>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
                 EuroValuesOutput = new NativeArray<float>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
 
-                positionFilters = new NativeArray<ThreadedLowPassFilter>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
-                derivativeFilters = new NativeArray<ThreadedLowPassFilter>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
+                positionFilters = new NativeArray<float2>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
+                derivativeFilters = new NativeArray<float2>(LocalAvatarSyncMessage.StoredBones, Allocator.Persistent);
 
                 musclesJob = new UpdateAvatarMusclesJob();
                 AvatarJob = new UpdateAvatarJob();
@@ -294,6 +307,7 @@ namespace Basis.Scripts.Networking.Recievers
                 musclesJob.targetMuscles = targetMuscles;
                 AvatarJob.OutputVector = OuputVectors;
                 AvatarJob.TargetVector = TargetVectors;
+
                 ForceUpdateFilters();
 
                 RemotePlayer = (BasisRemotePlayer)Player;
@@ -311,20 +325,15 @@ namespace Basis.Scripts.Networking.Recievers
         {
             for (int i = 0; i < LocalAvatarSyncMessage.StoredBones; i++)
             {
-                // Initialize filters for each data point
-                ThreadedLowPassFilter positionFilter = new ThreadedLowPassFilter();
-                positionFilter.Initialize(Alpha(MinCutoff));
-                positionFilters[i] = positionFilter;
-
-                ThreadedLowPassFilter derivativeFilter = new ThreadedLowPassFilter();
-                derivativeFilter.Initialize(Alpha(DerivativeCutoff));
-                derivativeFilters[i] = derivativeFilter;
+                positionFilters[i] = new float2(0,0);
+                derivativeFilters[i] = new float2(0,0);
             }
-            oneEuroFilterJob = new OneEuroFilterParallelJob
+
+            oneEuroFilterJob = new BasicOneEuroFilterParallelJob
             {
                 InputValues = musclesPreEuro,
                 OutputValues = EuroValuesOutput,
-                Frequency = Frequency,
+                DeltaTime = Time.deltaTime,
                 MinCutoff = MinCutoff,
                 Beta = Beta,
                 DerivativeCutoff = DerivativeCutoff,
@@ -334,7 +343,7 @@ namespace Basis.Scripts.Networking.Recievers
         }
         private float Alpha(float cutoff)
         {
-            float te = 1.0f / Frequency;
+            float te = 1.0f / (1.0f / Time.deltaTime);
             float tau = 1.0f / (2.0f * Mathf.PI * cutoff);
             return 1.0f / (1.0f + tau / te);
         }
