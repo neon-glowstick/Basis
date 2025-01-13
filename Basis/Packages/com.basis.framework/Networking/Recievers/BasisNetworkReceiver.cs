@@ -119,17 +119,6 @@ namespace Basis.Scripts.Networking.Recievers
                         ForceUpdateFilters();
                     }
 
-                    // oneEuroFilterJob = new BasicOneEuroFilterParallelJob
-                    // {
-                    //     InputValues = musclesPreEuro,
-                    //     OutputValues = EuroValuesOutput,
-                    //     DeltaTime = Time.deltaTime,
-                    //     MinCutoff = MinCutoff,
-                    //     Beta = Beta,
-                    //     DerivativeCutoff = DerivativeCutoff,
-                    //     PositionFilters = positionFilters,
-                    //     DerivativeFilters = derivativeFilters
-                    // };
                     EuroFilterHandle = oneEuroFilterJob.Schedule(LocalAvatarSyncMessage.StoredBones,64,musclesHandle);
                 }
             }
