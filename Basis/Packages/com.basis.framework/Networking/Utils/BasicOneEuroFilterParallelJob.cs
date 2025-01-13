@@ -17,6 +17,7 @@ using UnityEngine;
 [BurstCompile]
 public struct BasicOneEuroFilterParallelJob : IJobParallelFor
 {
+    [ReadOnly]
     public NativeArray<float> InputValues;
     public NativeArray<float> OutputValues;
 
