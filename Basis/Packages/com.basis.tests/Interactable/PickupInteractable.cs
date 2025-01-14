@@ -1,5 +1,4 @@
 using Basis.Scripts.Device_Management.Devices;
-using Basis.Scripts.Device_Management.Devices.Simulation;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Animations;
@@ -105,6 +104,7 @@ public class PickupInteractable : InteractableObject
         {
             case GeometryType.Sphere:
                 var sphere = (SphereCollider)collider;
+                // TODO: use&cache sphere mesh generated (is lower poly)
                 primitive = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 if(primitive.TryGetComponent(out SphereCollider sCol))
                 {
@@ -377,20 +377,22 @@ public class PickupInteractable : InteractableObject
         }
     }
 
+    #if UNITY_EDITOR
     public void OnValidate()
     {
         string errPrefix = "ReparentInteractable needs component defined on self or given a reference for ";
         if (RigidRef == null && !TryGetComponent(out Rigidbody _))
         {
-            Debug.LogError(errPrefix + "Rigidbody", gameObject);
+            Debug.LogWarning(errPrefix + "Rigidbody", gameObject);
         }
         if (ColliderRef == null && !TryGetComponent(out Collider _))
         {
-            Debug.LogError(errPrefix + "Collider", gameObject);
+            Debug.LogWarning(errPrefix + "Collider", gameObject);
         }
         if (ConstraintRef == null && !TryGetComponent(out ParentConstraint _))
         {
-            Debug.LogError(errPrefix + "ParentConstraint", gameObject);
+            Debug.LogWarning(errPrefix + "ParentConstraint", gameObject);
         }
     }
+    #endif
 }
