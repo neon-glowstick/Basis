@@ -161,6 +161,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!54 &21929890
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -469,7 +470,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 609646653}
   m_SourcePrefab: {fileID: 100100000, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
 --- !u!1001 &391151166
 PrefabInstance:
@@ -603,6 +607,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!54 &462462409
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -761,6 +766,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!54 &556741050
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -877,6 +883,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &609646638 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
+  m_PrefabInstance: {fileID: 264690768}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &609646653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 609646638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79f4379d9a24e0f47ba1589762550575, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MessageIndex: 3321
+  byteArray: 00000000000000000000000000000000000000000000000000000000
+  IsOwner: 0
+  LerpMultiplier: 3
+  DeliveryMethod: 4
+  previousPosition: {x: 0, y: 0, z: 0}
+  previousRotation: {x: 0, y: 0, z: 0, w: 0}
+  previousScale: {x: 0, y: 0, z: 0}
+  NeedsAUpdate: 0
+  Rigidbody: {fileID: 0}
 --- !u!1001 &782519661
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1145,6 +1178,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!54 &1232611346
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1385,6 +1419,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!1 &1405895927
 GameObject:
   m_ObjectHideFlags: 0
@@ -1666,6 +1701,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!1 &1556212794
 GameObject:
   m_ObjectHideFlags: 0
@@ -1845,6 +1881,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!54 &1568311659
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2304,6 +2341,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!1 &2063075830
 GameObject:
   m_ObjectHideFlags: 0
@@ -2464,6 +2502,7 @@ MonoBehaviour:
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
+  ConstraintRef: {fileID: 0}
 --- !u!1001 &6034627799823193631
 PrefabInstance:
   m_ObjectHideFlags: 0
