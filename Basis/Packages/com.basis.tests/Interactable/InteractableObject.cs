@@ -3,15 +3,16 @@ using UnityEngine;
 
 
 // needs rigidbody for hover sphere `OnTriggerStay`
+[System.Serializable]
 public abstract class InteractableObject: MonoBehaviour {
-    public CachedList<InputSource> InputSources;
+    public BasisInputWrapper InputSource;
 
     [Header("Interactable Settings")]
     public float InteractRange = 1.0f;
     public bool CanEquip = false;
     public Vector3 equipPos;
     public Quaternion equipRot;
-
+    public bool RequiresUpdateLoop;
 
     /// <summary>
     /// Check if object is within range based on its transform and Interact Range
@@ -58,9 +59,9 @@ public abstract class InteractableObject: MonoBehaviour {
     
     abstract public void InputUpdate();
 
-    public struct InputSource
+    public struct BasisInputWrapper
     {
-        public InputSource(BasisInput source, bool isInteracting)
+        public BasisInputWrapper(BasisInput source, bool isInteracting)
         {
             Source = source;
             IsInteracting = isInteracting;

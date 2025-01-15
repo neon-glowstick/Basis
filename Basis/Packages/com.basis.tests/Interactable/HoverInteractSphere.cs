@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SphereCollider))]
+[System.Serializable]
 public class HoverInteractSphere : MonoBehaviour
 {
 

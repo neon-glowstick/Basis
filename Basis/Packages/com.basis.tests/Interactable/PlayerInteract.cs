@@ -17,15 +17,19 @@ public class PlayerInteract : MonoBehaviour
     [Tooltip("How far the player Hover.")]
     public float hoverRadius = 0.5f;
     [Tooltip("Both of the above are relative to object transforms, objects with larger colliders may have issues")]
-
+    [System.Serializable]
     public struct InteractInput
     {
         public string deviceUid { get; set; }
+        [SerializeField]
         public BasisInput input { get; set; }
-        public GameObject interactOrigin { get; set; }
+        public Transform interactOrigin { get; set; }
         // TODO: use this ref
+        [SerializeField]
         public LineRenderer lineRenderer { get; set; }
+        [SerializeField]
         public HoverInteractSphere hoverInteract { get; set; }
+        [SerializeField]
         public InteractableObject lastTarget { get; set; }
 
         public bool IsInput(BasisInput input)
@@ -33,10 +37,8 @@ public class PlayerInteract : MonoBehaviour
             return deviceUid == input.UniqueDeviceIdentifier;
         }
     }
-
-    public CachedList<InteractInput> InteractInputs = new();
-    
-    // private UniqueCounterList<InteractableObject> ActiveObjects = new();
+    [SerializeField]
+    public InteractInput[] InteractInputs = new InteractInput[] { };
 
     public Material LineMaterial;
     private AsyncOperationHandle<Material> asyncOperationLineMaterial;
@@ -45,55 +47,48 @@ public class PlayerInteract : MonoBehaviour
 
     // TODO: load with addressable.  
     public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
-
-
-    void Start()
+    private void Start()
     {
         BasisLocalPlayer.Instance.LocalBoneDriver.OnSimulate += Simulate;
-        BasisDeviceManagement.Instance.AllInputDevices.OnListChanged += OnInputChanged;
-        BasisDeviceManagement.Instance.AllInputDevices.OnListItemRemoved += OnInputRemoved;
+        var Device = BasisDeviceManagement.Instance.AllInputDevices;
+        Device.OnListAdded += OnInputChanged;
+        Device.OnListItemRemoved += OnInputRemoved;
 
         AsyncOperationHandle<Material> op = Addressables.LoadAssetAsync<Material>(LoadMaterialAddress);
         LineMaterial = op.WaitForCompletion();
         asyncOperationLineMaterial = op;
     }
-    void OnDestroy()
+    private void OnDestroy()
     {
         if (asyncOperationLineMaterial.IsValid())
         {
             asyncOperationLineMaterial.Release();
         }
         BasisLocalPlayer.Instance.LocalBoneDriver.OnSimulate -= Simulate;
-        BasisDeviceManagement.Instance.AllInputDevices.OnListChanged -= OnInputChanged;
-        BasisDeviceManagement.Instance.AllInputDevices.OnListItemRemoved -= OnInputRemoved;
-
-        foreach (InteractInput input in InteractInputs)
+        var Device = BasisDeviceManagement.Instance.AllInputDevices;
+        Device.OnListAdded -= OnInputChanged;
+        Device.OnListItemRemoved -= OnInputRemoved;
+        int count = InteractInputs.Length;
+        for (int Index = 0; Index < count; Index++)
         {
-            Destroy(input.interactOrigin);
+            InteractInput input = InteractInputs[Index];
+            if (input.interactOrigin != null)
+            {
+                Destroy(input.interactOrigin.gameObject);
+            }
         }
     }
 
-    private void OnInputChanged()
+    private void OnInputChanged(BasisInput Input)
     {
-        int count = BasisDeviceManagement.Instance.AllInputDevices.Count;
-        for (int Index = 0; Index < count; Index++)
+        // TODO: need a different config value for can interact/pickup/grab. Mainly input action/trigger values
+        if (Input.BasisDeviceMatchableNames != null && Input.BasisDeviceMatchableNames.HasRayCastSupport
+        )
         {
-            BasisInput device = BasisDeviceManagement.Instance.AllInputDevices[Index];
-            // skip invalid or already included
-            if (device == null || device != null && InteractInputs.Any(x => x.IsInput(device)))
-            {
-                continue;
-            }
-
-            // TODO: need a different config value for can interact/pickup/grab. Mainly input action/trigger values
-            if (device.BasisDeviceMatchableNames != null && 
-                device.BasisDeviceMatchableNames.HasRayCastSupport
-            ) {
-                AddInput(device);
-            }
-            // TODO: what if it has no matchable name?
-            // device removed handled elsewhere
+            AddInput(Input);
         }
+        // TODO: what if it has no matchable name?
+        // device removed handled elsewhere
     }
 
     private void OnInputRemoved(BasisInput input)
@@ -105,8 +100,16 @@ public class PlayerInteract : MonoBehaviour
     [BurstCompile]
     private void Simulate()
     {
-        var count = InteractInputs.Count;
-        for (int Index = 0; Index < count; Index++)
+        if (InteractInputs == null)
+        {
+            return;
+        }
+        var InteractInputsCount = InteractInputs.Length;
+        if (InteractInputsCount == 0)
+        {
+            return;
+        }
+        for (int Index = 0; Index < InteractInputsCount; Index++)
         {
             InteractInput interactInput = InteractInputs[Index];
             if (interactInput.input == null)
@@ -117,7 +120,7 @@ public class PlayerInteract : MonoBehaviour
 
             HoverInteractSphere hoverSphere = interactInput.hoverInteract;
 
-            Vector3 originPos = interactInput.interactOrigin.transform.position;
+            Vector3 originPos = interactInput.interactOrigin.position;
             Ray ray;
             if (hoverSphere.HoverTarget != null)
             {
@@ -133,7 +136,7 @@ public class PlayerInteract : MonoBehaviour
                 else
                 {
                     Vector3 origin = originPos;
-                    Vector3 direction = interactInput.interactOrigin.transform.forward;
+                    Vector3 direction = interactInput.interactOrigin.forward;
                     ray = new Ray(origin, direction);
                 }
             }
@@ -141,11 +144,11 @@ public class PlayerInteract : MonoBehaviour
             RaycastHit rayHit;
             InteractableObject hitInteractable = null;
             // TODO: Interact layer
-            bool isValidRayHit = Physics.Raycast(ray, out rayHit, raycastDistance) && 
-                rayHit.collider != null && 
+            bool isValidRayHit = Physics.Raycast(ray, out rayHit, raycastDistance) &&
+                rayHit.collider != null &&
                 rayHit.collider.TryGetComponent(out hitInteractable);
 
-            
+
             if (isValidRayHit || hoverSphere.HoverTarget != null)
             {
                 // prioritize hover
@@ -186,35 +189,34 @@ public class PlayerInteract : MonoBehaviour
             // write changes back
             InteractInputs[Index] = interactInput;
         }
-
-        // update objects, seperate list to ensure each target only gets one update
-        List<InteractableObject> updateList = new();
-        foreach (InteractInput input in InteractInputs)
+        // Iterate over all the inputs
+        for (int Index = 0; Index < InteractInputsCount; Index++)
         {
-            if (input.lastTarget != null && !updateList.Any(x => x.GetInstanceID() == input.lastTarget.GetInstanceID()))
+            InteractInput input = InteractInputs[Index];
+            if (input.lastTarget != null)
             {
-                updateList.Add(input.lastTarget);
+                if (input.lastTarget.RequiresUpdateLoop)
+                {
+                    input.lastTarget.InputUpdate();
+                }
             }
-        }
-        foreach (InteractableObject interactable in updateList)
-        {
-            interactable.InputUpdate();
         }
 
 
         // apply line renderer
         if (renderInteractLine)
         {
-            foreach (InteractInput input in InteractInputs)
+            for (int Index = 0; Index < InteractInputsCount; Index++)
             {
+                InteractInput input = InteractInputs[Index];
                 if (input.lastTarget != null && input.lastTarget.IsHoveredBy(input.input))
                 {
-                    Vector3 origin = input.interactOrigin.transform.position;
+                    Vector3 origin = input.interactOrigin.position;
                     Vector3 start;
                     // desktop offset for center eye (a little to the bottom right)
                     if (IsDesktopCenterEye(input.input))
                     {
-                        start = input.interactOrigin.transform.position + (input.interactOrigin.transform.forward * 0.1f) + Vector3.down * 0.1f + (input.interactOrigin.transform.right * 0.1f);
+                        start = input.interactOrigin.position + (input.interactOrigin.forward * 0.1f) + Vector3.down * 0.1f + (input.interactOrigin.right * 0.1f);
                     }
                     else
                     {
@@ -240,8 +242,9 @@ public class PlayerInteract : MonoBehaviour
         // turn all the lines off
         else
         {
-            foreach (InteractInput input in InteractInputs)
+            for (int Index = 0; Index < InteractInputsCount; Index++)
             {
+                InteractInput input = InteractInputs[Index];
                 input.lineRenderer.enabled = false;
             }
         }
@@ -357,15 +360,15 @@ public class PlayerInteract : MonoBehaviour
 
     private void RemoveInput(string uid)
     {
-        var inputs = InteractInputs.Where(x => x.deviceUid == uid).ToArray();
-        if (inputs.Length > 1) 
-        {
-            BasisDebug.LogError("Interact Inputs has multiple inputs of the same UID. Please report this bug.");
-        }
+        // Find the inputs to remove based on the UID
+        InteractInput[] inputs = InteractInputs.Where(x => x.deviceUid == uid).ToArray();
+        int length = inputs.Length;
 
-        if (inputs.Length > 0)
+        if (length > 0) // If matching inputs were found
         {
             InteractInput input = inputs[0];
+
+            // Handle hover and interaction states
             if (input.lastTarget != null)
             {
                 if (input.lastTarget.IsHoveredBy(input.input))
@@ -378,10 +381,18 @@ public class PlayerInteract : MonoBehaviour
                     input.lastTarget.OnInteractEnd(input.input);
                 }
             }
-            
 
-            Destroy(input.interactOrigin);
-            InteractInputs.Remove(input);
+            // Destroy the interact origin
+            Destroy(input.interactOrigin.gameObject);
+
+            // Manually resize the array
+            InteractInputs = InteractInputs
+                .Where(x => x.deviceUid != input.deviceUid) // Exclude the removed input
+                .ToArray();
+        }
+        else
+        {
+            BasisDebug.LogError("Interact Inputs has multiple inputs of the same UID. Please report this bug.");
         }
     }
 
@@ -397,7 +408,7 @@ public class PlayerInteract : MonoBehaviour
         interactOrigin.layer = LayerMask.NameToLayer("Interactable");
         // TODO: custom config to use center of palm instead of raycast offset (IK palm? but that breaks input on a bad avi upload, no?)
         interactOrigin.transform.SetLocalPositionAndRotation(input.BasisDeviceMatchableNames.PositionRayCastOffset, Quaternion.Euler(input.BasisDeviceMatchableNames.RotationRaycastOffset));
-        
+
         lineRenderer.enabled = false;
         lineRenderer.material = LineMaterial;
         lineRenderer.startWidth = interactLineWidth;
@@ -415,36 +426,38 @@ public class PlayerInteract : MonoBehaviour
         sphereCollider.enabled = !IsDesktopCenterEye(input);
 
 
-        InteractInput interactInput = new()
+        InteractInput interactInput = new InteractInput()
         {
             deviceUid = input.UniqueDeviceIdentifier,
             input = input,
-            interactOrigin = interactOrigin,
+            interactOrigin = interactOrigin.transform,
             lineRenderer = lineRenderer,
             hoverInteract = interactSphere,
         };
-
-        InteractInputs.Add(interactInput);
+        List<InteractInput> interactInputList = InteractInputs.ToList();
+        interactInputList.Add(interactInput);
+        InteractInputs = interactInputList.ToArray();
     }
-
 
     private void OnDrawGizmos()
     {
-        foreach (var device in InteractInputs)
+        int count = InteractInputs.Length;
+        for (int Index = 0; Index < count; Index++)
         {
+            InteractInput device = InteractInputs[Index];
             // pointer line
-            Gizmos.DrawLine(device.interactOrigin.transform.position, device.interactOrigin.transform.position + device.interactOrigin.transform.forward * raycastDistance);
+            Gizmos.DrawLine(device.interactOrigin.position, device.interactOrigin.position + device.interactOrigin.forward * raycastDistance);
 
             // hover target line
             if (device.hoverInteract != null && device.hoverInteract.HoverTarget != null)
             {
-                Gizmos.DrawLine(device.interactOrigin.transform.position, device.hoverInteract.TargetClosestPoint);
+                Gizmos.DrawLine(device.interactOrigin.position, device.hoverInteract.TargetClosestPoint);
             }
 
             // hover sphere
             if (!IsDesktopCenterEye(device.input))
             {
-                Gizmos.DrawWireSphere(device.interactOrigin.transform.position, hoverRadius);
+                Gizmos.DrawWireSphere(device.interactOrigin.position, hoverRadius);
             }
         }
     }

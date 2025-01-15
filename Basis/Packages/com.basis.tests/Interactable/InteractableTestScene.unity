@@ -119,34 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &11334214 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-  m_PrefabInstance: {fileID: 953741117}
-  m_PrefabAsset: {fileID: 0}
---- !u!1773428102 &11334222
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 11334214}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -1.291, y: 1, z: 0}
-  m_RotationAtRest: {x: 45.029, y: 67.472, z: 49.67}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &21929887
 GameObject:
   m_ObjectHideFlags: 0
@@ -161,7 +133,6 @@ GameObject:
   - component: {fileID: 21929891}
   - component: {fileID: 21929890}
   - component: {fileID: 21929889}
-  - component: {fileID: 21929895}
   m_Layer: 8
   m_Name: Sphere
   m_TagString: Untagged
@@ -185,11 +156,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
 --- !u!54 &21929890
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -306,29 +277,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1773428102 &21929895
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 21929887}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -0.849, y: 0.953, z: -1.678}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &241820446
 GameObject:
   m_ObjectHideFlags: 0
@@ -521,10 +469,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 609646646}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
 --- !u!1001 &391151166
 PrefabInstance:
@@ -610,7 +555,8 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1266327906536326857, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -629,7 +575,6 @@ GameObject:
   - component: {fileID: 462462410}
   - component: {fileID: 462462409}
   - component: {fileID: 462462408}
-  - component: {fileID: 462462414}
   m_Layer: 8
   m_Name: Sphere (1)
   m_TagString: Untagged
@@ -653,11 +598,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
 --- !u!54 &462462409
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -774,29 +719,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1773428102 &462462414
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 462462406}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -1.191, y: 0.953, z: -1.678}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &556741047
 GameObject:
   m_ObjectHideFlags: 0
@@ -811,7 +733,6 @@ GameObject:
   - component: {fileID: 556741051}
   - component: {fileID: 556741050}
   - component: {fileID: 556741049}
-  - component: {fileID: 556741055}
   m_Layer: 8
   m_Name: Sphere (2)
   m_TagString: Untagged
@@ -835,11 +756,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
 --- !u!54 &556741050
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -956,57 +877,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1773428102 &556741055
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 556741047}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -1.546, y: 0.953, z: -1.678}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
---- !u!1 &609646638 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-  m_PrefabInstance: {fileID: 264690768}
-  m_PrefabAsset: {fileID: 0}
---- !u!1773428102 &609646646
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 609646638}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -0.92800003, y: 1, z: 0}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1001 &782519661
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1082,10 +952,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1212161320}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
 --- !u!1001 &857767427
 PrefabInstance:
@@ -1165,9 +1032,6 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7906979de341558478671be4f6bdf5e8, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1232611347}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7906979de341558478671be4f6bdf5e8, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1232611346}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7906979de341558478671be4f6bdf5e8, type: 3}
       insertIndex: -1
@@ -1184,30 +1048,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1001019263030247314, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: m_IsKinematic
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5036961803400065188, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: CanEquip
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5036961803400065188, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: equipPos.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5036961803400065188, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: equipPos.y
-      value: -0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5036961803400065188, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: equipPos.z
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5036961803400065188, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: KinematicWhileInteracting
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6918077497000395064, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.291
@@ -1252,50 +1092,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestPickup (3)
       objectReference: {fileID: 0}
-    - target: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: m_Layer
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 11334222}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
---- !u!1 &1212161312 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-  m_PrefabInstance: {fileID: 782519661}
-  m_PrefabAsset: {fileID: 0}
---- !u!1773428102 &1212161320
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1212161312}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -1.1370001, y: 1, z: 0}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &1232611343 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 7906979de341558478671be4f6bdf5e8, type: 3}
@@ -1339,11 +1140,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 1
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
 --- !u!54 &1232611346
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1371,29 +1172,59 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!1773428102 &1232611347
-ParentConstraint:
+--- !u!1 &1262652854
+GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1232611343}
-  m_Enabled: 1
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1262652855}
+  - component: {fileID: 1262652856}
+  m_Layer: 0
+  m_Name: Basis Scene
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1262652855
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1262652854}
   serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -1.451, y: 0.991, z: 0.668}
-  m_RotationAtRest: {x: -89.98, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1262652856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1262652854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a77971dc49cce9541828138eb5e2270e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BasisBundleDescription:
+    AssetBundleName: 
+    AssetBundleDescription: 
+  SpawnPoint: {fileID: 1262652855}
+  RespawnHeight: -100
+  RespawnCheckTimer: 0.1
+  Group: {fileID: 6216228358845890117, guid: 471a0209081144d4da2426822e8a0b47, type: 2}
+  MainCamera: {fileID: 1556212796}
+  IsReady: 0
 --- !u!1 &1336315009
 GameObject:
   m_ObjectHideFlags: 0
@@ -1408,7 +1239,6 @@ GameObject:
   - component: {fileID: 1336315013}
   - component: {fileID: 1336315012}
   - component: {fileID: 1336315017}
-  - component: {fileID: 1336315018}
   m_Layer: 8
   m_Name: Capsule (3)
   m_TagString: Untagged
@@ -1550,34 +1380,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
---- !u!1773428102 &1336315018
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1336315009}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -2.2507, y: 1.0181, z: 0.001}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &1405895927
 GameObject:
   m_ObjectHideFlags: 0
@@ -1713,7 +1520,6 @@ GameObject:
   - component: {fileID: 1472934488}
   - component: {fileID: 1472934487}
   - component: {fileID: 1472934492}
-  - component: {fileID: 1472934493}
   m_Layer: 8
   m_Name: Capsule (4)
   m_TagString: Untagged
@@ -1855,34 +1661,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
---- !u!1773428102 &1472934493
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1472934484}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -2.417, y: 1.0181, z: 0.001}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &1556212794
 GameObject:
   m_ObjectHideFlags: 0
@@ -2034,7 +1817,6 @@ GameObject:
   - component: {fileID: 1568311660}
   - component: {fileID: 1568311659}
   - component: {fileID: 1568311658}
-  - component: {fileID: 1568311657}
   m_Layer: 8
   m_Name: Capsule (5)
   m_TagString: Untagged
@@ -2042,29 +1824,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!1773428102 &1568311657
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1568311656}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -1.897, y: 1.0181, z: 0.001}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!114 &1568311658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2081,11 +1840,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
 --- !u!54 &1568311659
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2383,39 +2142,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1896202243}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
---- !u!1 &1896202235 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8381068889838832174, guid: 2d8f3575614e0d7419c84f967185cdac, type: 3}
-  m_PrefabInstance: {fileID: 1770558167}
-  m_PrefabAsset: {fileID: 0}
---- !u!1773428102 &1896202243
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1896202235}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -0.744, y: 1, z: 0}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &1983638905
 GameObject:
   m_ObjectHideFlags: 0
@@ -2430,7 +2158,6 @@ GameObject:
   - component: {fileID: 1983638909}
   - component: {fileID: 1983638908}
   - component: {fileID: 1983638913}
-  - component: {fileID: 1983638914}
   m_Layer: 8
   m_Name: Capsule (2)
   m_TagString: Untagged
@@ -2572,34 +2299,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
---- !u!1773428102 &1983638914
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1983638905}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -2.075, y: 1.0181, z: 0.001}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1 &2063075830
 GameObject:
   m_ObjectHideFlags: 0
@@ -2614,7 +2318,6 @@ GameObject:
   - component: {fileID: 2063075834}
   - component: {fileID: 2063075833}
   - component: {fileID: 2063075838}
-  - component: {fileID: 2063075839}
   m_Layer: 8
   m_Name: Capsule (1)
   m_TagString: Untagged
@@ -2756,34 +2459,11 @@ MonoBehaviour:
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
+  RequiresUpdateLoop: 0
   KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
---- !u!1773428102 &2063075839
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2063075830}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -1.897, y: 1.0181, z: 0.001}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
 --- !u!1001 &6034627799823193631
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2937,7 +2617,8 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2919849334597809319, guid: 1701187c6a784ab4f8030c14149b0bce, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -2966,3 +2647,4 @@ SceneRoots:
   - {fileID: 6880374503260693233}
   - {fileID: 1734220527}
   - {fileID: 857767427}
+  - {fileID: 1262652855}

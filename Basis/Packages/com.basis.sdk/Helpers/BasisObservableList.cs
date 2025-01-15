@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +10,7 @@ public class BasisObservableList<T> : IList<T>
     [SerializeField]
     public List<T> _list = new List<T>();
 
+    public event Action<T> OnListAdded;
     public event Action OnListChanged;
     public event Action<T> OnListItemRemoved;
     public T this[int index]
@@ -29,11 +30,11 @@ public class BasisObservableList<T> : IList<T>
     public int Count => _list.Count;
 
     public bool IsReadOnly => false;
-
     public void Add(T item)
     {
-        _list.Add(item);
-        OnListChanged?.Invoke();
+            _list.Add(item);
+            OnListChanged?.Invoke();
+            OnListAdded?.Invoke(item);
     }
 
     public void Clear()
@@ -54,6 +55,7 @@ public class BasisObservableList<T> : IList<T>
     {
         _list.Insert(index, item);
         OnListChanged?.Invoke();
+        OnListAdded?.Invoke(item);
     }
 
     public bool Remove(T item)

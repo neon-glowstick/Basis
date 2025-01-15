@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 2600401473938556946}
   - component: {fileID: 1001019263030247314}
   - component: {fileID: 5036961803400065188}
-  - component: {fileID: 1266327906536326857}
   m_Layer: 8
   m_Name: PickupInteractable
   m_TagString: Untagged
@@ -134,7 +133,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -151,34 +150,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   InteractRange: 1
-  CanEquip: 0
-  equipPos: {x: 0, y: 0, z: 0}
+  CanEquip: 1
+  equipPos: {x: 0, y: -0.1, z: 0.1}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
-  KinematicWhileInteracting: 1
+  RequiresUpdateLoop: 0
+  KinematicWhileInteracting: 0
   LocalOnly: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
---- !u!1773428102 &1266327906536326857
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8381068889838832174}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: -0.744, y: 1, z: 0}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets: []
-  m_RotationOffsets: []
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 0
-  m_IsLocked: 0
-  m_Sources: []
