@@ -5,9 +5,9 @@ namespace Basis.Network.Core
         public const int NetworkIntervalPoll = 15;
         /// <summary>
         /// when adding a new message we need to increase this
-        /// will funciton up to 64
+        /// will function up to 64
         /// </summary>
-        public const byte TotalChannels = 12;
+        public const byte TotalChannels = 11;
         /// <summary>
         /// channel zero is only used for unreliable methods
         /// we fall it through to stop bugs
@@ -22,7 +22,7 @@ namespace Basis.Network.Core
         /// </summary>
         public const byte VoiceChannel = 2;
         /// <summary>
-        /// this is what peopl usee send data on the scene network
+        /// this is what people use to send data on the scene network
         /// </summary>
         public const byte SceneChannel = 3;
         /// <summary>
@@ -31,11 +31,10 @@ namespace Basis.Network.Core
         public const byte AvatarChannel = 4;
 
         public const byte CreateRemotePlayer = 5;
-        public const byte CreateRemotePlayers = 6;
-        public const byte AvatarChangeMessage = 7;
-        public const byte OwnershipResponse = 8;
-        public const byte OwnershipTransfer = 9;
-        public const byte AudioRecipients = 10;
-        public const byte Disconnection = 11;
+        public const byte AvatarChangeMessage = 6;
+        public const byte OwnershipResponse = 7;
+        public const byte OwnershipTransfer = 8;
+        public const byte AudioRecipients = 9;
+        public const byte Disconnection = 10;
     }
 }

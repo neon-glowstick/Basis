@@ -414,13 +414,6 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
-                case BasisNetworkCommons.CreateRemotePlayers:
-                    BasisNetworkManagement.MainThreadContext.Post(async _ =>
-                    {
-                        await BasisNetworkHandleRemote.HandleCreateAllRemoteClients(Reader, this.transform);
-                        Reader.Recycle();
-                    }, null);
-                    break;
                 case BasisNetworkCommons.OwnershipResponse:
                     BasisNetworkManagement.MainThreadContext.Post(_ =>
                     {

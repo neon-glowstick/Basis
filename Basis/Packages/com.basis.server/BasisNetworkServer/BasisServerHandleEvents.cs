@@ -181,75 +181,73 @@ namespace BasisServerHandle
         #region Network Receive Handlers
         private static void HandleNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
         {
-            try
+            var task = Task.Run(() =>
             {
-                var task = Task.Run(() =>
+                try
                 {
-                    try
+                    switch (channel)
                     {
-                        switch (channel)
-                        {
-                            case BasisNetworkCommons.FallChannel:
-                                if (deliveryMethod == DeliveryMethod.Unreliable)
+                        case BasisNetworkCommons.FallChannel:
+                            if (deliveryMethod == DeliveryMethod.Unreliable)
+                            {
+                                if (reader.TryGetByte(out byte Byte))
                                 {
-                                    if (reader.TryGetByte(out byte Byte))
-                                    {
-                                        HandleNetworkReceiveEvent(peer, reader, Byte, deliveryMethod);
-                                    }
-                                    else
-                                    {
-                                        BNL.LogError($"Unknown channel no data remains: {channel} " + reader.AvailableBytes);
-                                        reader.Recycle();
-                                    }
+                                    HandleNetworkReceiveEvent(peer, reader, Byte, deliveryMethod);
                                 }
                                 else
                                 {
-                                    BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
+                                    BNL.LogError($"Unknown channel no data remains: {channel} " + reader.AvailableBytes);
                                     reader.Recycle();
                                 }
-                                break;
-                            case BasisNetworkCommons.MovementChannel:
-                                HandleAvatarMovement(reader, peer);
-                                break;
-                            case BasisNetworkCommons.VoiceChannel:
-                                HandleVoiceMessage(reader, peer);
-                                break;
-                            case BasisNetworkCommons.AvatarChannel:
-                                BasisNetworkingGeneric.HandleAvatar(reader, deliveryMethod, peer);
-                                break;
-                            case BasisNetworkCommons.SceneChannel:
-                                BasisNetworkingGeneric.HandleScene(reader, deliveryMethod, peer);
-                                break;
-                            case BasisNetworkCommons.AvatarChangeMessage:
-                                SendAvatarMessageToClients(reader, peer);
-                                break;
-                            case BasisNetworkCommons.OwnershipTransfer:
-                                BasisNetworkOwnership.OwnershipTransfer(reader, peer);
-                                break;
-                            case BasisNetworkCommons.OwnershipResponse:
-                                BasisNetworkOwnership.OwnershipResponse(reader, peer);
-                                break;
-                            case BasisNetworkCommons.AudioRecipients:
-                                UpdateVoiceReceivers(reader, peer);
-                                break;
-                            default:
+                            }
+                            else
+                            {
                                 BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
                                 reader.Recycle();
-                                break;
-                        }
+                            }
+                            break;
+                        case BasisNetworkCommons.MovementChannel:
+                            HandleAvatarMovement(reader, peer);
+                            break;
+                        case BasisNetworkCommons.VoiceChannel:
+                            HandleVoiceMessage(reader, peer);
+                            break;
+                        case BasisNetworkCommons.AvatarChannel:
+                            BasisNetworkingGeneric.HandleAvatar(reader, deliveryMethod, peer);
+                            break;
+                        case BasisNetworkCommons.SceneChannel:
+                            BasisNetworkingGeneric.HandleScene(reader, deliveryMethod, peer);
+                            break;
+                        case BasisNetworkCommons.AvatarChangeMessage:
+                            SendAvatarMessageToClients(reader, peer);
+                            break;
+                        case BasisNetworkCommons.OwnershipTransfer:
+                            BasisNetworkOwnership.OwnershipTransfer(reader, peer);
+                            break;
+                        case BasisNetworkCommons.OwnershipResponse:
+                            BasisNetworkOwnership.OwnershipResponse(reader, peer);
+                            break;
+                        case BasisNetworkCommons.AudioRecipients:
+                            UpdateVoiceReceivers(reader, peer);
+                            break;
+                        default:
+                            BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
+                            reader.Recycle();
+                            break;
                     }
-                    catch (Exception e)
-                    {
-                        BNL.LogError($"{e.Message} : {e.StackTrace}");
-                        reader?.Recycle();
-                    }
-                });
-            }
-            catch (Exception e)
-            {
-                BNL.LogError($"{e.Message} : {e.StackTrace}");
-                reader?.Recycle();
-            }
+                }
+                catch (Exception ex)
+                {
+                    // Log detailed error information
+                    BNL.LogError($"[Error] Exception occurred in HandleNetworkReceiveEvent.\n" +
+                                 $"Peer: {peer.Address}, Channel: {channel}, DeliveryMethod: {deliveryMethod}\n" +
+                                 $"Message: {ex.Message}\n" +
+                                 $"StackTrace: {ex.StackTrace}\n" +
+                                 $"InnerException: {ex.InnerException}");
+
+                    reader?.Recycle(); // Ensure the reader is recycled to prevent memory leaks
+                }
+            });
         }
         #endregion
 
@@ -401,7 +399,11 @@ namespace BasisServerHandle
             BasisSavedState.AddLastData(authClient, readyMessage);
             return serverReadyMessage;
         }
-
+        /// <summary>
+        /// notify existing clients about a new player
+        /// </summary>
+        /// <param name="serverSideSyncPlayerMessage"></param>
+        /// <param name="authClient"></param>
         public static void NotifyExistingClients(ServerReadyMessage serverSideSyncPlayerMessage, NetPeer authClient)
         {
             NetDataWriter Writer = new NetDataWriter(true, 2);
@@ -416,60 +418,30 @@ namespace BasisServerHandle
                 }
             }
         }
-
+        /// <summary>
+        /// send everyone to the new client
+        /// </summary>
+        /// <param name="authClient"></param>
         public static void SendClientListToNewClient(NetPeer authClient)
         {
             try
             {
                 // Fetch all peers into an array (up to 1024)
                 ReadOnlySpan<NetPeer> peers = BasisPlayerArray.GetSnapshot();
-                int peerCount = peers.Length;
-
-                if (peerCount == 0)
-                {
-                    BNL.Log("No peers to notify.");
-                    return;
-                }
-
-                if (peerCount > 1024)
-                {
-                    BNL.LogError("Peer count exceeds the maximum allowed limit (1024).");
-                    return;
-                }
-
-                // Pre-allocate list with a known capacity
-                List<ServerReadyMessage> serverReadyMessages = new List<ServerReadyMessage>(peerCount);
-
+                NetDataWriter writer = new NetDataWriter(true, 2);
                 foreach (var peer in peers)
                 {
                     if (peer == authClient)
                     {
                         continue;
                     }
-
                     if (CreateServerReadyMessageForPeer(peer, out ServerReadyMessage Message))
                     {
-                        serverReadyMessages.Add(Message);
+                        Message.Serialize(writer, true);
+                        authClient.Send(writer, BasisNetworkCommons.CreateRemotePlayer, DeliveryMethod.ReliableOrdered);
                     }
+                    writer.Reset();
                 }
-
-                // If no messages were created, return early
-                if (serverReadyMessages.Count == 0)
-                {
-                    BNL.Log("No valid peers to notify.");
-                    return;
-                }
-
-                // Create a batched message and send it to the new client
-                var remoteMessages = new CreateAllRemoteMessage
-                {
-                    serverSidePlayer = serverReadyMessages.ToArray()
-                };
-
-                NetDataWriter writer = new NetDataWriter(true, 2);
-                remoteMessages.Serialize(writer, false);
-                authClient.Send(writer, BasisNetworkCommons.CreateRemotePlayers, DeliveryMethod.ReliableOrdered);
-                BNL.Log($"Sent client list ({serverReadyMessages.Count} clients) to new peer {authClient.Id}.");
             }
             catch (Exception ex)
             {
