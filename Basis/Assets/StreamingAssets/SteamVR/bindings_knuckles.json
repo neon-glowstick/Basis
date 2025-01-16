@@ -1,7 +1,7 @@
 {
    "action_manifest_version" : 0,
    "alias_info" : {},
-   "app_key" : "application.generated.unity.basis.exe",
+   "app_key" : "application.generated.unity.basisunity.exe",
    "bindings" : {
       "/actions/buggy" : {
          "chords" : [],
@@ -45,6 +45,9 @@
          "sources" : [
             {
                "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/joystickclick"
+                  },
                   "position" : {
                      "output" : "/actions/default/in/joystick"
                   }
@@ -54,6 +57,9 @@
             },
             {
                "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/joystickclick"
+                  },
                   "position" : {
                      "output" : "/actions/default/in/joystick"
                   }
@@ -114,6 +120,70 @@
                },
                "mode" : "button",
                "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/default/in/handtrigger"
+                  },
+                  "touch" : {
+                     "output" : "/actions/default/in/grip"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {},
+               "mode" : "none",
+               "path" : "/user/hand/left/input/skeleton/left"
+            },
+            {
+               "inputs" : {},
+               "mode" : "none",
+               "path" : "/user/hand/right/input/skeleton/left"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/default/in/trackpad"
+                  },
+                  "touch" : {
+                     "output" : "/actions/default/in/trackpadtouched"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/left/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/default/in/trackpad"
+                  },
+                  "touch" : {
+                     "output" : "/actions/default/in/trackpadtouched"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/right/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/system"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/system"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/system"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/system"
             }
          ]
       },

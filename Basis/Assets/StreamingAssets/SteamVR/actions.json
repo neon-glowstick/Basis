@@ -32,6 +32,30 @@
       "type": "vector1"
     },
     {
+      "name": "/actions/default/in/JoyStickClick",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/default/in/TrackPad",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/default/in/System",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/default/in/HandTrigger",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/default/in/TrackPadTouched",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/default/in/Grip",
+      "type": "boolean"
+    },
+    {
       "name": "/actions/default/out/Haptic",
       "type": "vibration"
     }

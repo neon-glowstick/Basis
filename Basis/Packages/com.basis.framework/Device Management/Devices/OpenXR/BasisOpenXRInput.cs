@@ -72,7 +72,7 @@ namespace Basis.Scripts.Device_Management.Devices.OpenXR
                 }
                 if (Device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.menuButton, out bool menuButton))
                 {
-                    InputState.MenuButton = menuButton;
+                    InputState.SystemOrMenuButton = menuButton;
                 }
                 if (Device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primaryButton, out bool primaryButtonGetState))
                 {
@@ -94,6 +94,17 @@ namespace Basis.Scripts.Device_Management.Devices.OpenXR
                 {
                     InputState.Primary2DAxisClick = primary2DAxisClick;
                 }
+
+                if (Device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.grip, out float SecondaryTrigger))
+                {
+                    InputState.SecondaryTrigger = SecondaryTrigger;
+                }
+                /*
+                 *             target.TrackPad = this.TrackPad;
+            target.TrackPadTouched = this.TrackPadTouched;
+            target.System = this.System;
+            target.JoyStickClick = this.JoyStickClick;
+                 */
 
                 // Calculate Finger Curls
                 CalculateFingerCurls();
@@ -126,7 +137,7 @@ namespace Basis.Scripts.Device_Management.Devices.OpenXR
             FingerCurls.IndexPercentage = new Vector2(BasisBaseMuscleDriver.MapValue(InputState.Trigger, 0, 1, -1f, 0.7f), 0);// Index finger curl
             FingerCurls.MiddlePercentage = new Vector2(InputState.PrimaryButtonGetState ? -1f : 0.7f, 0);// Middle finger curl
             FingerCurls.RingPercentage = new Vector2(InputState.SecondaryButtonGetState ? -1f : 0.7f, 0); // Ring finger curl
-            FingerCurls.LittlePercentage = new Vector2(InputState.MenuButton ? 1 - 1f : 0.7f, 0); // Pinky finger curl
+            FingerCurls.LittlePercentage = new Vector2(InputState.SystemOrMenuButton ? 1 - 1f : 0.7f, 0); // Pinky finger curl
         }
     }
 }

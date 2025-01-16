@@ -23,6 +23,7 @@ public class BasisNetworkManagementEditor : Editor
         // Display stats
         networkManager.Ip = EditorGUILayout.TextField("IP Address:", networkManager.Ip);
         networkManager.Port = (ushort)EditorGUILayout.IntField("Port:", networkManager.Port);
+        networkManager.Password = EditorGUILayout.PasswordField("Password:", networkManager.Password);
         EditorGUILayout.LabelField("Total Players:", BasisNetworkManagement.Players.Count.ToString());
         EditorGUILayout.LabelField("Remote Players:", BasisNetworkManagement.RemotePlayers.Count.ToString());
         EditorGUILayout.LabelField("Joining Players:", BasisNetworkManagement.JoiningPlayers.Count.ToString());
