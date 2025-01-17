@@ -81,6 +81,10 @@ namespace BasisServerHandle
             BasisNetworkOwnership.RemovePlayerOwnership(id);
             BasisSavedState.RemovePlayer(peer);
             BasisServerReductionSystem.RemovePlayer(peer);
+            if (Peers.Count == 0)
+            {
+                BasisNetworkIDDatabase.Reset();
+            }
         }
         #endregion
 
@@ -164,7 +168,7 @@ namespace BasisServerHandle
                         };
                         NetDataWriter Writer = new NetDataWriter(true, 4);
                         ServerUniqueIDMessageArray.Serialize(Writer);
-                        newPeer.Send(Writer, BasisNetworkCommons.MassnetIDAssign, DeliveryMethod.ReliableOrdered);
+                        newPeer.Send(Writer, BasisNetworkCommons.NetIDAssigns, DeliveryMethod.ReliableOrdered);
                         SendRemoteSpawnMessage(newPeer, readyMessage);
                     }
                     else
@@ -230,10 +234,10 @@ namespace BasisServerHandle
                         case BasisNetworkCommons.AvatarChangeMessage:
                             SendAvatarMessageToClients(reader, peer);
                             break;
-                        case BasisNetworkCommons.OwnershipTransfer:
+                        case BasisNetworkCommons.ChangeCurrentOwnerRequest:
                             BasisNetworkOwnership.OwnershipTransfer(reader, peer);
                             break;
-                        case BasisNetworkCommons.OwnershipResponse:
+                        case BasisNetworkCommons.GetCurrentOwnerRequest:
                             BasisNetworkOwnership.OwnershipResponse(reader, peer);
                             break;
                         case BasisNetworkCommons.AudioRecipients:
@@ -241,6 +245,12 @@ namespace BasisServerHandle
                             break;
                         case BasisNetworkCommons.netIDAssign:
                             netIDAssign(reader, peer);
+                            break;
+                        case BasisNetworkCommons.LoadResourceMessage:
+                            LoadResource(reader, peer);
+                            break;
+                        case BasisNetworkCommons.UnloadResourceMessage:
+                            UnloadResource(reader, peer);
                             break;
                         default:
                             BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
@@ -506,6 +516,24 @@ namespace BasisServerHandle
             Reader.Recycle();
             //returns a message with the ushort back to the client, or it sends it to everyone if its new.
             BasisNetworkIDDatabase.AddOrFindNetworkID(Peer, ServerUniqueIDMessage.UniqueID);
+            //we need to convert the string int a  ushort.
+        }
+        public static void LoadResource(NetPacketReader Reader, NetPeer Peer)
+        {
+            LocalLoadResource LocalLoadResource = new LocalLoadResource();
+            LocalLoadResource.Deserialize(Reader);
+            Reader.Recycle();
+            //returns a message with the ushort back to the client, or it sends it to everyone if its new.
+            BasisNetworkResourceManagement.LoadResource(LocalLoadResource);
+            //we need to convert the string int a  ushort.
+        }
+        public static void UnloadResource(NetPacketReader Reader, NetPeer Peer)
+        {
+            UnLoadResource UnLoadResource = new UnLoadResource();
+            UnLoadResource.Deserialize(Reader);
+            Reader.Recycle();
+            //returns a message with the ushort back to the client, or it sends it to everyone if its new.
+            BasisNetworkResourceManagement.UnloadResource(UnLoadResource);
             //we need to convert the string int a  ushort.
         }
         #endregion

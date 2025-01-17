@@ -3,7 +3,6 @@ using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Networking;
 using Basis.Scripts.Networking.NetworkedAvatar;
 using LiteNetLib;
-using System;
 using UnityEngine;
 
 public class BasisTestNetwork : MonoBehaviour

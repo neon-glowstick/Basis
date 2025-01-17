@@ -75,10 +75,17 @@ namespace Basis
             // Keep the application running
             while (true)
             {
-                Thread.Sleep(500);
-                BNL.Log($"Thread Count is: {ThreadPool.ThreadCount} With Pending Jobs: {ThreadPool.PendingWorkItemCount}");
+                Thread.Sleep(3500);
+                if (ThreadPool.ThreadCount != CachedThreadCount || CachedPendingWorkItemCount != ThreadPool.PendingWorkItemCount)
+                {
+                    CachedThreadCount = ThreadPool.ThreadCount;
+                    CachedPendingWorkItemCount = ThreadPool.PendingWorkItemCount;
+                    BNL.Log($"Thread Count is: {ThreadPool.ThreadCount} With Pending Jobs: {ThreadPool.PendingWorkItemCount}");
+                }
             }
         }
+        public static int CachedThreadCount;
+        public static long CachedPendingWorkItemCount;
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {

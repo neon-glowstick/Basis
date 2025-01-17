@@ -7,7 +7,7 @@ namespace Basis.Network.Core
         /// when adding a new message we need to increase this
         /// will function up to 64
         /// </summary>
-        public const byte TotalChannels = 13;
+        public const byte TotalChannels = 15;
         /// <summary>
         /// channel zero is only used for unreliable methods
         /// we fall it through to stop bugs
@@ -29,14 +29,45 @@ namespace Basis.Network.Core
         /// this is what people use to send data on there avatar
         /// </summary>
         public const byte AvatarChannel = 4;
-
+        /// <summary>
+        /// Message to create a remote player entity
+        /// </summary>
         public const byte CreateRemotePlayer = 5;
+        /// <summary>
+        /// message to swap to a different avatar
+        /// </summary>
         public const byte AvatarChangeMessage = 6;
-        public const byte OwnershipResponse = 7;
-        public const byte OwnershipTransfer = 8;
+        /// <summary>
+        /// Ownership Response is when we get the current owner
+        /// </summary>
+        public const byte GetCurrentOwnerRequest = 7;
+        /// <summary>
+        /// changes current owner of a string
+        /// </summary>
+        public const byte ChangeCurrentOwnerRequest = 8;
+        /// <summary>
+        /// the audio recipients that can here
+        /// </summary>
         public const byte AudioRecipients = 9;
+        /// <summary>
+        /// Removes a players entity
+        /// </summary>
         public const byte Disconnection = 10;
+        /// <summary>
+        /// assign a net id (string to ushort)
+        /// </summary>
         public const byte netIDAssign = 11;
-        public const byte MassnetIDAssign = 12;
+        /// <summary>
+        /// assign a array of net id (string to ushort)
+        /// </summary>
+        public const byte NetIDAssigns = 12;
+        /// <summary>
+        /// load a resource (scene,gameobject,script,asset) whatever the implementation is
+        /// </summary>
+        public const byte LoadResourceMessage = 13;
+        /// <summary>
+        /// Unload a Resource
+        /// </summary>
+        public const byte UnloadResourceMessage = 14;
     }
 }

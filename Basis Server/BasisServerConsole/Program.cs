@@ -75,7 +75,7 @@ namespace Basis
             // Keep the application running
             while (true)
             {
-                Thread.Sleep(2500);
+                Thread.Sleep(3500);
                 if (ThreadPool.ThreadCount != CachedThreadCount || CachedPendingWorkItemCount != ThreadPool.PendingWorkItemCount)
                 {
                     CachedThreadCount = ThreadPool.ThreadCount;

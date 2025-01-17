@@ -1,6 +1,7 @@
 using Basis.Network.Core;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,15 @@ namespace BasisNetworkCore
             {
                 // Log that we are assigning a new ID
                 BNL.Log($"No existing ID found for {UniqueStringID}. Assigning a new ID.");
+
+                // Check if we can assign a new ID
+                if (counter >= ushort.MaxValue)
+                {
+                    // Log and throw an error
+                    string errorMessage = $"Error: Cannot assign a new NetID for {UniqueStringID}. Maximum ID limit of {ushort.MaxValue} reached.";
+                    BNL.Log(errorMessage);
+                    throw new InvalidOperationException(errorMessage);
+                }
 
                 // Generate a new unique ushort ID
                 ushort newID = (ushort)Interlocked.Increment(ref counter); // Thread-safe increment
