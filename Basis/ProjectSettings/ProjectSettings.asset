@@ -165,7 +165,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.BasisUnity.BasisUnity
+    Android: com.Basis.Basis
     Standalone: com.Basis.Basis
   buildNumber:
     Standalone: 0

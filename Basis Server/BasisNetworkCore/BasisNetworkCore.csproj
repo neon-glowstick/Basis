@@ -1,6 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="$(ProjectDir)..\.props" />
-
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net9.0</TargetFrameworks>
 		<Configurations>Debug;Release</Configurations>

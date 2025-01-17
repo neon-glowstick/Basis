@@ -1,0 +1,105 @@
+using Basis.Network.Core;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using static BasisNetworkCore.Serializable.SerializableBasis;
+
+namespace BasisNetworkCore
+{
+    public static class BasisNetworkIDDatabase
+    {
+        public static ConcurrentDictionary<string, ushort> UshortNetworkDatabase = new ConcurrentDictionary<string, ushort>();
+        private static int counter = -1; // Start at -1 so the first increment becomes 0
+
+        public static void AddOrFindNetworkID(NetPeer HeWhoAsked, string UniqueStringID)
+        {
+            if (UshortNetworkDatabase.TryGetValue(UniqueStringID, out ushort Value)) // This should basically never happen!
+            {
+                // We already know about it, let's just give it back to that player
+                ServerNetIDMessage SUIMA = new ServerNetIDMessage
+                {
+                    NetIDMessage = new NetIDMessage() { UniqueID = UniqueStringID },
+                    UshortUniqueIDMessage = new UshortUniqueIDMessage() { UniqueIDUshort = Value }
+                };
+                NetDataWriter Writer = new NetDataWriter(true);
+                SUIMA.Serialize(Writer);
+                HeWhoAsked.Send(Writer, BasisNetworkCommons.netIDAssign, DeliveryMethod.ReliableOrdered);
+                BNL.Log($"Sent existing NetID ({Value}) for {UniqueStringID} to peer {HeWhoAsked.Address}");
+            }
+            else
+            {
+                // Log that we are assigning a new ID
+                BNL.Log($"No existing ID found for {UniqueStringID}. Assigning a new ID.");
+
+                // Generate a new unique ushort ID
+                ushort newID = (ushort)Interlocked.Increment(ref counter); // Thread-safe increment
+
+                // Add to the database
+                UshortNetworkDatabase[UniqueStringID] = newID;
+                BNL.Log($"New ID {newID} assigned to {UniqueStringID}");
+
+                // Notify the requesting peer and broadcast to others
+                ServerNetIDMessage SUIMA = new ServerNetIDMessage
+                {
+                    NetIDMessage = new NetIDMessage() { UniqueID = UniqueStringID },
+                    UshortUniqueIDMessage = new UshortUniqueIDMessage() { UniqueIDUshort = newID }
+                };
+                NetDataWriter Writer = new NetDataWriter(true);
+                SUIMA.Serialize(Writer);
+
+                BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.netIDAssign, BasisPlayerArray.GetSnapshot(), DeliveryMethod.ReliableOrdered);
+                BNL.Log($"Broadcasted new ID ({newID}) for {UniqueStringID} to all connected peers.");
+            }
+        }
+
+        public static ServerNetIDMessage[] GetAllNetworkID()
+        {
+            BNL.Log("Fetching all network IDs...");
+            List<ServerNetIDMessage> ServerUniqueIDMessages = new List<ServerNetIDMessage>();
+            foreach (KeyValuePair<string, ushort> pair in UshortNetworkDatabase)
+            {
+                ServerNetIDMessage SUIM = new ServerNetIDMessage
+                {
+                    NetIDMessage = new NetIDMessage() { UniqueID = pair.Key },
+                    UshortUniqueIDMessage = new UshortUniqueIDMessage() { UniqueIDUshort = pair.Value }
+                };
+                ServerUniqueIDMessages.Add(SUIM);
+            }
+            BNL.Log($"Total network IDs fetched: {ServerUniqueIDMessages.Count}");
+            return ServerUniqueIDMessages.ToArray();
+        }
+
+        public static void RemoveUshortNetworkID(ushort netID)
+        {
+            BNL.Log($"Attempting to remove NetID: {netID}");
+            // Remove based on value (ushort ID)
+            var itemToRemove = UshortNetworkDatabase.FirstOrDefault(kvp => kvp.Value == netID);
+            if (!string.IsNullOrEmpty(itemToRemove.Key))
+            {
+                if (UshortNetworkDatabase.TryRemove(itemToRemove.Key, out _))
+                {
+                    BNL.Log($"Successfully removed NetID: {netID} associated with UniqueStringID: {itemToRemove.Key}");
+                }
+                else
+                {
+                    BNL.Log($"Failed to remove NetID: {netID} (concurrent operation may have interfered)");
+                }
+            }
+            else
+            {
+                BNL.Log($"NetID {netID} not found in the database.");
+            }
+        }
+
+        public static void Reset()
+        {
+            BNL.Log("Resetting BasisNetworkIDDatabase...");
+            UshortNetworkDatabase.Clear();
+            Interlocked.Exchange(ref counter, -1);
+            BNL.Log("Database reset complete. Counter set to -1.");
+        }
+    }
+}

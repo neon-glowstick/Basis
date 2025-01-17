@@ -1,21 +1,22 @@
-using System;
-using System.Net.Sockets;
-using System.Net;
-using LiteNetLib;
-using BasisNetworkCore;
-using LiteNetLib.Utils;
 using Basis.Network.Core;
-using static Basis.Network.Core.Serializable.SerializableBasis;
-using Basis.Network.Server.Ownership;
 using Basis.Network.Server.Generic;
-using static SerializableBasis;
+using Basis.Network.Server.Ownership;
+using BasisNetworkCore;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
+using static Basis.Network.Core.Serializable.SerializableBasis;
+using static BasisNetworkCore.Serializable.SerializableBasis;
 using static BasisNetworkServer;
+using static SerializableBasis;
 
 namespace BasisServerHandle
 {
-    public static class BasisServerHandleEvents 
+    public static class BasisServerHandleEvents
     {
         #region Server Events Setup
         public static void SubscribeServerEvents()
@@ -66,7 +67,7 @@ namespace BasisServerHandle
                 {
                     BNL.LogError($"Failed to remove peer: {id}");
                 }
-                chunkedNetPeerArray.SetPeer(id,null);
+                chunkedNetPeerArray.SetPeer(id, null);
                 CleanupPlayerData(id, peer);
             }
             catch (Exception e)
@@ -94,10 +95,10 @@ namespace BasisServerHandle
 
         public static void ClientDisconnect(ushort leaving)
         {
-            NetDataWriter writer = new NetDataWriter(true,sizeof(ushort));
+            NetDataWriter writer = new NetDataWriter(true, sizeof(ushort));
             writer.Put(leaving);
 
-           ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
+            ReadOnlySpan<NetPeer> Peers = BasisPlayerArray.GetSnapshot();
             foreach (var client in Peers)
             {
                 if (client.Id != leaving)
@@ -153,9 +154,17 @@ namespace BasisServerHandle
                     BasisPlayerArray.AddPlayer(newPeer);
                     BNL.Log($"Peer connected: {newPeer.Id}");
                     ReadyMessage readyMessage = new ReadyMessage();
-                    readyMessage.Deserialize(request.Data,false);
+                    readyMessage.Deserialize(request.Data, false);
                     if (readyMessage.WasDeserializedCorrectly())
                     {
+                        ServerNetIDMessage[] SUIM = BasisNetworkIDDatabase.GetAllNetworkID();
+                        ServerUniqueIDMessages ServerUniqueIDMessageArray = new ServerUniqueIDMessages
+                        {
+                            Messages = SUIM
+                        };
+                        NetDataWriter Writer = new NetDataWriter(true, 4);
+                        ServerUniqueIDMessageArray.Serialize(Writer);
+                        newPeer.Send(Writer, BasisNetworkCommons.MassnetIDAssign, DeliveryMethod.ReliableOrdered);
                         SendRemoteSpawnMessage(newPeer, readyMessage);
                     }
                     else
@@ -229,6 +238,9 @@ namespace BasisServerHandle
                             break;
                         case BasisNetworkCommons.AudioRecipients:
                             UpdateVoiceReceivers(reader, peer);
+                            break;
+                        case BasisNetworkCommons.netIDAssign:
+                            netIDAssign(reader, peer);
                             break;
                         default:
                             BNL.LogError($"Unknown channel: {channel} " + reader.AvailableBytes);
@@ -448,7 +460,7 @@ namespace BasisServerHandle
                 BNL.LogError($"Failed to send client list: {ex.Message}\n{ex.StackTrace}");
             }
         }
-        private static bool CreateServerReadyMessageForPeer(NetPeer peer,out ServerReadyMessage ServerReadyMessage)
+        private static bool CreateServerReadyMessageForPeer(NetPeer peer, out ServerReadyMessage ServerReadyMessage)
         {
             try
             {
@@ -484,6 +496,17 @@ namespace BasisServerHandle
                 ServerReadyMessage = new ServerReadyMessage();
                 return false;
             }
+        }
+        #endregion
+        #region Network ID Generation
+        public static void netIDAssign(NetPacketReader Reader, NetPeer Peer)
+        {
+            NetIDMessage ServerUniqueIDMessage = new NetIDMessage();
+            ServerUniqueIDMessage.Deserialize(Reader);
+            Reader.Recycle();
+            //returns a message with the ushort back to the client, or it sends it to everyone if its new.
+            BasisNetworkIDDatabase.AddOrFindNetworkID(Peer, ServerUniqueIDMessage.UniqueID);
+            //we need to convert the string int a  ushort.
         }
         #endregion
     }

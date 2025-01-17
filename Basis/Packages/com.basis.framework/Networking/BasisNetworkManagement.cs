@@ -450,6 +450,20 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
+                case BasisNetworkCommons.MassnetIDAssign:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.MassNetIDAssign(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
+                case BasisNetworkCommons.netIDAssign:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.NetIDAssign(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
                 default:
                     BNL.LogError($"this Channel was not been implemented {channel}");
                     Reader.Recycle();
