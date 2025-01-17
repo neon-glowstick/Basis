@@ -464,6 +464,20 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
+                case BasisNetworkCommons.LoadResourceMessage:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.LoadResourceMessage(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
+                case BasisNetworkCommons.UnloadResourceMessage:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.UnloadResourceMessage(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
                 default:
                     BNL.LogError($"this Channel was not been implemented {channel}");
                     Reader.Recycle();

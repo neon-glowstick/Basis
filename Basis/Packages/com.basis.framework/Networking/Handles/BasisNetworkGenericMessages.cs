@@ -127,4 +127,39 @@ public static class BasisNetworkGenericMessages
             BasisNetworkNetIDConversion.AddNetworkId(message);
         }
     }
+    public static void LoadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        LocalLoadResource LocalLoadResource = new LocalLoadResource();
+        LocalLoadResource.Deserialize(reader);
+        switch (LocalLoadResource.Mode)
+        {
+            case 0:
+
+                break;
+            case 1:
+
+                break;
+            default:
+                BNL.LogError($"tried to Load Mode {LocalLoadResource.Mode}");
+                break;
+        }
+    }
+
+    public static void UnloadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        UnLoadResource UnLoadResource = new UnLoadResource();
+        UnLoadResource.Deserialize(reader);
+        switch (UnLoadResource.Mode)
+        {
+            case 0:
+
+                break;
+            case 1:
+
+                break;
+            default:
+                BNL.LogError($"tried to removed Mode {UnLoadResource.Mode}");
+                break;
+        }
+    }
 }
