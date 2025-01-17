@@ -414,14 +414,14 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
-                case BasisNetworkCommons.OwnershipResponse:
+                case BasisNetworkCommons.GetCurrentOwnerRequest:
                     BasisNetworkManagement.MainThreadContext.Post(_ =>
                     {
                         BasisNetworkGenericMessages.HandleOwnershipResponse(Reader);
                         Reader.Recycle();
                     }, null);
                     break;
-                case BasisNetworkCommons.OwnershipTransfer:
+                case BasisNetworkCommons.ChangeCurrentOwnerRequest:
                     BasisNetworkManagement.MainThreadContext.Post(_ =>
                     {
                         BasisNetworkGenericMessages.HandleOwnershipTransfer(Reader);
@@ -450,7 +450,7 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
-                case BasisNetworkCommons.MassnetIDAssign:
+                case BasisNetworkCommons.NetIDAssigns:
                     BasisNetworkManagement.MainThreadContext.Post(_ =>
                     {
                         BasisNetworkGenericMessages.MassNetIDAssign(Reader, deliveryMethod);
@@ -482,7 +482,7 @@ namespace Basis.Scripts.Networking
             };
             NetDataWriter netDataWriter = new NetDataWriter();
             OwnershipTransferMessage.Serialize(netDataWriter);
-            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.OwnershipTransfer, DeliveryMethod.ReliableSequenced);
+            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.ChangeCurrentOwnerRequest, DeliveryMethod.ReliableSequenced);
             BasisNetworkProfiler.OwnershipTransferMessageCounter.Sample(netDataWriter.Length);
         }
         public static void RequestCurrentOwnership(string UniqueNetworkId)
@@ -497,7 +497,7 @@ namespace Basis.Scripts.Networking
             };
             NetDataWriter netDataWriter = new NetDataWriter();
             OwnershipTransferMessage.Serialize(netDataWriter);
-            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter,BasisNetworkCommons.OwnershipResponse, DeliveryMethod.ReliableSequenced);
+            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter,BasisNetworkCommons.GetCurrentOwnerRequest, DeliveryMethod.ReliableSequenced);
             BasisNetworkProfiler.RequestOwnershipTransferMessageCounter.Sample(netDataWriter.Length);
         }
 
