@@ -15,7 +15,7 @@ public static class BasisNetworkNetIDConversion
 
     public static void RequestId(string NetworkId)
     {
-        if (NetworkIds.TryGetValue(NetworkId,out ushort Value))
+        if (NetworkIds.TryGetValue(NetworkId, out ushort Value))
         {
             OnNetworkIdAdded?.Invoke(NetworkId, Value);
         }
@@ -23,11 +23,13 @@ public static class BasisNetworkNetIDConversion
         {
             NetDataWriter netDataWriter = new NetDataWriter();
 
-            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter,BasisNetworkCommons.netIDAssign, LiteNetLib.DeliveryMethod.ReliableSequenced);
+            NetIDMessage ServerUniqueIDMessage = new NetIDMessage();
+            ServerUniqueIDMessage.UniqueID = NetworkId;
+            ServerUniqueIDMessage.Serialize(netDataWriter);
+            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.netIDAssign, LiteNetLib.DeliveryMethod.ReliableSequenced);
             //request new one from server
         }
     }
-
     public static void AddNetworkId(ServerNetIDMessage ServerNetIDMessage)
     {
         // Attempt to add the new network ID
