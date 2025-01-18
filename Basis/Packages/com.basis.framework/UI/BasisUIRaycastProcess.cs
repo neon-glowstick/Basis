@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using static Basis.Scripts.UI.BasisPointRaycaster;
-using static Basis.Scripts.UI.BasisUIRaycast;
 
 namespace Basis.Scripts.UI
 {
@@ -47,17 +46,17 @@ public class BasisUIRaycastProcess
             for (int Index = 0; Index < DevicesCount; Index++)
             {
                 BasisInput input = Inputs[Index];
-                if (input.HasRaycastSupport && input.BasisUIRaycast != null && input.BasisUIRaycast.WasCorrectLayer)
+                if (input.HasUIInputSupport && input.BasisPointRaycaster != null && input.BasisPointRaycaster.WasCorrectLayer)
                 {
-                    EffectiveMouseAction |= input.BasisUIRaycast.CurrentEventData.WasLastDown == false && input.InputState.Trigger == 1;
-                    if (input.BasisUIRaycast.HadRaycastUITarget)
+                    EffectiveMouseAction |= input.BasisPointRaycaster.CurrentEventData.WasLastDown == false && input.InputState.Trigger == 1;
+                    if (input.BasisPointRaycaster.HadRaycastUITarget)
                     {
-                        List<RaycastUIHitData> hitData = input.BasisUIRaycast.SortedGraphics;
-                        List<RaycastResult> RaycastResults = input.BasisUIRaycast.SortedRays;
+                        List<RaycastHitData> hitData = input.BasisPointRaycaster.SortedGraphics;
+                        List<RaycastResult> RaycastResults = input.BasisPointRaycaster.SortedRays;
                         hitData.Sort((g1, g2) => g2.graphic.depth.CompareTo(g1.graphic.depth));
                         RaycastResult hit = RaycastResults[0];
                         hit.gameObject = hitData[0].graphic.gameObject;
-                        SimulateOnCanvas(hit, hitData[0], input.BasisUIRaycast.CurrentEventData, input.InputState, input.LastState);
+                        SimulateOnCanvas(hit, hitData[0], input.BasisPointRaycaster.CurrentEventData, input.InputState, input.LastState);
                         HasTarget = true;
                     }
                 }
@@ -70,13 +69,13 @@ public class BasisUIRaycastProcess
             for (int Index = 0; Index < DevicesCount; Index++)
             {
                 BasisInput input = Inputs[Index];
-                if (input.HasRaycastSupport && input.BasisUIRaycast != null && input.BasisUIRaycast.WasCorrectLayer)
+                if (input.HasUIInputSupport && input.BasisPointRaycaster != null && input.BasisPointRaycaster.WasCorrectLayer)
                 {
-                    SendUpdateEventToSelectedObject(input.BasisUIRaycast.CurrentEventData); //needed if you want to use the keyboard
+                    SendUpdateEventToSelectedObject(input.BasisPointRaycaster.CurrentEventData); //needed if you want to use the keyboard
                 }
             }
         }
-    public void SimulateOnCanvas(RaycastResult raycastResult, RaycastUIHitData hit, BasisPointerEventData currentEventData, BasisInputState Current, BasisInputState LastCurrent)
+    public void SimulateOnCanvas(RaycastResult raycastResult, RaycastHitData hit, BasisPointerEventData currentEventData, BasisInputState Current, BasisInputState LastCurrent)
     {
         if (hit.graphic != null)
         {
@@ -113,7 +112,7 @@ public class BasisUIRaycastProcess
             ProcessPointerButtonDrag(currentEventData);
         }
     }
-    public void CheckOrApplySelectedGameobject(RaycastUIHitData hit, BasisPointerEventData CurrentEventData)
+    public void CheckOrApplySelectedGameobject(RaycastHitData hit, BasisPointerEventData CurrentEventData)
     {
         if (hit.graphic != null)
         {
@@ -127,7 +126,7 @@ public class BasisUIRaycastProcess
             EventSystem.current.SetSelectedGameObject(null, CurrentEventData);
         }
     }
-    public void EffectiveMouseDown(RaycastUIHitData hit, BasisPointerEventData CurrentEventData)
+    public void EffectiveMouseDown(RaycastHitData hit, BasisPointerEventData CurrentEventData)
     {
         CurrentEventData.eligibleForClick = true;
         CurrentEventData.delta = Vector2.zero;
@@ -169,7 +168,7 @@ public class BasisUIRaycastProcess
             ExecuteEvents.Execute(dragObject, CurrentEventData, ExecuteEvents.initializePotentialDrag);
         }
     }
-    public void EffectiveMouseUp(RaycastUIHitData hit, BasisPointerEventData CurrentEventData)
+    public void EffectiveMouseUp(RaycastHitData hit, BasisPointerEventData CurrentEventData)
     {
         var target = CurrentEventData.pointerPress;
         ExecuteEvents.Execute(target, CurrentEventData, ExecuteEvents.pointerUpHandler);
