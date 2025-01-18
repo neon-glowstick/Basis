@@ -33,7 +33,8 @@ public static class BasisNetworkSpawnItem
         LocalLoadResource LocalLoadResource = new LocalLoadResource
         {
             LoadInformation = updatedLoad,
-            LoadedNetID = Guid.NewGuid().ToString()
+            LoadedNetID = Guid.NewGuid().ToString(),
+             Mode = 1,
         };
         LiteNetLib.Utils.NetDataWriter Writer = new LiteNetLib.Utils.NetDataWriter();
         LocalLoadResource.Serialize(Writer);
