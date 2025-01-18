@@ -15,6 +15,10 @@ public class BasisTestNetworkScene : MonoBehaviour
         BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
         BasisNetworkManagement.OnRemotePlayerJoined += OnRemotePlayerJoined;
     }
+    public void OnEnable()
+    {
+        BasisNetworkSpawnItem.RequestSceneLoad("Scene", "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedBundle", "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedMeta",false);
+    }
     /// <summary>
     /// this runs after a remote user connects and passes all there local checks and balances with the server
     /// </summary>

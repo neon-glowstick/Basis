@@ -465,9 +465,9 @@ namespace Basis.Scripts.Networking
                     }, null);
                     break;
                 case BasisNetworkCommons.LoadResourceMessage:
-                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    BasisNetworkManagement.MainThreadContext.Post(async _ =>
                     {
-                        BasisNetworkGenericMessages.LoadResourceMessage(Reader, deliveryMethod);
+                     await   BasisNetworkGenericMessages.LoadResourceMessage(Reader, deliveryMethod);
                         Reader.Recycle();
                     }, null);
                     break;

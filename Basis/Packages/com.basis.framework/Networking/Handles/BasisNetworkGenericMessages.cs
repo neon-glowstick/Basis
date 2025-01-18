@@ -6,6 +6,7 @@ using Basis.Scripts.Profiler;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Threading.Tasks;
 using UnityEngine;
 using static BasisNetworkCore.Serializable.SerializableBasis;
 using static SerializableBasis;
@@ -127,17 +128,16 @@ public static class BasisNetworkGenericMessages
             BasisNetworkNetIDConversion.AddNetworkId(message);
         }
     }
-    public static void LoadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    public static async Task LoadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
     {
         LocalLoadResource LocalLoadResource = new LocalLoadResource();
         LocalLoadResource.Deserialize(reader);
         switch (LocalLoadResource.Mode)
         {
             case 0:
-
                 break;
             case 1:
-
+                await BasisNetworkSpawnItem.SpawnScene(LocalLoadResource);
                 break;
             default:
                 BNL.LogError($"tried to Load Mode {LocalLoadResource.Mode}");
@@ -155,7 +155,7 @@ public static class BasisNetworkGenericMessages
 
                 break;
             case 1:
-
+                BasisNetworkSpawnItem.DestroyScene();
                 break;
             default:
                 BNL.LogError($"tried to removed Mode {UnLoadResource.Mode}");
