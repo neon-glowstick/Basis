@@ -15,18 +15,27 @@ public static partial class SerializableBasis
         /// this is a unique string that this Object is linked with over the network.
         /// </summary>
         public string LoadedNetID;
-        public byte[] LoadInformation;
+        public string UnlockPassword;
+        public string MetaURL;
+        public string BundleURL;
+        public bool IsLocalLoad;
         public void Deserialize(NetDataReader Writer)
         {
             Mode = Writer.GetByte();
             LoadedNetID = Writer.GetString();
-            LoadInformation = Writer.GetRemainingBytes();
+            UnlockPassword = Writer.GetString();
+            MetaURL = Writer.GetString();
+            BundleURL = Writer.GetString();
+            IsLocalLoad = Writer.GetBool();
         }
         public void Serialize(NetDataWriter Writer)
         {
             Writer.Put(Mode);
             Writer.Put(LoadedNetID);
-            Writer.Put(LoadInformation);
+            Writer.Put(UnlockPassword);
+            Writer.Put(MetaURL);
+            Writer.Put(BundleURL);
+            Writer.Put(IsLocalLoad);
         }
     }
     public struct UnLoadResource

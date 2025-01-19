@@ -135,6 +135,7 @@ public static class BasisNetworkGenericMessages
         switch (LocalLoadResource.Mode)
         {
             case 0:
+                BNL.LogError($"tried to Load Mode {LocalLoadResource.Mode}");
                 break;
             case 1:
                 await BasisNetworkSpawnItem.SpawnScene(LocalLoadResource);
@@ -152,7 +153,7 @@ public static class BasisNetworkGenericMessages
         switch (UnLoadResource.Mode)
         {
             case 0:
-
+                BNL.LogError($"tried to Load Mode {UnLoadResource.Mode}");
                 break;
             case 1:
                 BasisNetworkSpawnItem.DestroyScene();
