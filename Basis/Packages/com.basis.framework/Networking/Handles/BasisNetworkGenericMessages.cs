@@ -135,7 +135,7 @@ public static class BasisNetworkGenericMessages
         switch (LocalLoadResource.Mode)
         {
             case 0:
-                BNL.LogError($"tried to Load Mode {LocalLoadResource.Mode}");
+                await BasisNetworkSpawnItem.SpawnGameObject(LocalLoadResource);
                 break;
             case 1:
                 await BasisNetworkSpawnItem.SpawnScene(LocalLoadResource);
@@ -145,7 +145,6 @@ public static class BasisNetworkGenericMessages
                 break;
         }
     }
-
     public static void UnloadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
     {
         UnLoadResource UnLoadResource = new UnLoadResource();
@@ -153,7 +152,7 @@ public static class BasisNetworkGenericMessages
         switch (UnLoadResource.Mode)
         {
             case 0:
-                BNL.LogError($"tried to Load Mode {UnLoadResource.Mode}");
+                BasisNetworkSpawnItem.DestroyGameobject();
                 break;
             case 1:
                 BasisNetworkSpawnItem.DestroyScene();

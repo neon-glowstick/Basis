@@ -1,4 +1,5 @@
 using LiteNetLib.Utils;
+using System.Numerics;
 
 public static partial class SerializableBasis
 {
@@ -19,6 +20,19 @@ public static partial class SerializableBasis
         public string MetaURL;
         public string BundleURL;
         public bool IsLocalLoad;
+
+        public float PositionX;
+        public float PositionY;
+        public float PositionZ;
+
+        public float QuaternionX;
+        public float QuaternionY;
+        public float QuaternionZ;
+        public float QuaternionW;
+
+        public float ScaleX;
+        public float ScaleY;
+        public float ScaleZ;
         public void Deserialize(NetDataReader Writer)
         {
             Mode = Writer.GetByte();
@@ -27,6 +41,21 @@ public static partial class SerializableBasis
             MetaURL = Writer.GetString();
             BundleURL = Writer.GetString();
             IsLocalLoad = Writer.GetBool();
+            if(Mode == 0)
+            {
+                PositionX = Writer.GetFloat();
+                PositionY = Writer.GetFloat();
+                PositionZ = Writer.GetFloat();
+
+                QuaternionX = Writer.GetFloat();
+                QuaternionY = Writer.GetFloat();
+                QuaternionZ = Writer.GetFloat();
+                QuaternionW = Writer.GetFloat();
+
+                ScaleX = Writer.GetFloat();
+                ScaleY = Writer.GetFloat();
+                ScaleZ = Writer.GetFloat();
+            }
         }
         public void Serialize(NetDataWriter Writer)
         {
@@ -36,6 +65,21 @@ public static partial class SerializableBasis
             Writer.Put(MetaURL);
             Writer.Put(BundleURL);
             Writer.Put(IsLocalLoad);
+            if (Mode == 0)
+            {
+                Writer.Put(PositionX);
+                Writer.Put(PositionY);
+                Writer.Put(PositionZ);
+
+                Writer.Put(QuaternionX);
+                Writer.Put(QuaternionY);
+                Writer.Put(QuaternionZ);
+                Writer.Put(QuaternionW);
+
+                Writer.Put(ScaleX);
+                Writer.Put(ScaleY);
+                Writer.Put(ScaleZ);
+            }
         }
     }
     public struct UnLoadResource
