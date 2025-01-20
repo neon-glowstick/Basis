@@ -99,13 +99,18 @@ namespace Basis.Scripts.UI
             // }
         }
 
+        public ReadOnlySpan<RaycastHit> GetHits()
+        {
+            return PhysicHits.AsSpan()[..PhysicHitCount];
+        }
+
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
         }
 
         private void OnDrawGizmos()
         {
-            // Gizmos.color = Color.cyan;
+            Gizmos.color = Color.cyan;
             Gizmos.DrawLine(ray.origin, ray.origin + ray.direction * MaxDistance);
         }
     }
