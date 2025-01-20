@@ -46,14 +46,15 @@ public class BasisUIRaycastProcess
             for (int Index = 0; Index < DevicesCount; Index++)
             {
                 BasisInput input = Inputs[Index];
-                if (input.HasRaycastSupport && input.BasisUIRaycast != null && input.BasisUIRaycast.WasCorrectLayer)
+                if (input.HasRaycastSupport && input.BasisPointRaycaster != null && input.BasisUIRaycast != null && input.BasisUIRaycast.WasCorrectLayer)
                 {
                     EffectiveMouseAction |= input.BasisUIRaycast.CurrentEventData.WasLastDown == false && input.InputState.Trigger == 1;
                     if (input.BasisUIRaycast.HadRaycastUITarget)
                     {
                         List<RaycastUIHitData> hitData = input.BasisUIRaycast.SortedGraphics;
                         List<RaycastResult> RaycastResults = input.BasisUIRaycast.SortedRays;
-                        hitData.Sort((g1, g2) => g2.graphic.depth.CompareTo(g1.graphic.depth));
+                        // TODO: test things and make sure we dont need to re-sort using default sort algo since UI raycast uses a custom sort fn
+                        // hitData.Sort((g1, g2) => g2.graphic.depth.CompareTo(g1.graphic.depth));
                         RaycastResult hit = RaycastResults[0];
                         hit.gameObject = hitData[0].graphic.gameObject;
                         SimulateOnCanvas(hit, hitData[0], input.BasisUIRaycast.CurrentEventData, input.InputState, input.LastState);

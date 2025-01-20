@@ -6,6 +6,7 @@ using Basis.Scripts.BasisSdk.Helpers;
 using Basis.Scripts.Device_Management;
 using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Drivers;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -18,8 +19,7 @@ namespace Basis.Scripts.UI
     {
         public BasisPointRaycaster BasisPointRaycaster;
 
-        public LayerMask UIMask;
-
+        public static LayerMask UILayer = LayerMask.NameToLayer("UI");
         public RaycastHit PhysicHit;
         public Material lineMaterial;
         public float lineWidth = 0.01f;
@@ -38,16 +38,14 @@ namespace Basis.Scripts.UI
         public bool HadRaycastUITarget = false;
         public bool WasCorrectLayer = false;
         static readonly Vector3[] s_Corners = new Vector3[4];
-        static readonly RaycastUIHitComparer s_RaycastHitComparer = new RaycastUIHitComparer();
         [SerializeField]
         public List<RaycastUIHitData> SortedGraphics = new List<RaycastUIHitData>();
         [SerializeField]
         public List<RaycastResult> SortedRays = new List<RaycastResult>();
         public List<Canvas> Results = new List<Canvas>();
-        public bool IgnoreReversedGraphics;
-        const string k_UILayer = "UI";
+        public bool IgnoreReversedGraphics = true;        
         
-        [System.Serializable]
+        [Serializable]
         public struct RaycastUIHitData
         {
             public RaycastUIHitData(Graphic graphic, Vector3 worldHitPosition, Vector2 screenPosition, float distance, int displayIndex)
@@ -69,11 +67,6 @@ namespace Basis.Scripts.UI
             [SerializeField]
             public int displayIndex;
         }
-        sealed class RaycastUIHitComparer : IComparer<RaycastUIHitData>
-        {
-            public int Compare(RaycastUIHitData a, RaycastUIHitData b)
-                => b.graphic.depth.CompareTo(a.graphic.depth);
-        }
 
         public async Task Initialize(BasisInput basisInput, BasisPointRaycaster pointRaycaster)
         {
@@ -82,9 +75,6 @@ namespace Basis.Scripts.UI
             BasisPointRaycaster = pointRaycaster;
             BasisDeviceMatchableNames = BasisInput.BasisDeviceMatchableNames;
             ApplyStaticDataToRaycastResult();
-
-            UIMask = LayerMask.NameToLayer(k_UILayer);
-
 
             HasLineRenderer = false;
             HasRedicalRenderer = false;
@@ -110,7 +100,7 @@ namespace Basis.Scripts.UI
                 LineRenderer.enabled = HasLineRenderer;
                 LineRenderer.numCapVertices = 12;
                 LineRenderer.numCornerVertices = 12;
-                LineRenderer.gameObject.layer = LayerMask.NameToLayer(k_UILayer);
+                LineRenderer.gameObject.layer = UILayer;
             }
             if (BasisDeviceMatchableNames.HasRayCastRedical)
             {
@@ -156,7 +146,31 @@ namespace Basis.Scripts.UI
         }
         public void HandleUIRaycast()
         {
-            HadRaycastUITarget = BasisPointRaycaster.PhysicHitCount > 0;
+            SortedGraphics.Clear();
+            SortedRays.Clear();
+            HadRaycastUITarget = false;
+
+            bool hitCollider = BasisPointRaycaster.PhysicHitCount > 0;
+
+            // NOTE: only first collider hit counted for UI
+            // TODO: this should never be null at this point, right? yet it sometimes is with this! wtf!
+            bool hitObject = hitCollider && BasisPointRaycaster.PhysicHits[0].transform != null;
+            PhysicHit = BasisPointRaycaster.PhysicHits[0];
+
+            bool hitCanvas = false;
+            if (hitObject)
+            {
+                PhysicHit.transform.GetComponentsInChildren<Canvas>(false, Results);
+                hitCanvas = Results.Count > 0;
+            }
+
+            if (!hitCanvas)
+            {
+                HandleNoHit();
+                return;
+            }
+
+            HadRaycastUITarget = RaycastToUI();
             
             if (HadRaycastUITarget)
             {
@@ -175,19 +189,9 @@ namespace Basis.Scripts.UI
         }
         private void HandleDidHit()
         {
-            SortedGraphics.Clear();
-            SortedRays.Clear();
-
-            // only first hit counted for UI
-            // TODO: not do this?
-            PhysicHit = BasisPointRaycaster.PhysicHits[0];
-
-            PhysicHit.transform.GetComponentsInChildren<Canvas>(false, Results);
-
-            WasCorrectLayer = PhysicHit.transform.gameObject.layer == UIMask;
+            WasCorrectLayer = PhysicHit.transform.gameObject.layer == UILayer;
             if (WasCorrectLayer)
             {
-                RaycastToUI();
                 UpdateRayCastResult();//sets all RaycastResult data
                 UpdateLineRenderer();//updates the line denderer
                 UpdateRadicalRenderer();// moves the redical renderer
@@ -301,7 +305,6 @@ namespace Basis.Scripts.UI
             }
             return false;
         }
-        public void Sort<T>(IList<T> hits, IComparer<T> comparer) where T : struct => Sort(hits, comparer, hits.Count);
         public bool ProcessSortedHitsResults(Canvas canvas, bool hitSomething, List<RaycastUIHitData> raycastHitDatums, List<RaycastResult> resultAppendList)
         {
             // Now that we have a list of sorted hits, process any extra settings and filters.
@@ -349,7 +352,8 @@ namespace Basis.Scripts.UI
 
             return hitSomething;
         }
-        public static void Sort<T>(IList<T> hits, IComparer<T> comparer, int count) where T : struct
+        public void Sort<T>(IList<T> hits, Comparison<T> comparer) where T : struct => Sort(hits, comparer, hits.Count);
+        public static void Sort<T>(IList<T> hits, Comparison<T> comparer, int count) where T : struct
         {
             if (count <= 1)
                 return;
@@ -360,7 +364,7 @@ namespace Basis.Scripts.UI
                 fullPass = true;
                 for (var i = 1; i < count; ++i)
                 {
-                    var result = comparer.Compare(hits[i - 1], hits[i]);
+                    var result = comparer(hits[i - 1], hits[i]);
                     if (result > 0)
                     {
                         (hits[i - 1], hits[i]) = (hits[i], hits[i - 1]);
@@ -397,7 +401,7 @@ namespace Basis.Scripts.UI
                 }
             }
 
-            Sort(results, s_RaycastHitComparer);
+            Sort(results, (a, b) => b.graphic.depth.CompareTo(a.graphic.depth));
         }
 
         public bool ShouldTestGraphic(Graphic graphic, LayerMask layerMask)
@@ -411,7 +415,6 @@ namespace Basis.Scripts.UI
 
             return true;
         }
-
         public bool SphereIntersectsRectTransform(RectTransform transform, Vector4 raycastPadding, Vector3 from, out Vector3 worldPosition, out float distance)
         {
             var plane = GetRectTransformPlane(transform, raycastPadding, s_Corners);
