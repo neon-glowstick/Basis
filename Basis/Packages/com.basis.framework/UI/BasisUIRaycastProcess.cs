@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using static Basis.Scripts.UI.BasisPointRaycaster;
 using static Basis.Scripts.UI.BasisUIRaycast;
 
 namespace Basis.Scripts.UI

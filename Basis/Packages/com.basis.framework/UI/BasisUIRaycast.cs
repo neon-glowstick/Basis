@@ -14,7 +14,7 @@ using UnityEngine.UI;
 
 namespace Basis.Scripts.UI
 {
-    public partial class BasisUIRaycast
+    public class BasisUIRaycast
     {
         public BasisPointRaycaster BasisPointRaycaster;
 
@@ -43,6 +43,7 @@ namespace Basis.Scripts.UI
         public List<RaycastUIHitData> SortedGraphics = new List<RaycastUIHitData>();
         [SerializeField]
         public List<RaycastResult> SortedRays = new List<RaycastResult>();
+        public List<Canvas> Results = new List<Canvas>();
         public bool IgnoreReversedGraphics;
         const string k_UILayer = "UI";
         
@@ -197,21 +198,19 @@ namespace Basis.Scripts.UI
             }
         }
         
-        public Vector2 ScreenPoint;
-        public bool UseWorldPosition = true;
         private void UpdateRayCastResult()
         {
             RaycastResult.gameObject = PhysicHit.transform.gameObject;
             RaycastResult.distance = PhysicHit.distance;
-            if (UseWorldPosition)
+            if (BasisPointRaycaster.UseWorldPosition)
             {
-                ScreenPoint = BasisLocalCameraDriver.Instance.Camera.WorldToScreenPoint(BasisPointRaycaster.transform.position, Camera.MonoOrStereoscopicEye.Mono);
+                BasisPointRaycaster.ScreenPoint = BasisLocalCameraDriver.Instance.Camera.WorldToScreenPoint(BasisPointRaycaster.transform.position, Camera.MonoOrStereoscopicEye.Mono);
             }
             else
             {
                 // we assign screenpoint manually example in BasisLocalCameraDriver
             }
-            RaycastResult.screenPosition = ScreenPoint;
+            RaycastResult.screenPosition = BasisPointRaycaster.ScreenPoint;
             FoundCanvas = PhysicHit.transform.gameObject.GetComponentInParent<Canvas>();
             if (FoundCanvas != null)
             {
@@ -278,8 +277,6 @@ namespace Basis.Scripts.UI
             }
         }
         
-        public Vector3 LastRotation;
-        public List<Canvas> Results = new List<Canvas>();
         
         public bool RaycastToUI()
         {

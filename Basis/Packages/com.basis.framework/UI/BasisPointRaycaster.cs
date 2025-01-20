@@ -1,16 +1,9 @@
-using Basis.Scripts.Addressable_Driver;
-using Basis.Scripts.Addressable_Driver.Enums;
-using Basis.Scripts.Addressable_Driver.Factory;
-using Basis.Scripts.Addressable_Driver.Resource;
-using Basis.Scripts.BasisSdk.Helpers;
 using Basis.Scripts.Device_Management;
 using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Drivers;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace Basis.Scripts.UI
 {
@@ -85,7 +78,6 @@ namespace Basis.Scripts.UI
             else
             {
                 // TODO: what? where does this come into play?
-                // ScreenPoint = BasisLocalCameraDriver.Instance.Camera.WorldToScreenPoint(transform.position, Camera.MonoOrStereoscopicEye.Mono);
                 ray = BasisLocalCameraDriver.Instance.Camera.ScreenPointToRay(ScreenPoint, Camera.MonoOrStereoscopicEye.Mono);
             }
 
