@@ -2,11 +2,24 @@ using Basis.Network.Core;
 using BasisNetworkCore;
 using LiteNetLib.Utils;
 using System.Collections.Concurrent;
+using System.Linq;
 using static SerializableBasis;
 
 public static class BasisNetworkResourceManagement
 {
     public static ConcurrentDictionary<string, LocalLoadResource> UshortNetworkDatabase = new ConcurrentDictionary<string, LocalLoadResource>();
+    public static void SendOutAllResources(LiteNetLib.NetPeer NewConnection)
+    {
+        LocalLoadResource[] Resource = UshortNetworkDatabase.Values.ToArray();
+        int length = Resource.Length;
+        for (int Index = 0; Index < length; Index++)
+        {
+            LocalLoadResource LLR = Resource[Index];
+            NetDataWriter Writer = new NetDataWriter(true);
+            LLR.Serialize(Writer);
+            NewConnection.Send(Writer, BasisNetworkCommons.LoadResourceMessage, LiteNetLib.DeliveryMethod.ReliableSequenced);
+        }
+    }
     public static void LoadResource(LocalLoadResource LocalLoadResource)
     {
         if (UshortNetworkDatabase.ContainsKey(LocalLoadResource.LoadedNetID) == false)
@@ -36,7 +49,7 @@ public static class BasisNetworkResourceManagement
             NetDataWriter Writer = new NetDataWriter(true);
             UnLoadResource.Serialize(Writer);
             BNL.Log("Removing Object " + UnLoadResource.LoadedNetID);
-            BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.LoadResourceMessage, BasisPlayerArray.GetSnapshot(), LiteNetLib.DeliveryMethod.ReliableSequenced);
+            BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.UnloadResourceMessage, BasisPlayerArray.GetSnapshot(), LiteNetLib.DeliveryMethod.ReliableSequenced);
         }
         else
         {
