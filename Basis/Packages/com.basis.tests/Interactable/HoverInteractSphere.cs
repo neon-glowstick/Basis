@@ -23,8 +23,9 @@ public class HoverInteractSphere : MonoBehaviour
     {
         if (sphereColliderRef != null && other.TryGetComponent(out InteractableObject otherInteractable))
         {
-            Vector3 otherClosestPoint = other.ClosestPoint(transform.position);
-            float otherDistance = Vector3.Distance(otherClosestPoint, transform.position);
+            Vector3 sourcePosition = transform.position;
+            Vector3 otherClosestPoint = other.ClosestPoint(sourcePosition);
+            float otherDistance = Vector3.Distance(otherClosestPoint, sourcePosition);
 
             if (otherDistance < TargetDistance)
             {
@@ -32,8 +33,10 @@ public class HoverInteractSphere : MonoBehaviour
                 TargetDistance = otherDistance;
                 TargetClosestPoint = otherClosestPoint;
             }
-            else if (otherClosestPoint != TargetClosestPoint && otherInteractable.GetInstanceID() == HoverTarget.GetInstanceID())
+            // update target distance and closest point
+            else if (otherInteractable.GetInstanceID() == HoverTarget.GetInstanceID() && otherClosestPoint != TargetClosestPoint)
             {
+                TargetDistance = otherDistance;
                 TargetClosestPoint = otherClosestPoint;
             }
 
@@ -42,6 +45,8 @@ public class HoverInteractSphere : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        if (HoverTarget == null)
+            return;
         // current target left
         if (other.TryGetComponent(out InteractableObject otherInteractable) && HoverTarget.GetInstanceID() == otherInteractable.GetInstanceID())
         {
