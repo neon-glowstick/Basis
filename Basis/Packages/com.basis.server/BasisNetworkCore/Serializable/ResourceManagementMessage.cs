@@ -31,6 +31,10 @@ public static partial class SerializableBasis
         public float ScaleX;
         public float ScaleY;
         public float ScaleZ;
+
+        public bool Persist;
+        //will never remove this item from the server,
+        //if off when player count on server is zero it will be removed.
         public void Deserialize(NetDataReader Writer)
         {
             Mode = Writer.GetByte();
@@ -39,7 +43,8 @@ public static partial class SerializableBasis
             MetaURL = Writer.GetString();
             BundleURL = Writer.GetString();
             IsLocalLoad = Writer.GetBool();
-            if(Mode == 0)
+            Persist = Writer.GetBool();
+            if (Mode == 0)
             {
                 PositionX = Writer.GetFloat();
                 PositionY = Writer.GetFloat();
@@ -63,6 +68,7 @@ public static partial class SerializableBasis
             Writer.Put(MetaURL);
             Writer.Put(BundleURL);
             Writer.Put(IsLocalLoad);
+            Writer.Put(Persist);
             if (Mode == 0)
             {
                 Writer.Put(PositionX);

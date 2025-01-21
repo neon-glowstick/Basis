@@ -39,13 +39,13 @@ public class BasisTestNetworkScene : MonoBehaviour
     }
     public void OnDisable()
     {
-        if (GameobjectLoadTest)
+        if (SceneLoadTest)
         {
-            BasisNetworkSpawnItem.RequestGameObjectUnLoad(Gameobject.LoadedNetID);
+            BasisNetworkSpawnItem.RequestSceneUnLoad(Scene.LoadedNetID);
         }
         if (GameobjectLoadTest)
         {
-            BasisNetworkSpawnItem.RequestSceneUnLoad(Scene.LoadedNetID);
+            BasisNetworkSpawnItem.RequestGameObjectUnLoad(Gameobject.LoadedNetID);
         }
     }
     /// <summary>

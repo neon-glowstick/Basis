@@ -84,6 +84,7 @@ namespace BasisServerHandle
             if (Peers.Count == 0)
             {
                 BasisNetworkIDDatabase.Reset();
+                BasisNetworkResourceManagement.Reset();
             }
         }
         #endregion

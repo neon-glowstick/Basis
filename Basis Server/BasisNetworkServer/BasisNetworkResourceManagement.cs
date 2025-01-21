@@ -8,6 +8,27 @@ using static SerializableBasis;
 public static class BasisNetworkResourceManagement
 {
     public static ConcurrentDictionary<string, LocalLoadResource> UshortNetworkDatabase = new ConcurrentDictionary<string, LocalLoadResource>();
+    public static void Reset()
+    {
+        LocalLoadResource[] Resource = UshortNetworkDatabase.Values.ToArray();
+        int length = Resource.Length;
+        for (int Index = 0; Index < length; Index++)
+        {
+            LocalLoadResource LLR = Resource[Index];
+            if (LLR.Persist == false)
+            {
+                UnLoadResource UnloadResource = new UnLoadResource
+                {
+                    Mode = LLR.Mode,
+                    LoadedNetID = LLR.LoadedNetID
+                };
+                NetDataWriter Writer = new NetDataWriter(true);
+                UnloadResource.Serialize(Writer);
+                BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.LoadResourceMessage, BasisPlayerArray.GetSnapshot(), LiteNetLib.DeliveryMethod.ReliableSequenced);
+            }
+        }
+        UshortNetworkDatabase.Clear();
+    }
     public static void SendOutAllResources(LiteNetLib.NetPeer NewConnection)
     {
         LocalLoadResource[] Resource = UshortNetworkDatabase.Values.ToArray();
