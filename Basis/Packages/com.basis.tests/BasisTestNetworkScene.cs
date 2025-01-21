@@ -15,6 +15,7 @@ public class BasisTestNetworkScene : MonoBehaviour
     public bool GameobjectLoadTest = false;
     public LocalLoadResource Scene;
     public LocalLoadResource Gameobject;
+    public bool IsPersistent;
     public void Awake()
     {
         BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
@@ -27,14 +28,14 @@ public class BasisTestNetworkScene : MonoBehaviour
             BasisNetworkSpawnItem.RequestSceneLoad("Scene",
                "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedBundle",
                "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedMeta",
-               false, out Scene);
+               false, IsPersistent, out Scene);
         }
         if (GameobjectLoadTest)
         {
             BasisNetworkSpawnItem.RequestGameObjectLoad("Aurellia",
                  "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedBundle",
                  "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedMeta",
-                 false, BasisLocalPlayer.Instance.transform.position, Quaternion.identity, Vector3.one, out Gameobject);
+                 false, BasisLocalPlayer.Instance.transform.position, Quaternion.identity, Vector3.one, IsPersistent, out Gameobject);
         }
     }
     public void OnDisable()

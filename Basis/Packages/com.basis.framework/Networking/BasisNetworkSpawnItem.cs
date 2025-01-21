@@ -11,7 +11,7 @@ using static SerializableBasis;
 
 public static class BasisNetworkSpawnItem
 {
-    public static bool RequestSceneLoad(string UnlockPassword, string BundleURL, string MetaURL, bool IsLocal,out LocalLoadResource localLoadResource)
+    public static bool RequestSceneLoad(string UnlockPassword, string BundleURL, string MetaURL, bool IsLocal, bool Persist, out LocalLoadResource localLoadResource)
     {
         if (string.IsNullOrEmpty(BundleURL) || string.IsNullOrEmpty(MetaURL) || string.IsNullOrEmpty(UnlockPassword))
         {
@@ -29,7 +29,8 @@ public static class BasisNetworkSpawnItem
             BundleURL = BundleURL,
             UnlockPassword = UnlockPassword,
             MetaURL = MetaURL,
-            IsLocalLoad = IsLocal
+            IsLocalLoad = IsLocal,
+            Persist = Persist,
         };
 
         LiteNetLib.Utils.NetDataWriter writer = new LiteNetLib.Utils.NetDataWriter();
@@ -41,7 +42,7 @@ public static class BasisNetworkSpawnItem
         return true;
     }
 
-    public static bool RequestGameObjectLoad(string UnlockPassword, string BundleURL, string MetaURL, bool IsLocal, Vector3 Position, Quaternion Rotation, Vector3 Scale, out LocalLoadResource LocalLoadResource)
+    public static bool RequestGameObjectLoad(string UnlockPassword, string BundleURL, string MetaURL, bool IsLocal, Vector3 Position, Quaternion Rotation, Vector3 Scale, bool Persistent, out LocalLoadResource LocalLoadResource)
     {
         if (string.IsNullOrEmpty(BundleURL) || string.IsNullOrEmpty(MetaURL) || string.IsNullOrEmpty(UnlockPassword))
         {
@@ -70,6 +71,7 @@ public static class BasisNetworkSpawnItem
             ScaleX = Scale.x,
             ScaleY = Scale.y,
             ScaleZ = Scale.z,
+            Persist = Persistent,
         };
 
         LiteNetLib.Utils.NetDataWriter writer = new LiteNetLib.Utils.NetDataWriter();
@@ -198,13 +200,23 @@ public static class BasisNetworkSpawnItem
         }
     }
 
-    public static void Reset()
+    public static async Task Reset()
     {
+        foreach (var reference in SpawnedScenes.Values)
+        {
+            await SceneManager.UnloadSceneAsync(reference);
+        }
+        foreach (var reference in SpawnedGameobjects.Values)
+        {
+            if (reference != null)
+            {
+                GameObject.Destroy(reference);
+            }
+        }
         SpawnedGameobjects.Clear();
         SpawnedScenes.Clear();
         BasisDebug.Log("All spawned objects and scenes have been cleared.", BasisDebug.LogTag.Networking);
     }
-
     public static ConcurrentDictionary<string, GameObject> SpawnedGameobjects = new ConcurrentDictionary<string, GameObject>();
     public static ConcurrentDictionary<string, Scene> SpawnedScenes = new ConcurrentDictionary<string, Scene>();
 }
