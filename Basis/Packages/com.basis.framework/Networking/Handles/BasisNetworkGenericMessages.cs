@@ -152,10 +152,10 @@ public static class BasisNetworkGenericMessages
         switch (UnLoadResource.Mode)
         {
             case 0:
-                BasisNetworkSpawnItem.DestroyGameobject();
+                BasisNetworkSpawnItem.DestroyGameobject(UnLoadResource);
                 break;
             case 1:
-                BasisNetworkSpawnItem.DestroyScene();
+                BasisNetworkSpawnItem.DestroyScene(UnLoadResource);
                 break;
             default:
                 BNL.LogError($"tried to removed Mode {UnLoadResource.Mode}");

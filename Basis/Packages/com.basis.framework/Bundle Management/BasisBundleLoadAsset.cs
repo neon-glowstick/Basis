@@ -46,14 +46,14 @@ public static class BasisBundleLoadAsset
         BasisDebug.LogError("Returning unable to load gameobject!");
         return null;
     }
-    public static async Task LoadSceneFromBundleAsync(BasisTrackedBundleWrapper bundle, bool MakeActiveScene, BasisProgressReport progressCallback)
+    public static async Task<Scene> LoadSceneFromBundleAsync(BasisTrackedBundleWrapper bundle, bool MakeActiveScene, BasisProgressReport progressCallback)
     {
         bool AssignedIncrement = false;
         string[] scenePaths = bundle.AssetBundle.GetAllScenePaths();
         if (scenePaths.Length == 0)
         {
             BasisDebug.LogError("No scenes found in AssetBundle.");
-            return;
+            return new Scene();
         }
 
         if (!string.IsNullOrEmpty(scenePaths[0]))
@@ -80,6 +80,7 @@ public static class BasisBundleLoadAsset
                 }
                 BasisDebug.Log("Scene set as active: " + loadedScene.name);
                 progressCallback.ReportProgress(100, "loading scene"); // Set progress to 100 when done
+                return loadedScene;
             }
             else
             {
@@ -90,5 +91,6 @@ public static class BasisBundleLoadAsset
         {
             BasisDebug.LogError("Path was null or empty! this should not be happening!");
         }
+        return new Scene();
     }
 }
