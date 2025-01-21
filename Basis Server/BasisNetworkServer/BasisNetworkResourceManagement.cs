@@ -53,7 +53,7 @@ public static class BasisNetworkResourceManagement
         }
         else
         {
-            BNL.LogError("Trying to unload a object that does not exist! " + UnLoadResource.LoadedNetID);
+            BNL.LogError($"Trying to unload a object that does not exist! ID Proved was [{UnLoadResource.LoadedNetID}]");
         }
     }
 }

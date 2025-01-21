@@ -170,6 +170,7 @@ namespace BasisServerHandle
                         ServerUniqueIDMessageArray.Serialize(Writer);
                         newPeer.Send(Writer, BasisNetworkCommons.NetIDAssigns, DeliveryMethod.ReliableOrdered);
                         SendRemoteSpawnMessage(newPeer, readyMessage);
+                        BasisNetworkResourceManagement.SendOutAllResources(newPeer);
                     }
                     else
                     {

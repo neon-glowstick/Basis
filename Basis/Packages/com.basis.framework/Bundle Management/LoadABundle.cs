@@ -10,6 +10,6 @@ public class LoadABundle : MonoBehaviour
     async void OnEnable()
     {
         // Load the GameObject asynchronously
-        GameObject output = await BasisLoadHandler.LoadGameObjectBundle(BasisLoadableBundle, UseSafety, Report, CancellationToken, Vector3.zero, Quaternion.identity,Vector3.one,false);
+        GameObject output = await BasisLoadHandler.LoadGameObjectBundle(BasisLoadableBundle, UseSafety, Report, CancellationToken, Vector3.zero, Quaternion.identity,Vector3.one,false,this.transform);
     }
 }

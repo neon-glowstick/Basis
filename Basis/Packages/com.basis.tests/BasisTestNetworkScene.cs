@@ -4,6 +4,7 @@ using Basis.Scripts.Networking;
 using Basis.Scripts.Networking.NetworkedAvatar;
 using LiteNetLib;
 using UnityEngine;
+using static SerializableBasis;
 
 public class BasisTestNetworkScene : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class BasisTestNetworkScene : MonoBehaviour
     public ushort MessageIndex;
     public bool SceneLoadTest = false;
     public bool GameobjectLoadTest = false;
+    public LocalLoadResource Scene;
+    public LocalLoadResource Gameobject;
     public void Awake()
     {
         BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
@@ -21,11 +24,28 @@ public class BasisTestNetworkScene : MonoBehaviour
     {
         if (SceneLoadTest)
         {
-            BasisNetworkSpawnItem.RequestSceneLoad("Scene", "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedBundle", "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedMeta", false);
+            BasisNetworkSpawnItem.RequestSceneLoad("Scene",
+               "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedBundle",
+               "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedMeta",
+               false, out Scene);
         }
         if (GameobjectLoadTest)
         {
-          //here  BasisNetworkSpawnItem.RequestGameObjectLoad("",,);
+            BasisNetworkSpawnItem.RequestGameObjectLoad("Aurellia",
+                 "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedBundle",
+                 "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedMeta",
+                 false, BasisLocalPlayer.Instance.transform.position, Quaternion.identity, Vector3.one, out Gameobject);
+        }
+    }
+    public void OnDisable()
+    {
+        if (GameobjectLoadTest)
+        {
+            BasisNetworkSpawnItem.RequestGameObjectUnLoad(Gameobject.LoadedNetID);
+        }
+        if (GameobjectLoadTest)
+        {
+            BasisNetworkSpawnItem.RequestSceneUnLoad(Scene.LoadedNetID);
         }
     }
     /// <summary>
