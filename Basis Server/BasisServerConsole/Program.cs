@@ -20,6 +20,8 @@ namespace Basis
             Configuration config = Configuration.LoadFromXml(configFilePath);
             config.ProcessEnvironmentalOverrides();
 
+            ThreadPool.SetMinThreads(config.MinThreadPoolThreads, config.MinThreadPoolThreads);
+            ThreadPool.SetMaxThreads(config.MaxThreadPoolThreads, config.MaxThreadPoolThreads);
             // Initialize server-side logging
             string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
             BasisServerSideLogging.Initialize(config, folderPath);
