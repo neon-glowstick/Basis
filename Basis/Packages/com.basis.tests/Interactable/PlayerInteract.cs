@@ -44,15 +44,22 @@ public class PlayerInteract : MonoBehaviour
     private AsyncOperationHandle<Material> asyncOperationLineMaterial;
     public float interactLineWidth = 0.015f;
     public bool renderInteractLine = true;
+    private bool interactLinesActive = false;
 
     // TODO: load with addressable.  
     public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
+
+    const string k_InteractableLayer = "Interactable";
+    public LayerMask InteractableLayerMask;
     private void Start()
     {
         BasisLocalPlayer.Instance.LocalBoneDriver.OnSimulate += Simulate;
         var Device = BasisDeviceManagement.Instance.AllInputDevices;
         Device.OnListAdded += OnInputChanged;
         Device.OnListItemRemoved += OnInputRemoved;
+
+        // TODO add default layer ect to mask
+        InteractableLayerMask = LayerMask.NameToLayer(k_InteractableLayer);
 
         AsyncOperationHandle<Material> op = Addressables.LoadAssetAsync<Material>(LoadMaterialAddress);
         LineMaterial = op.WaitForCompletion();
@@ -119,33 +126,11 @@ public class PlayerInteract : MonoBehaviour
             }
 
             HoverInteractSphere hoverSphere = interactInput.hoverInteract;
-
-            Vector3 originPos = interactInput.interactOrigin.position;
-            Ray ray;
-            if (hoverSphere.HoverTarget != null)
-            {
-                Vector3 direction = (originPos - hoverSphere.TargetClosestPoint).normalized;
-                ray = new Ray(originPos, direction);
-            }
-            else
-            {
-                if (IsDesktopCenterEye(interactInput.input))
-                {
-                    ray = new Ray(interactInput.input.transform.position, interactInput.input.transform.forward);
-                }
-                else
-                {
-                    Vector3 origin = originPos;
-                    Vector3 direction = interactInput.interactOrigin.forward;
-                    ray = new Ray(origin, direction);
-                }
-            }
-
+            
             RaycastHit rayHit;
             InteractableObject hitInteractable = null;
-            // TODO: Interact layer
-            bool isValidRayHit = Physics.Raycast(ray, out rayHit, raycastDistance) &&
-                rayHit.collider != null &&
+            bool isValidRayHit = interactInput.input.BasisPointRaycaster.FirstHit(out rayHit, raycastDistance) &&
+                (rayHit.collider.gameObject.layer & InteractableLayerMask) != 0 &&
                 rayHit.collider.TryGetComponent(out hitInteractable);
 
 
@@ -161,11 +146,9 @@ public class PlayerInteract : MonoBehaviour
                 {
                     // NOTE: this will skip a frame of hover after stopping interact
                     interactInput = UpdatePickupState(hitInteractable, interactInput);
-
-
                 }
             }
-            // hover misssed entirely 
+            // hover misssed entirely
             else
             {
                 if (interactInput.lastTarget != null)
@@ -189,16 +172,14 @@ public class PlayerInteract : MonoBehaviour
             // write changes back
             InteractInputs[Index] = interactInput;
         }
+        // TODO: replace with UniqueCounterList
         // Iterate over all the inputs
         for (int Index = 0; Index < InteractInputsCount; Index++)
         {
             InteractInput input = InteractInputs[Index];
-            if (input.lastTarget != null)
+            if (input.lastTarget != null && input.lastTarget.RequiresUpdateLoop)
             {
-                if (input.lastTarget.RequiresUpdateLoop)
-                {
-                    input.lastTarget.InputUpdate();
-                }
+                input.lastTarget.InputUpdate();
             }
         }
 
@@ -206,6 +187,7 @@ public class PlayerInteract : MonoBehaviour
         // apply line renderer
         if (renderInteractLine)
         {
+            interactLinesActive = true;
             for (int Index = 0; Index < InteractInputsCount; Index++)
             {
                 InteractInput input = InteractInputs[Index];
@@ -240,8 +222,9 @@ public class PlayerInteract : MonoBehaviour
             }
         }
         // turn all the lines off
-        else
+        else if (interactLinesActive)
         {
+            interactLinesActive = false;
             for (int Index = 0; Index < InteractInputsCount; Index++)
             {
                 InteractInput input = InteractInputs[Index];
@@ -355,7 +338,7 @@ public class PlayerInteract : MonoBehaviour
 
     private bool IsInputGrabbing(BasisInput input)
     {
-        return input.InputState.Trigger > 0.5f;
+        return input.InputState.GripButton || IsDesktopCenterEye(input) && input.InputState.Trigger == 1;
     }
 
     private void RemoveInput(string uid)
@@ -445,8 +428,8 @@ public class PlayerInteract : MonoBehaviour
         for (int Index = 0; Index < count; Index++)
         {
             InteractInput device = InteractInputs[Index];
-            // pointer line
-            Gizmos.DrawLine(device.interactOrigin.position, device.interactOrigin.position + device.interactOrigin.forward * raycastDistance);
+
+            Gizmos.color = Color.magenta;
 
             // hover target line
             if (device.hoverInteract != null && device.hoverInteract.HoverTarget != null)

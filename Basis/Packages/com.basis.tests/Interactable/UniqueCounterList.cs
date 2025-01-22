@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+// TODO: Test this!
 public class UniqueCounterList<T> : IEnumerable<T> where T : UnityEngine.Object
 {
     private readonly List<UItem> _list;
@@ -73,8 +74,8 @@ public class UniqueCounterList<T> : IEnumerable<T> where T : UnityEngine.Object
 
     public bool Remove(T item)
     {
+        // O(2(1 + n))
         bool removed = false;
-
         if(_hashSet.Contains(item)) {
             int index = _list.FindIndex(x => x.Item.GetInstanceID() == item.GetInstanceID());
             Debug.Assert(index >= 0);
@@ -92,7 +93,6 @@ public class UniqueCounterList<T> : IEnumerable<T> where T : UnityEngine.Object
         }
         return removed;
     }
-
     public bool Contains(T item)
     {
         return _hashSet.Contains(item);
@@ -102,12 +102,6 @@ public class UniqueCounterList<T> : IEnumerable<T> where T : UnityEngine.Object
         if(!_hashSet.Contains(item)) return 0;
         return _list.Find(x => x.Item.GetInstanceID() == item.GetInstanceID()).Counter;
     }
-
-    // public void RemoveAt(int index)
-    // {
-    //     _list.RemoveAt(index);
-    //     InvalidateCount();
-    // }
 
     public void Clear()
     {
