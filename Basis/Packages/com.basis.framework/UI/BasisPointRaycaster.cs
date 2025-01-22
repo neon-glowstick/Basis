@@ -89,20 +89,65 @@ namespace Basis.Scripts.UI
             PhysicHitCount = Physics.RaycastNonAlloc(ray, PhysicHits, MaxDistance, Mask, TriggerInteraction);
             // order from raycast is undefined, sort by distance
             Array.Sort(PhysicHits, (a, b) => a.distance.CompareTo(b.distance));
-
-            // if (PhysicHitCount > 0)
-            // {
-            //     var hits = PhysicHits.ToList();
-
-            //     hits.ConvertAll(x => x.collider != null ? x.collider.gameObject.name : null);
-            //     BasisDebug.Log("First Hit:" + hits[0].collider.gameObject.name + "\n Raycast Hits: " + string.Join(", ", hits.ToArray()[..PhysicHitCount]));
-            // }
         }
 
+        // get a span of valid hits sorted by distance
         public ReadOnlySpan<RaycastHit> GetHits()
         {
             return PhysicHits.AsSpan()[..PhysicHitCount];
         }
+
+        /// <summary>
+        /// Gets the closest raycast hit up to maxDistance that is in the layerMask
+        /// </summary>
+        /// <param name="hitInfo"></param>
+        /// <param name="maxDistance"></param>
+        /// <param name="layerMask"></param>
+        /// <returns>true on valid hit</returns> 
+        public bool FirstHitInMask(out RaycastHit hitInfo, float maxDistance = float.PositiveInfinity, int layerMask = Physics.AllLayers)
+        {
+            hitInfo = default;
+            foreach (var hit in GetHits())
+            {
+                if (hit.distance > maxDistance)
+                    return false;
+                if (hit.collider == null)
+                    continue;
+
+                if ((hit.collider.gameObject.layer & layerMask) != 0)
+                {
+                    hitInfo = hit;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the closest raycast hit up to maxDistance
+        /// </summary>
+        /// <param name="hitInfo"></param>
+        /// <param name="maxDistance"></param>
+        /// <returns>true on valid hit</returns> 
+        public bool FirstHit(out RaycastHit hitInfo, float maxDistance = float.PositiveInfinity)
+        {
+            hitInfo = default;
+            foreach (var hit in GetHits())
+            {
+                if (hit.distance > maxDistance)
+                    return false;
+                if (hit.collider == null)
+                    continue;
+
+                hitInfo = hit;
+                return true;
+            }
+            
+            return false;
+        }
+
+
 
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
