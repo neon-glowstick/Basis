@@ -23,7 +23,18 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         BasisNetworkManagement.OnLocalPlayerLeft += OnLocalPlayerLeft;
         BasisNetworkManagement.OnRemotePlayerLeft += OnRemotePlayerLeft;
     }
-
+    private void OnDestroy()
+    {
+        if (BasisObjectSyncSystem.Instance != null)
+        {
+            BasisObjectSyncSystem.Instance.UnregisterObject(this);
+        }
+        BasisScene.OnNetworkMessageReceived -= OnNetworkMessageReceived;
+        BasisNetworkManagement.OnLocalPlayerJoined -= OnLocalPlayerJoined;
+        BasisNetworkManagement.OnRemotePlayerJoined -= OnRemotePlayerJoined;
+        BasisNetworkManagement.OnLocalPlayerLeft -= OnLocalPlayerLeft;
+        BasisNetworkManagement.OnRemotePlayerLeft -= OnRemotePlayerLeft;
+    }
     private void OnLocalPlayerLeft(BasisNetworkPlayer player1, BasisLocalPlayer player2)
     {
         ComputeCurrentOwner();
@@ -52,18 +63,6 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         ushort OldestPlayerInInstance = BasisNetworkManagement.Instance.GetOldestAvailablePlayerUshort();
         bool IsOwner = OldestPlayerInInstance == BasisNetworkManagement.Instance.Transmitter.NetId;
         Rigidbody.isKinematic = !IsOwner;
-    }
-    private void OnDestroy()
-    {
-        if (BasisObjectSyncSystem.Instance != null)
-        {
-            BasisObjectSyncSystem.Instance.UnregisterObject(this);
-        }
-        BasisScene.OnNetworkMessageReceived -= OnNetworkMessageReceived;
-        BasisNetworkManagement.OnLocalPlayerJoined -= OnLocalPlayerJoined;
-        BasisNetworkManagement.OnRemotePlayerJoined -= OnRemotePlayerJoined;
-        BasisNetworkManagement.OnLocalPlayerLeft -= OnLocalPlayerLeft;
-        BasisNetworkManagement.OnRemotePlayerLeft -= OnRemotePlayerLeft;
     }
 
     public void UpdateStoredData(Vector3 position, Quaternion rotation, Vector3 scale)

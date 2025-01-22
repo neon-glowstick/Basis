@@ -204,7 +204,10 @@ public static class BasisNetworkSpawnItem
     {
         foreach (var reference in SpawnedScenes.Values)
         {
-            await SceneManager.UnloadSceneAsync(reference);
+            if (reference.IsValid())
+            {
+                await SceneManager.UnloadSceneAsync(reference);
+            }
         }
         foreach (var reference in SpawnedGameobjects.Values)
         {
