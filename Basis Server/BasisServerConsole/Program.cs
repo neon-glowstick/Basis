@@ -18,6 +18,7 @@ namespace Basis
 
             // Load configuration from the XML file
             Configuration config = Configuration.LoadFromXml(configFilePath);
+            config.ProcessEnvironmentalOverrides();
 
             // Initialize server-side logging
             string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
