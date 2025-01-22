@@ -18,6 +18,8 @@ namespace Basis
 
             // Load configuration from the XML file
             Configuration config = Configuration.LoadFromXml(configFilePath);
+            config.ProcessEnvironmentalOverrides();
+
             ThreadPool.SetMinThreads(config.MinThreadPoolThreads, config.MinThreadPoolThreads);
             ThreadPool.SetMaxThreads(config.MaxThreadPoolThreads, config.MaxThreadPoolThreads);
             // Initialize server-side logging
@@ -32,6 +34,7 @@ namespace Basis
 
             // Initialize health check
             Check = new BasisNetworkHealthCheck(config);
+
             // Start the server in a background task and prevent it from exiting
             Task serverTask = Task.Run(() =>
             {
@@ -75,17 +78,9 @@ namespace Basis
             // Keep the application running
             while (true)
             {
-                Thread.Sleep(3500);
-                if (ThreadPool.ThreadCount != CachedThreadCount || CachedPendingWorkItemCount != ThreadPool.PendingWorkItemCount)
-                {
-                    CachedThreadCount = ThreadPool.ThreadCount;
-                    CachedPendingWorkItemCount = ThreadPool.PendingWorkItemCount;
-                    BNL.Log($"Thread Count is: {ThreadPool.ThreadCount} With Pending Jobs: {ThreadPool.PendingWorkItemCount}");
-                }
+                Thread.Sleep(15000);
             }
         }
-        public static int CachedThreadCount;
-        public static long CachedPendingWorkItemCount;
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
