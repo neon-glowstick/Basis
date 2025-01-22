@@ -46,7 +46,6 @@ public class PlayerInteract : MonoBehaviour
     public bool renderInteractLine = true;
     private bool interactLinesActive = false;
 
-    // TODO: load with addressable.  
     public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
 
     const string k_InteractableLayer = "Interactable";
