@@ -1,4 +1,5 @@
 using LiteNetLib;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -11,7 +12,8 @@ namespace Basis.Scripts.BasisSdk
         public float RespawnCheckTimer = 0.1f;
         public UnityEngine.Audio.AudioMixerGroup Group;
         public static BasisScene Instance;
-        public static UnityEvent<BasisScene> Ready = new UnityEvent<BasisScene>();
+        public static Action<BasisScene> Ready;
+        public static Action<BasisScene> Destroyed;
         public Camera MainCamera;
         public bool IsReady;
         public void Awake()
@@ -23,6 +25,7 @@ namespace Basis.Scripts.BasisSdk
         public void OnDestroy()
         {
             IsReady = false;
+            Destroyed?.Invoke(this);
         }
         public static SceneNetworkMessageReceiveEvent OnNetworkMessageReceived;
         public static SceneNetworkMessageSendEvent OnNetworkMessageSend;

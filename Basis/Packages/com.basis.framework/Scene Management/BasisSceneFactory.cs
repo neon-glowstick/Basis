@@ -22,7 +22,27 @@ public class BasisSceneFactory : MonoBehaviour
         {
             Instance = this;
         }
-        BasisScene.Ready.AddListener(Initalize);
+        BasisScene.Ready += Initalize;
+        BasisScene.Destroyed += BasisSceneDestroyed;
+    }
+    public void BasisSceneDestroyed(BasisScene UnloadingScene)
+    {
+        if(UnloadingScene != BasisScene)
+        {
+            return;
+        }
+        else
+        {
+            BasisScene[] Scenes = FindObjectsByType<BasisScene>( FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            foreach(BasisScene PotentialMainScene in Scenes)
+            {
+                if(PotentialMainScene != UnloadingScene)
+                {
+                    Initalize(PotentialMainScene);
+                    return;
+                }
+            }
+        }
     }
     public void Initalize(BasisScene scene)
     {
