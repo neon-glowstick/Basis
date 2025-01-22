@@ -43,6 +43,8 @@ public class Configuration
     public int PromethusPort = 1234;
     public string PromethusUrl = "/metrics";
     public string Password = "default_password";
+    public int MinThreadPoolThreads = 100;
+    public int MaxThreadPoolThreads = 500;
     public static Configuration LoadFromXml(string filePath)
     {
         if (!File.Exists(filePath))
@@ -93,6 +95,8 @@ public class Configuration
             PromethusPort = int.Parse(doc.SelectSingleNode("/Configuration/PromethusPort")?.InnerText ?? "1234"),
             PromethusUrl = doc.SelectSingleNode("/Configuration/PromethusUrl")?.InnerText ?? "/metrics",
             Password = doc.SelectSingleNode("/Configuration/Password")?.InnerText ?? "default_password", // Parse password
+            MinThreadPoolThreads = int.Parse(doc.SelectSingleNode("/Configuration/MinThreadPoolThreads")?.InnerText ?? "100"),
+            MaxThreadPoolThreads = int.Parse(doc.SelectSingleNode("/Configuration/MaxThreadPoolThreads")?.InnerText ?? "500"),
         };
     }
 
@@ -224,6 +228,8 @@ public class Configuration
         root.AppendChild(CreateElement(doc, "PromethusPort", "1234"));
         root.AppendChild(CreateElement(doc, "PromethusUrl", "/metrics"));
         root.AppendChild(CreateElement(doc, "Password", "default_password")); // Default password
+        root.AppendChild(CreateElement(doc, "MinThreadPoolThreads", "100"));
+        root.AppendChild(CreateElement(doc, "MaxThreadPoolThreads", "500"));
 
         doc.AppendChild(root);
         doc.Save(filePath);

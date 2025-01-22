@@ -34,10 +34,11 @@ namespace Basis.Scripts.Device_Management.Devices
         public float3 AvatarPositionOffset = Vector3.zero;
         public float3 AvatarRotationOffset = Vector3.zero;
 
-        public bool HasUIInputSupport = false;
+        public bool HasRaycastSupport = false;
         public string CommonDeviceIdentifier;
         public BasisVisualTracker BasisVisualTracker;
         public BasisPointRaycaster BasisPointRaycaster;//used to raycast against things like UI
+        public BasisUIRaycast BasisUIRaycast;
         public AddressableGenericResource LoadedDeviceRequest;
         public event SimulationHandler AfterControlApply;
         public GameObject BasisPointRaycasterRef;
@@ -171,8 +172,8 @@ namespace Basis.Scripts.Device_Management.Devices
             {
                 AvatarRotationOffset = BasisDeviceMatchableNames.AvatarRotationOffset;
                 AvatarPositionOffset = BasisDeviceMatchableNames.AvatarPositionOffset;
-                HasUIInputSupport = BasisDeviceMatchableNames.HasRayCastSupport;
-                if (HasUIInputSupport)
+                HasRaycastSupport = BasisDeviceMatchableNames.HasRayCastSupport;
+                if (HasRaycastSupport)
                 {
                     CreateRayCaster(this);
                 }
@@ -386,9 +387,11 @@ namespace Basis.Scripts.Device_Management.Devices
                 case BasisBoneTrackedRole.Mouth:
                     break;
             }
-            if (HasUIInputSupport)
+            if (HasRaycastSupport)
             {
-                BasisPointRaycaster.RayCastUI();
+                BasisPointRaycaster.UpdateRaycast();
+                // TODO: move this into AfterControlApply?
+                BasisUIRaycast.HandleUIRaycast();
             }
             AfterControlApply?.Invoke();
         }
@@ -470,7 +473,9 @@ namespace Basis.Scripts.Device_Management.Devices
             BasisPointRaycasterRef.transform.parent = this.transform;
             BasisPointRaycasterRef.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             BasisPointRaycaster = BasisHelpers.GetOrAddComponent<BasisPointRaycaster>(BasisPointRaycasterRef);
-            await BasisPointRaycaster.Initialize(BaseInput);
+            BasisPointRaycaster.Initialize(BaseInput);
+            BasisUIRaycast = new BasisUIRaycast();
+            await BasisUIRaycast.Initialize(BaseInput, BasisPointRaycaster);
         }
     }
 }

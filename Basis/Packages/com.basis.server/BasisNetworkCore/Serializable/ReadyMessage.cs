@@ -1,4 +1,5 @@
 using LiteNetLib.Utils;
+using static BasisNetworkCore.Serializable.SerializableBasis;
 public static partial class SerializableBasis
 {
     public struct ReadyMessage

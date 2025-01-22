@@ -6,7 +6,9 @@ using Basis.Scripts.Profiler;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Threading.Tasks;
 using UnityEngine;
+using static BasisNetworkCore.Serializable.SerializableBasis;
 using static SerializableBasis;
 
 
@@ -110,5 +112,54 @@ public static class BasisNetworkGenericMessages
             BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.SceneChannel, deliveryMethod);
         }
         BasisNetworkProfiler.SceneDataMessageCounter.Sample(netDataWriter.Length);
+    }
+    public static void NetIDAssign(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        ServerNetIDMessage ServerNetIDMessage = new ServerNetIDMessage();
+        ServerNetIDMessage.Deserialize(reader);
+        BasisNetworkNetIDConversion.AddNetworkId(ServerNetIDMessage);
+    }
+    public static void MassNetIDAssign(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        ServerUniqueIDMessages ServerNetIDMessage = new ServerUniqueIDMessages();
+        ServerNetIDMessage.Deserialize(reader);
+        foreach(ServerNetIDMessage message in ServerNetIDMessage.Messages)
+        {
+            BasisNetworkNetIDConversion.AddNetworkId(message);
+        }
+    }
+    public static async Task LoadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        LocalLoadResource LocalLoadResource = new LocalLoadResource();
+        LocalLoadResource.Deserialize(reader);
+        switch (LocalLoadResource.Mode)
+        {
+            case 0:
+                break;
+            case 1:
+                await BasisNetworkSpawnItem.SpawnScene(LocalLoadResource);
+                break;
+            default:
+                BNL.LogError($"tried to Load Mode {LocalLoadResource.Mode}");
+                break;
+        }
+    }
+
+    public static void UnloadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        UnLoadResource UnLoadResource = new UnLoadResource();
+        UnLoadResource.Deserialize(reader);
+        switch (UnLoadResource.Mode)
+        {
+            case 0:
+
+                break;
+            case 1:
+                BasisNetworkSpawnItem.DestroyScene();
+                break;
+            default:
+                BNL.LogError($"tried to removed Mode {UnLoadResource.Mode}");
+                break;
+        }
     }
 }
