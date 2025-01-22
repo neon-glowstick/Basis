@@ -46,7 +46,7 @@ public class BasisUIRaycastProcess
             for (int Index = 0; Index < DevicesCount; Index++)
             {
                 BasisInput input = Inputs[Index];
-                if (input.HasRaycastSupport && input.BasisPointRaycaster != null && input.BasisUIRaycast != null && input.BasisUIRaycast.WasCorrectLayer)
+                if (input.HasRaycastSupport && input.BasisUIRaycast != null && input.BasisUIRaycast != null && input.BasisUIRaycast.WasCorrectLayer)
                 {
                     EffectiveMouseAction |= input.BasisUIRaycast.CurrentEventData.WasLastDown == false && input.InputState.Trigger == 1;
                     if (input.BasisUIRaycast.HadRaycastUITarget)
