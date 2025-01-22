@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.SceneManagement;
 namespace Basis.Scripts.Drivers
 {
     public static class BasisSceneLoadDriver
@@ -28,12 +29,13 @@ namespace Basis.Scripts.Drivers
         /// remote but can be used local.
         /// </summary>
         /// <returns></returns>
-        public static async Task LoadSceneAssetBundle(BasisLoadableBundle BasisLoadableBundle, bool SpawnPlayerOnSceneLoad = true, bool MakeSceneActiveScene = true)
+        public static async Task<Scene> LoadSceneAssetBundle(BasisLoadableBundle BasisLoadableBundle, bool SpawnPlayerOnSceneLoad = true, bool MakeSceneActiveScene = true)
         {
             SetIfPlayerShouldSpawnOnSceneLoad(SpawnPlayerOnSceneLoad);
             BasisDebug.Log("Loading Scene ", BasisDebug.LogTag.Scene);
-            await BasisLoadHandler.LoadSceneBundle(MakeSceneActiveScene, BasisLoadableBundle, progressCallback, new CancellationToken());
+            Scene Scene = await BasisLoadHandler.LoadSceneBundle(MakeSceneActiveScene, BasisLoadableBundle, progressCallback, new CancellationToken());
             BasisDebug.Log("Loaded Scene ", BasisDebug.LogTag.Scene);
+            return Scene;
         }
         /// <summary>
         /// turning this off for loading in additional levels is recommended. :) 

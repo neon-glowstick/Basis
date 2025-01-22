@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class BundledContentHolder : MonoBehaviour
 {
@@ -6,7 +6,7 @@ public class BundledContentHolder : MonoBehaviour
     public BasisLoadableBundle DefaultScene;
     public BasisLoadableBundle DefaultAvatar;
     public static BundledContentHolder Instance;
-    public bool UseAddressables;
+    public bool UseAddressablesToLoadScene;
     public void Awake()
     {
         Instance = this;

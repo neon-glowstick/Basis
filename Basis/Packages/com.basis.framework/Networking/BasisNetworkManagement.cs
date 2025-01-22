@@ -123,7 +123,7 @@ namespace Basis.Scripts.Networking
             {
                 SetupSceneEvents(BasisScene.Instance);
             }
-            BasisScene.Ready.AddListener(SetupSceneEvents);
+            BasisScene.Ready += SetupSceneEvents;
             this.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             OnEnableInstanceCreate?.Invoke();
         }
@@ -146,7 +146,7 @@ namespace Basis.Scripts.Networking
             BasisAvatarBufferPool.Clear();
             BasisNetworkClient.Disconnect();
         }
-        public void Shutdown()
+        public async void Shutdown()
         {
             // Reset static fields
             Ip = "0.0.0.0";
@@ -157,6 +157,7 @@ namespace Basis.Scripts.Networking
             Players.Clear();
             RemotePlayers.Clear();
             JoiningPlayers.Clear();
+           await BasisNetworkSpawnItem.Reset();
             ReceiverCount = 0;
             MainThreadContext = null;
             LocalPlayerPeer = null;

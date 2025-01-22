@@ -2,67 +2,224 @@ using Basis.Network.Core;
 using Basis.Scripts.Drivers;
 using Basis.Scripts.Networking;
 using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using static SerializableBasis;
 
 public static class BasisNetworkSpawnItem
 {
-    public static async Task SpawnScene(LocalLoadResource localLoadResource)
+    public static bool RequestSceneLoad(string UnlockPassword, string BundleURL, string MetaURL, bool IsLocal, bool Persist, out LocalLoadResource localLoadResource)
     {
-        // Deserialize the incoming byte array
-        byte[] load = localLoadResource.LoadInformation;
-        BasisLoadableBundle loadBundle = SerializationHelper.FromByteArray(load);
-
-        // Simulate scene loading
-        await BasisSceneLoadDriver.LoadSceneAssetBundle(BundledContentHolder.Instance.DefaultScene);
-    }
-    public static void RequestSceneLoad(string UnlockPassword, string BundleURL, string MetaURL, bool IsLocal)
-    {
-        BasisRemoteEncyptedBundle BasisRemoteEncyptedBundle = new BasisRemoteEncyptedBundle
+        if (string.IsNullOrEmpty(BundleURL) || string.IsNullOrEmpty(MetaURL) || string.IsNullOrEmpty(UnlockPassword))
         {
-            MetaURL = UnlockPassword,
+            BasisDebug.Log("Invalid parameters for scene load request.", BasisDebug.LogTag.Networking);
+            localLoadResource = new LocalLoadResource();
+            return false;
+        }
+
+        BasisDebug.Log("Requesting scene load...", BasisDebug.LogTag.Networking);
+
+        localLoadResource = new LocalLoadResource
+        {
+            LoadedNetID = Guid.NewGuid().ToString(),
+            Mode = 1,
             BundleURL = BundleURL,
-            IsLocal = IsLocal
+            UnlockPassword = UnlockPassword,
+            MetaURL = MetaURL,
+            IsLocalLoad = IsLocal,
+            Persist = Persist,
         };
 
-        // Serialize back to a byte array if needed
-        byte[] updatedLoad = SerializationHelper.ToByteArray(UnlockPassword, BasisRemoteEncyptedBundle);
+        LiteNetLib.Utils.NetDataWriter writer = new LiteNetLib.Utils.NetDataWriter();
+        localLoadResource.Serialize(writer);
 
-        LocalLoadResource LocalLoadResource = new LocalLoadResource
+        BasisDebug.Log($"Sending scene load request with NetID: {localLoadResource.LoadedNetID}", BasisDebug.LogTag.Networking);
+
+        BasisNetworkManagement.LocalPlayerPeer?.Send(writer, BasisNetworkCommons.LoadResourceMessage, LiteNetLib.DeliveryMethod.ReliableOrdered);
+        return true;
+    }
+
+    public static bool RequestGameObjectLoad(string UnlockPassword, string BundleURL, string MetaURL, bool IsLocal, Vector3 Position, Quaternion Rotation, Vector3 Scale, bool Persistent, out LocalLoadResource LocalLoadResource)
+    {
+        if (string.IsNullOrEmpty(BundleURL) || string.IsNullOrEmpty(MetaURL) || string.IsNullOrEmpty(UnlockPassword))
         {
-            LoadInformation = updatedLoad,
-            LoadedNetID = Guid.NewGuid().ToString()
+            BasisDebug.Log("Invalid parameters for GameObject load request.", BasisDebug.LogTag.Networking);
+            LocalLoadResource = new LocalLoadResource();
+            return false;
+        }
+
+        BasisDebug.Log("Requesting GameObject load...", BasisDebug.LogTag.Networking);
+
+        LocalLoadResource = new LocalLoadResource
+        {
+            LoadedNetID = Guid.NewGuid().ToString(),
+            Mode = 0,
+            BundleURL = BundleURL,
+            UnlockPassword = UnlockPassword,
+            MetaURL = MetaURL,
+            IsLocalLoad = IsLocal,
+            PositionX = Position.x,
+            PositionY = Position.y,
+            PositionZ = Position.z,
+            QuaternionW = Rotation.w,
+            QuaternionX = Rotation.x,
+            QuaternionY = Rotation.y,
+            QuaternionZ = Rotation.z,
+            ScaleX = Scale.x,
+            ScaleY = Scale.y,
+            ScaleZ = Scale.z,
+            Persist = Persistent,
         };
-        LiteNetLib.Utils.NetDataWriter Writer = new LiteNetLib.Utils.NetDataWriter();
-        LocalLoadResource.Serialize(Writer);
-        BasisNetworkManagement.LocalPlayerPeer.Send(Writer,BasisNetworkCommons.LoadResourceMessage, LiteNetLib.DeliveryMethod.ReliableOrdered);
-    }
-    public static void DestroyScene()
-    {
 
+        LiteNetLib.Utils.NetDataWriter writer = new LiteNetLib.Utils.NetDataWriter();
+        LocalLoadResource.Serialize(writer);
+
+        BasisDebug.Log($"Sending GameObject load request with NetID: {LocalLoadResource.LoadedNetID}", BasisDebug.LogTag.Networking);
+
+        BasisNetworkManagement.LocalPlayerPeer?.Send(writer, BasisNetworkCommons.LoadResourceMessage, LiteNetLib.DeliveryMethod.ReliableOrdered);
+        return true;
     }
-}
-public static class SerializationHelper
-{
-    public static byte[] ToByteArray(string UnlockPassword, BasisRemoteEncyptedBundle BasisRemoteBundleEncrypted)
+
+    public static void RequestGameObjectUnLoad(string LoadedNetID)
     {
-        using (MemoryStream ms = new MemoryStream())
+        if (string.IsNullOrEmpty(LoadedNetID))
         {
-            BinaryFormatter formatter = new BinaryFormatter();
-            formatter.Serialize(ms, UnlockPassword);
-            formatter.Serialize(ms, BasisRemoteBundleEncrypted);
-            return ms.ToArray();
+            BasisDebug.Log("Invalid LoadedNetID for GameObject unload.", BasisDebug.LogTag.Networking);
+            return;
+        }
+
+        UnLoadResource localLoadResource = new UnLoadResource { LoadedNetID = LoadedNetID, Mode = 0 };
+        RequestUnload(localLoadResource);
+    }
+
+    public static void RequestSceneUnLoad(string LoadedNetID)
+    {
+        if (string.IsNullOrEmpty(LoadedNetID))
+        {
+            BasisDebug.Log("Invalid LoadedNetID for scene unload.", BasisDebug.LogTag.Networking);
+            return;
+        }
+
+        BasisDebug.Log("Requesting scene unload...", BasisDebug.LogTag.Networking);
+
+        UnLoadResource localLoadResource = new UnLoadResource { LoadedNetID = LoadedNetID, Mode = 1 };
+        RequestUnload(localLoadResource);
+    }
+
+    public static void RequestUnload(UnLoadResource UnLoadResource)
+    {
+        if (string.IsNullOrEmpty(UnLoadResource.LoadedNetID))
+        {
+            BasisDebug.Log("Invalid unload request.", BasisDebug.LogTag.Networking);
+            return;
+        }
+
+        LiteNetLib.Utils.NetDataWriter writer = new LiteNetLib.Utils.NetDataWriter();
+        UnLoadResource.Serialize(writer);
+
+        BasisDebug.Log($"Sending unload request with NetID: {UnLoadResource.LoadedNetID}", BasisDebug.LogTag.Networking);
+
+        BasisNetworkManagement.LocalPlayerPeer?.Send(writer, BasisNetworkCommons.UnloadResourceMessage, LiteNetLib.DeliveryMethod.ReliableOrdered);
+    }
+
+    public static async Task<Scene> SpawnScene(LocalLoadResource localLoadResource)
+    {
+        BasisDebug.Log($"Spawning scene with NetID: {localLoadResource.LoadedNetID}", BasisDebug.LogTag.Networking);
+
+        BasisLoadableBundle loadBundle = new BasisLoadableBundle
+        {
+            BasisRemoteBundleEncrypted = new BasisRemoteEncyptedBundle()
+            {
+                BundleURL = localLoadResource.BundleURL,
+                IsLocal = localLoadResource.IsLocalLoad,
+                MetaURL = localLoadResource.MetaURL
+            },
+            UnlockPassword = localLoadResource.UnlockPassword,
+        };
+
+        Scene scene = await BasisSceneLoadDriver.LoadSceneAssetBundle(loadBundle);
+        SpawnedScenes.TryAdd(localLoadResource.LoadedNetID, scene);
+
+        return scene;
+    }
+
+    public static async Task<GameObject> SpawnGameObject(LocalLoadResource localLoadResource)
+    {
+        BasisDebug.Log($"Spawning GameObject with NetID: {localLoadResource.LoadedNetID}", BasisDebug.LogTag.Networking);
+
+        BasisLoadableBundle loadBundle = new BasisLoadableBundle
+        {
+            BasisRemoteBundleEncrypted = new BasisRemoteEncyptedBundle()
+            {
+                BundleURL = localLoadResource.BundleURL,
+                IsLocal = localLoadResource.IsLocalLoad,
+                MetaURL = localLoadResource.MetaURL
+            },
+            UnlockPassword = localLoadResource.UnlockPassword,
+        };
+
+        GameObject reference = await BasisLoadHandler.LoadGameObjectBundle(loadBundle, true, new BasisProgressReport(), new CancellationToken(),
+            new Vector3(localLoadResource.PositionX, localLoadResource.PositionY, localLoadResource.PositionZ),
+            new Quaternion(localLoadResource.QuaternionX, localLoadResource.QuaternionY, localLoadResource.QuaternionZ, localLoadResource.QuaternionW),
+            new Vector3(localLoadResource.ScaleX, localLoadResource.ScaleY, localLoadResource.ScaleZ),
+            true, BasisNetworkManagement.Instance.transform);
+
+        SpawnedGameobjects.TryAdd(localLoadResource.LoadedNetID, reference);
+        return reference;
+    }
+
+    public static void DestroyScene(UnLoadResource resource)
+    {
+        if (string.IsNullOrEmpty(resource.LoadedNetID))
+        {
+            BasisDebug.Log("Invalid resource for destroying scene.", BasisDebug.LogTag.Networking);
+            return;
+        }
+
+        if (SpawnedScenes.TryRemove(resource.LoadedNetID, out Scene value))
+        {
+            SceneManager.UnloadSceneAsync(value);
         }
     }
 
-    public static BasisLoadableBundle FromByteArray(byte[] data)
+    public static void DestroyGameobject(UnLoadResource resource)
     {
-        using (MemoryStream ms = new MemoryStream(data))
+        if (string.IsNullOrEmpty(resource.LoadedNetID))
         {
-            BinaryFormatter formatter = new BinaryFormatter();
-            return (BasisLoadableBundle)formatter.Deserialize(ms);
+            BasisDebug.Log("Invalid resource for destroying GameObject.", BasisDebug.LogTag.Networking);
+            return;
+        }
+
+        if (SpawnedGameobjects.TryRemove(resource.LoadedNetID, out GameObject value))
+        {
+            if (value != null)
+                GameObject.Destroy(value);
         }
     }
+
+    public static async Task Reset()
+    {
+        foreach (var reference in SpawnedScenes.Values)
+        {
+            if (reference.IsValid())
+            {
+                await SceneManager.UnloadSceneAsync(reference);
+            }
+        }
+        foreach (var reference in SpawnedGameobjects.Values)
+        {
+            if (reference != null)
+            {
+                GameObject.Destroy(reference);
+            }
+        }
+        SpawnedGameobjects.Clear();
+        SpawnedScenes.Clear();
+        BasisDebug.Log("All spawned objects and scenes have been cleared.", BasisDebug.LogTag.Networking);
+    }
+    public static ConcurrentDictionary<string, GameObject> SpawnedGameobjects = new ConcurrentDictionary<string, GameObject>();
+    public static ConcurrentDictionary<string, Scene> SpawnedScenes = new ConcurrentDictionary<string, Scene>();
 }
