@@ -43,7 +43,7 @@ public class PlayerInteract : MonoBehaviour
     public Material LineMaterial;
     private AsyncOperationHandle<Material> asyncOperationLineMaterial;
     public float interactLineWidth = 0.015f;
-    public bool renderInteractLine = true;
+    public bool renderInteractLines = true;
     private bool interactLinesActive = false;
 
     public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
@@ -184,7 +184,7 @@ public class PlayerInteract : MonoBehaviour
 
 
         // apply line renderer
-        if (renderInteractLine)
+        if (renderInteractLines)
         {
             interactLinesActive = true;
             for (int Index = 0; Index < InteractInputsCount; Index++)

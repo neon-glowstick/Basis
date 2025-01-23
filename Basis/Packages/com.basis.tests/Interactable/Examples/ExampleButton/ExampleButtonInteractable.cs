@@ -27,19 +27,15 @@ public class ExampleButtonInteractable : InteractableObject
     private BasisInputWrapper _InputSource {
         get => _inputSource;
         set {
-            if (value.Source != null && InputSources.Count < 1)
+            if (value.Source != null)
             {
-                InputSources.Add(value);
-            }
-            else if (value.Source != null)
-            {
-                InputSources[0] = value;
+                Inputs = new(0);
+                Inputs.AddInputByRole(value.Source, value.IsInteracting);
             }
             else if (value.Source == null)
             {
-                InputSources.Clear();
+                Inputs = new(0);
             }
-            
             _inputSource = value;
             
         }

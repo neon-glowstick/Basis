@@ -3,6 +3,7 @@ using System.Linq;
 using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Device_Management.Devices.Desktop;
 using Basis.Scripts.Drivers;
+using Basis.Scripts.TransformBinders.BoneControl;
 using Unity.Mathematics;
 using System;
 using UnityEngine;
@@ -55,10 +56,7 @@ public class PickupInteractable : InteractableObject
         }
         if (ConstraintRef == null)
         {
-            if (TryGetComponent(out ConstraintRef))
-            {
-            }
-            else
+            if (!TryGetComponent(out ConstraintRef))
             {
                 ConstraintRef = gameObject.AddComponent<ParentConstraint>();
             }
@@ -98,15 +96,6 @@ public class PickupInteractable : InteractableObject
         }
     }
 
-    private int InputIndex(BasisInput input)
-    {
-        return InputSources.FindIndex(x => x.Source != null && x.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier);
-    }
-
-    public override bool CanHover(BasisInput input)
-    {
-        return InputSources.All(x => !x.IsInteracting) && InputIndex(input) == -1 && IsWithinRange(input.transform.position);
-    }
     public void SetParentConstraint(Transform source)
     {
         // ignore source count, only modify the 0 index
@@ -134,39 +123,50 @@ public class PickupInteractable : InteractableObject
         ConstraintRef.constraintActive = source != null;
     }
 
+    public override bool CanHover(BasisInput input)
+    {
+        return !Inputs.AnyInteracting() && 
+            input.TryGetRole(out BasisBoneTrackedRole role) && 
+            Inputs.TryGetByRole(role, out BasisInputWrapper found) &&
+            found.Source == null && 
+            !found.IsInteracting &&
+            IsWithinRange(input.transform.position);
+    }
     public override bool CanInteract(BasisInput input)
     {
-        // currently hovering with this input
-        return InputSources.All(x => !x.IsInteracting) &&
-            InputIndex(input) != -1 &&
+        // currently hovering can interact only, only one interacting at a time
+        return !Inputs.AnyInteracting() && 
+            Inputs.Find(input) != null &&
+            input.TryGetRole(out BasisBoneTrackedRole role) &&
+            Inputs.TryGetByRole(role, out BasisInputWrapper found) &&
+            found.Source != null && 
+            !found.IsInteracting &&
             IsWithinRange(input.transform.position);
     }
 
-
     public override void OnHoverStart(BasisInput input)
     {
-        int i = InputIndex(input);
-        if (i == -1)
-        {
-            InputSources.Add(new BasisInputWrapper(input, false));
-        }
-        else 
-        {
-            InputSources[i] = new BasisInputWrapper(input, false);
-            BasisDebug.LogWarning("Pickup Interactable found input source in list OnHover, this shouldn't happen");
-        }
+        var found = Inputs.Find(input);
+        var added = Inputs.AddInputByRole(input, false);
+        if (found != null)
+            BasisDebug.LogWarning(nameof(PickupInteractable) + " found input source in list OnHover, this shouldn't happen");
+        if (!added)
+            BasisDebug.LogWarning(nameof(PickupInteractable) + " did not find role for input on hover");
+        
         OnPickupHoverStart?.Invoke();
         HighlightObject(true);
     }
 
     public override void OnHoverEnd(BasisInput input, bool willInteract)
     {
-        int i = InputIndex(input);
-        if (i != -1)
+        if (input.TryGetRole(out BasisBoneTrackedRole role) && Inputs.TryGetByRole(role, out _))
         {
             if (!willInteract)
             {
-                InputSources.RemoveAt(i);
+                if (!Inputs.RemoveByRole(role))
+                {
+                    BasisDebug.LogWarning(nameof(PickupInteractable) + " found input by role but could not remove by it, this is a bug.");
+                }
             }
             OnPickupHoverEnd?.Invoke(willInteract);
             HighlightObject(false);
@@ -174,68 +174,68 @@ public class PickupInteractable : InteractableObject
     }
     public override void OnInteractStart(BasisInput input)
     {
-        int i = InputIndex(input);
-        if (i == -1)
-            return;
-        var wrapper = InputSources[i];
-        // same input that was highlighting previously
-        if (wrapper.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier && !wrapper.IsInteracting)
+        if(input.TryGetRole(out BasisBoneTrackedRole role) && Inputs.TryGetByRole(role, out BasisInputWrapper wrapper))
         {
-
-            if (RigidRef != null && KinematicWhileInteracting)
+            // same input that was highlighting previously
+            if (!wrapper.IsInteracting)
             {
-                _previousKinematicValue = RigidRef.isKinematic;
-                RigidRef.isKinematic = true;
-            }
+                if (RigidRef != null && KinematicWhileInteracting)
+                {
+                    _previousKinematicValue = RigidRef.isKinematic;
+                    RigidRef.isKinematic = true;
+                }
 
-            // Set ownership to the local player
-            // syncNetworking.IsOwner = true;
-            InputSources[i] = new BasisInputWrapper(input, true);
-            RequiresUpdateLoop = true;
-            OnPickup?.Invoke();
-            SetParentConstraint(input.transform);
+                // Set ownership to the local player
+                // syncNetworking.IsOwner = true;
+                Inputs.AddInputByRole(input, true);
+                RequiresUpdateLoop = true;
+                OnPickup?.Invoke();
+                SetParentConstraint(input.transform);
+            }
+            else
+            {
+                Debug.LogWarning("Input source interacted with ReparentInteractable without highlighting first.");
+            }
         }
         else
         {
-            Debug.LogWarning("Input source interacted with ReparentInteractable without highlighting first.");
+            BasisDebug.LogWarning(nameof(PickupInteractable) + " did not find role for input on Interact start");
         }
     }
 
     public override void OnInteractEnd(BasisInput input)
     {
-        int i = InputIndex(input);
-        if (i == -1)
-            return;
-        var wrapper = InputSources[i];
-
-        if (wrapper.IsInteracting && wrapper.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier)
+        if(input.TryGetRole(out BasisBoneTrackedRole role) && Inputs.TryGetByRole(role, out BasisInputWrapper wrapper))
         {
-
-            InputSources.RemoveAt(i);
-
-            if (KinematicWhileInteracting && RigidRef != null)
+            if (wrapper.IsInteracting)
             {
-                RigidRef.isKinematic = _previousKinematicValue;
-            }
+                Inputs.RemoveByRole(role);
 
-            RequiresUpdateLoop = false;
-            // cleanup Desktop Manipulation since InputUpdate isnt run again till next pickup
-            if (pauseHead)
-            {
-                BasisAvatarEyeInput.Instance.UnPauseHead(nameof(PickupInteractable) + ": " + gameObject.name);
-                targetOffset = Vector3.zero;
-                currentZoopVelocity = Vector3.zero;
-                pauseHead = false;
+                if (KinematicWhileInteracting && RigidRef != null)
+                {
+                    RigidRef.isKinematic = _previousKinematicValue;
+                }
+
+                RequiresUpdateLoop = false;
+                // cleanup Desktop Manipulation since InputUpdate isnt run again till next pickup
+                if (pauseHead)
+                {
+                    BasisAvatarEyeInput.Instance.UnPauseHead(nameof(PickupInteractable) + ": " + gameObject.name);
+                    targetOffset = Vector3.zero;
+                    currentZoopVelocity = Vector3.zero;
+                    pauseHead = false;
+                }
+                // syncNetworking.IsOwner = false;
+                OnDrop?.Invoke();
+                SetParentConstraint(null);
             }
-            // syncNetworking.IsOwner = false;
-            OnDrop?.Invoke();
-            SetParentConstraint(null);
         }
+
+        
     }
     public override void InputUpdate()
     {
-        var interactingInputIndex = InputSources.FindIndex(x => x.IsInteracting && x.Source != null);
-        if (interactingInputIndex != -1)
+        if (Inputs.AnyInteracting())
         {
             // Optionally, match the rotation.
             //  transform.rotation = target.rotation;
@@ -249,20 +249,14 @@ public class PickupInteractable : InteractableObject
 
     public override bool IsInteractingWith(BasisInput input)
     {
-        return InputSources.Any(x => 
-            x.IsInteracting && 
-            x.Source != null && 
-            x.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier
-        );
+        var found = Inputs.Find(input);
+        return found.HasValue && found.Value.IsInteracting;
     }
 
     public override bool IsHoveredBy(BasisInput input)
     {
-        return InputSources.Any(x => 
-            !x.IsInteracting && 
-            x.Source != null && 
-            x.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier
-        );
+        var found = Inputs.Find(input);
+        return found.HasValue && !found.Value.IsInteracting;
     }
 
     // this is cached, use it
@@ -298,7 +292,7 @@ public class PickupInteractable : InteractableObject
             Vector3 currentOffset = ConstraintRef.translationOffsets[0];
             if (targetOffset == Vector3.zero)
             {
-                BasisDebug.Log("Setting initial target to current offset:" + targetOffset + " : " + currentOffset);
+                // BasisDebug.Log("Setting initial target to current offset:" + targetOffset + " : " + currentOffset);
                 targetOffset = currentOffset;
             }
             
