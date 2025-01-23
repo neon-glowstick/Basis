@@ -31,8 +31,8 @@ namespace Basis.Scripts.Editor
             {
                 Vector2 previousAvatarEyePosition = avatar.AvatarEyePosition;
                 Vector2 previousAvatarMouthPosition = avatar.AvatarMouthPosition;
-                UpdateAvatarPosition(Color.green,ref avatar.AvatarEyePosition, inspector.AvatarEyePositionState, avatar.transform.rotation, bottom, previousAvatarEyePosition, AvatarPathConstants.avatarEyePositionField, inspector.uiElementsRoot, avatar);
-                UpdateAvatarPosition(Color.blue, ref avatar.AvatarMouthPosition, inspector.AvatarMouthPositionState, avatar.transform.rotation, bottom, previousAvatarMouthPosition, AvatarPathConstants.avatarMouthPositionField, inspector.uiElementsRoot, avatar);
+                UpdateAvatarPosition(Color.green,ref avatar.AvatarEyePosition, inspector.AvatarEyePositionState, avatar.transform.rotation, bottom, previousAvatarEyePosition, BasisPathConstants.avatarEyePositionField, inspector.uiElementsRoot, avatar);
+                UpdateAvatarPosition(Color.blue, ref avatar.AvatarMouthPosition, inspector.AvatarMouthPositionState, avatar.transform.rotation, bottom, previousAvatarMouthPosition, BasisPathConstants.avatarMouthPositionField, inspector.uiElementsRoot, avatar);
             }
         }
 

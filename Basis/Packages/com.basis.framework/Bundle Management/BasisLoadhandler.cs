@@ -110,7 +110,9 @@ public static class BasisLoadHandler
 
         if (LoadedBundles.TryGetValue(loadableBundle.BasisRemoteBundleEncrypted.MetaURL, out BasisTrackedBundleWrapper wrapper))
         {
+            BasisDebug.Log($"Bundle On Disc Loading", BasisDebug.LogTag.Networking);
             await wrapper.WaitForBundleLoadAsync();
+            BasisDebug.Log($"Bundle Loaded, Loading Scene", BasisDebug.LogTag.Networking);
             return await BasisBundleLoadAsset.LoadSceneFromBundleAsync(wrapper, makeActiveScene, report);
         }
 

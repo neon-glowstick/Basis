@@ -1,6 +1,12 @@
-public class AvatarPathConstants
+public class BasisPathConstants
 {
-    public static readonly string uxmlPath = "Packages/com.basis.sdk/Scripts/Editor/AvatarSDK.uxml";
+    // Common base paths
+    private const string BasePath = "Packages/com.basis.sdk/Scripts/Editor/StyleSheets/";
+    private const string AvatarFile = "AvatarSDK.uxml";
+    private const string PropFile = "PropSDK.uxml";
+    private const string SceneFile = "SceneSDK.uxml";
+    #region Avatar
+    public static readonly string AvataruxmlPath = $"{BasePath}{AvatarFile}";
 
     public static readonly string avatarEyePositionButton = "AvatarEyePositionButton";
     public static readonly string avatarMouthPositionButton = "AvatarMouthPositionButton";
@@ -19,6 +25,16 @@ public class AvatarPathConstants
     public static readonly string AvatarDescription = "avatardescriptioninput";
     public static readonly string AvatarIcon = "AvatarIcon";
     public static readonly string Avatarpassword = "avatarpassword";
+    #endregion
+    #region Prop
+    public static readonly string PropuxmlPath = $"{BasePath}{PropFile}";
+    #endregion
 
+    #region Scene
+    public static readonly string SceneuxmlPath = $"{BasePath}{SceneFile}";
+    #endregion
+    #region Shared
     public static readonly string ErrorMessage = "ErrorMessage";
+    public static readonly string BuildButton = "BuildButton";
+    #endregion
 }

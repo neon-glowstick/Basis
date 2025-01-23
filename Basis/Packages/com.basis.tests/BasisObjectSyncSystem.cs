@@ -173,9 +173,9 @@ public class BasisObjectSyncSystem : MonoBehaviour
             rotations[i] = rotation;
             scales[i] = transform.localScale;
 
-            targetPositions[i] = obj.Storeddata.Position;
-            targetRotations[i] = obj.Storeddata.Rotation;
-            targetScales[i] = obj.Storeddata.Scale;
+            targetPositions[i] = obj.StoredData.Position;
+            targetRotations[i] = obj.StoredData.Rotation;
+            targetScales[i] = obj.StoredData.Scale;
             lerpMultipliers[i] = obj.LerpMultiplier;
         }
     }

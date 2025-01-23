@@ -1,7 +1,6 @@
 using LiteNetLib;
 using System;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Basis.Scripts.BasisSdk
 {

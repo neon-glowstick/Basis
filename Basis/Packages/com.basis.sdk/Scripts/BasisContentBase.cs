@@ -1,8 +1,23 @@
+using System;
 using UnityEngine;
 
 public abstract class BasisContentBase : MonoBehaviour
 {
     [SerializeField]
     public BasisBundleDescription BasisBundleDescription;
-    public string NetworkID;
+    private string networkID;
+    public Action OnNetworkIDSet;
+    public string NetworkID
+    {
+        get
+        {
+            return networkID;
+        }
+
+        set
+        {
+            networkID = value;
+            OnNetworkIDSet?.Invoke();
+        }
+    }
 }

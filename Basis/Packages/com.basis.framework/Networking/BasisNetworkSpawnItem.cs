@@ -1,4 +1,5 @@
 using Basis.Network.Core;
+using Basis.Scripts.BasisSdk;
 using Basis.Scripts.Drivers;
 using Basis.Scripts.Networking;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.SceneManagement;
 using static SerializableBasis;
 
@@ -141,11 +143,25 @@ public static class BasisNetworkSpawnItem
         };
 
         Scene scene = await BasisSceneLoadDriver.LoadSceneAssetBundle(loadBundle);
+        BasisDebug.Log($"LoadSceneAssetBundle Complete now Starting Scene Traversal", BasisDebug.LogTag.Networking);
+        SceneTraverseNetIdAssign(scene, localLoadResource);
         SpawnedScenes.TryAdd(localLoadResource.LoadedNetID, scene);
-
+        BasisDebug.Log($"Scene Load From Server Complete ", BasisDebug.LogTag.Networking);
         return scene;
     }
-
+    public static void SceneTraverseNetIdAssign(Scene scene, LocalLoadResource localLoadResource)
+    {
+        GameObject[] Root = scene.GetRootGameObjects();
+        foreach (GameObject root in Root)
+        {
+            BasisScene BasisScene = root.GetComponentInChildren<BasisScene>();
+            if (BasisScene != null)
+            {
+                BasisScene.NetworkID = localLoadResource.LoadedNetID;
+                return;
+            }
+        }
+    }
     public static async Task<GameObject> SpawnGameObject(LocalLoadResource localLoadResource)
     {
         BasisDebug.Log($"Spawning GameObject with NetID: {localLoadResource.LoadedNetID}", BasisDebug.LogTag.Networking);
@@ -167,6 +183,10 @@ public static class BasisNetworkSpawnItem
             new Vector3(localLoadResource.ScaleX, localLoadResource.ScaleY, localLoadResource.ScaleZ),
             true, BasisNetworkManagement.Instance.transform);
 
+        if (reference.TryGetComponent<BasisContentBase>(out BasisContentBase BasisContentBase))
+        {
+            BasisContentBase.NetworkID = localLoadResource.LoadedNetID;
+        }
         SpawnedGameobjects.TryAdd(localLoadResource.LoadedNetID, reference);
         return reference;
     }

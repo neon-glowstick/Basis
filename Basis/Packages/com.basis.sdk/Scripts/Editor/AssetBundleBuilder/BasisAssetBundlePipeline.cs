@@ -90,7 +90,7 @@ public static class BasisAssetBundlePipeline
         }
     }
 
-    public static async void BuildAssetBundle(Scene scene, BasisAssetBundleObject settings, BasisBundleInformation BasisBundleInformation, string Password)
+    public static async Task BuildAssetBundle(Scene scene, BasisAssetBundleObject settings, BasisBundleInformation BasisBundleInformation, string Password)
     {
         ClearOutExistingSets();
         TemporaryStorageHandler.ClearTemporaryStorage(settings.AssetBundleDirectory);

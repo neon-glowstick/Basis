@@ -1,20 +1,13 @@
-using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management.Devices;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Animations;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static UnityEngine.GraphicsBuffer;
 
 public class PickupInteractable : InteractableObject
 {
-    // public BasisObjectSyncNetworking syncNetworking;
     [Header("Reparent Settings")]
-    public bool KinematicWhileInteracting = false;
-
-    [SerializeField]
-    private bool LocalOnly = true;
+    public bool KinematicWhileInteracting = true;
 
     [Header("References")]
     public Collider ColliderRef;
@@ -58,11 +51,6 @@ public class PickupInteractable : InteractableObject
             };
             ConstraintRef.AddSource(nullSource);
         }
-        // TODO: netsync
-        if (!LocalOnly)
-        {
-            // syncNetworking = GetComponent<BasisObjectSyncNetworking>();
-        }
 
         AsyncOperationHandle<Material> op = Addressables.LoadAssetAsync<Material>(k_LoadMaterialAddress);
         ColliderHighlightMat = op.WaitForCompletion();
@@ -85,10 +73,6 @@ public class PickupInteractable : InteractableObject
         }
 
     }
-
-
-
-
     public void HighlightObject(bool highlight)
     {
         if (ColliderRef && HighlightClone)
@@ -204,14 +188,6 @@ public class PickupInteractable : InteractableObject
             // Optionally, match the rotation.
             //  transform.rotation = target.rotation;
             //     this.transform.SetLocalPositionAndRotation(vector3 + PositionOffset, appliedRotation);
-
-            // Update the networked data (Storeddata) to reflect the position, rotation, and scale
-            if (!LocalOnly)
-            {
-                // syncNetworking.Storeddata.Position = transform.position;
-                // syncNetworking.Storeddata.Rotation = transform.rotation;
-                // syncNetworking.Storeddata.Scale = transform.localScale;
-            }
         }
     }
 
@@ -235,18 +211,6 @@ public class PickupInteractable : InteractableObject
     {
         return ColliderRef;
     }
-
-    // TODO: netsync
-    // public void OnOwnershipTransfer(bool isOwner)
-    // {
-    //     // remove ourselves from influece
-    //     if (!isOwner)
-    //     {
-    //         transform.SetParent(null);
-    //         InputSources[0] = new InputSource(null, true);
-    //     }
-    //     // dont care otherwise, wait for hover/interact
-    // }
 
     void OnDestroy()
     {

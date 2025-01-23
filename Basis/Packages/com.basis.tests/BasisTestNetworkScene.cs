@@ -16,6 +16,13 @@ public class BasisTestNetworkScene : MonoBehaviour
     public LocalLoadResource Scene;
     public LocalLoadResource Gameobject;
     public bool IsPersistent;
+    public string ScenePassword = "Scene";
+    public string SceneMetaUrl = "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedMeta";
+    public string SceneBundleUrl = "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedBundle";
+
+    public string GameobjectPassword = "Aurellia";
+    public string GameobjectMetaUrl = "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedMeta";
+    public string GameobjectBundleUrl = "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedBundle";
     public void Awake()
     {
         BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
@@ -25,16 +32,16 @@ public class BasisTestNetworkScene : MonoBehaviour
     {
         if (SceneLoadTest)
         {
-            BasisNetworkSpawnItem.RequestSceneLoad("Scene",
-               "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedBundle",
-               "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedMeta",
+            BasisNetworkSpawnItem.RequestSceneLoad(ScenePassword,
+               SceneMetaUrl,
+               SceneBundleUrl,
                false, IsPersistent, out Scene);
         }
         if (GameobjectLoadTest)
         {
-            BasisNetworkSpawnItem.RequestGameObjectLoad("Aurellia",
-                 "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedBundle",
-                 "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedMeta",
+            BasisNetworkSpawnItem.RequestGameObjectLoad(GameobjectPassword,
+                 GameobjectBundleUrl,
+                 GameobjectMetaUrl,
                  false, BasisLocalPlayer.Instance.transform.position, Quaternion.identity, Vector3.one, IsPersistent, out Gameobject);
         }
     }

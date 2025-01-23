@@ -2,73 +2,110 @@ using Basis.Scripts.BasisSdk;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Networking;
 using Basis.Scripts.Networking.NetworkedAvatar;
+using BasisSerializer.OdinSerializer;
 using LiteNetLib;
 using UnityEngine;
-
 public class BasisObjectSyncNetworking : MonoBehaviour
 {
-    public ushort MessageIndex = 3321;
-    public BasisPositionRotationScale Storeddata = new BasisPositionRotationScale();
+    public ushort MessageIndex = 0;
+    public bool HasMessageIndexAssigned;
+    public string NetworkId;
+    public BasisPositionRotationScale StoredData = new BasisPositionRotationScale();
     public float LerpMultiplier = 3f;
-    public Rigidbody Rigidbody;
-    private void Awake()
+    //public Rigidbody Rigidbody;
+    public int TargetFrequency = 10; // Target update frequency in Hz (10 times per second)
+    private double _updateInterval; // Time interval between updates
+    private double _lastUpdateTime; // Last update timestamp
+    public ushort CurrentOwner;
+    public bool IsLocalOwner = false;
+    public bool HasActiveOwnership = false;
+    public void OnEnable()
     {
-        if (BasisObjectSyncSystem.Instance != null)
-        {
-            BasisObjectSyncSystem.Instance.RegisterObject(this);
-        }
+        HasMessageIndexAssigned = false;
+        BasisObjectSyncSystem.Instance?.RegisterObject(this);
         BasisScene.OnNetworkMessageReceived += OnNetworkMessageReceived;
         BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
         BasisNetworkManagement.OnRemotePlayerJoined += OnRemotePlayerJoined;
         BasisNetworkManagement.OnLocalPlayerLeft += OnLocalPlayerLeft;
         BasisNetworkManagement.OnRemotePlayerLeft += OnRemotePlayerLeft;
+        BasisNetworkManagement.OnOwnershipTransfer += OnOwnershipTransfer;
+        BasisNetworkNetIDConversion.OnNetworkIdAdded += OnNetworkIdAdded;
+        BasisNetworkNetIDConversion.RequestId(NetworkId);
+        _updateInterval = 1f / TargetFrequency; // Calculate interval (1/33 seconds)
+        _lastUpdateTime = Time.timeAsDouble;
     }
-    private void OnDestroy()
+    public void OnDisable()
     {
-        if (BasisObjectSyncSystem.Instance != null)
-        {
-            BasisObjectSyncSystem.Instance.UnregisterObject(this);
-        }
+        HasMessageIndexAssigned = false;
+        BasisObjectSyncSystem.Instance?.UnregisterObject(this);
         BasisScene.OnNetworkMessageReceived -= OnNetworkMessageReceived;
         BasisNetworkManagement.OnLocalPlayerJoined -= OnLocalPlayerJoined;
         BasisNetworkManagement.OnRemotePlayerJoined -= OnRemotePlayerJoined;
         BasisNetworkManagement.OnLocalPlayerLeft -= OnLocalPlayerLeft;
         BasisNetworkManagement.OnRemotePlayerLeft -= OnRemotePlayerLeft;
+        BasisNetworkManagement.OnOwnershipTransfer -= OnOwnershipTransfer;
+        BasisNetworkNetIDConversion.OnNetworkIdAdded -= OnNetworkIdAdded;
     }
-    private void OnLocalPlayerLeft(BasisNetworkPlayer player1, BasisLocalPlayer player2)
+    private void OnOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner)
     {
-        ComputeCurrentOwner();
-    }
-
-    private void OnRemotePlayerLeft(BasisNetworkPlayer player1, BasisRemotePlayer player2)
-    {
-        ComputeCurrentOwner();
-    }
-
-    private void OnRemotePlayerJoined(BasisNetworkPlayer player1, BasisRemotePlayer player2)
-    {
-        ComputeCurrentOwner();
+        if (NetworkId == UniqueEntityID)
+        {
+            IsLocalOwner = IsOwner;
+            CurrentOwner = NetIdNewOwner;
+            HasActiveOwnership = true;
+            //Rigidbody.isKinematic = !IsLocalOwner;
+        }
     }
 
-    private void OnLocalPlayerJoined(BasisNetworkPlayer player1, BasisLocalPlayer player2)
+    public void OnNetworkIdAdded(string uniqueId, ushort ushortId)
     {
-        ComputeCurrentOwner();
+        if (NetworkId == uniqueId)
+        {
+            MessageIndex = ushortId;
+            HasMessageIndexAssigned = true;
+            if (HasActiveOwnership == false)
+            {
+                BasisNetworkManagement.RequestCurrentOwnership(NetworkId);
+            }
+        }
     }
-    public void OnNetworkMessageReceived(ushort PlayerID, ushort MessageIndex, byte[] buffer, DeliveryMethod DeliveryMethod = DeliveryMethod.ReliableSequenced)
+    public void OnLocalPlayerLeft(BasisNetworkPlayer player1, BasisLocalPlayer player2)
     {
-        ComputeCurrentOwner();
     }
-    public void ComputeCurrentOwner()
+    public void OnRemotePlayerLeft(BasisNetworkPlayer player1, BasisRemotePlayer player2)
     {
-        ushort OldestPlayerInInstance = BasisNetworkManagement.Instance.GetOldestAvailablePlayerUshort();
-        bool IsOwner = OldestPlayerInInstance == BasisNetworkManagement.Instance.Transmitter.NetId;
-        Rigidbody.isKinematic = !IsOwner;
     }
-
-    public void UpdateStoredData(Vector3 position, Quaternion rotation, Vector3 scale)
+    public void OnRemotePlayerJoined(BasisNetworkPlayer player1, BasisRemotePlayer player2)
     {
-        Storeddata.Position = position;
-        Storeddata.Rotation = rotation;
-        Storeddata.Scale = scale;
+    }
+    public void OnLocalPlayerJoined(BasisNetworkPlayer player1, BasisLocalPlayer player2)
+    {
+    }
+    public void Update()
+    {
+        if (IsLocalOwner && HasMessageIndexAssigned)
+        {
+            double DoubleTime = Time.timeAsDouble;
+            if (DoubleTime - _lastUpdateTime >= _updateInterval)
+            {
+                _lastUpdateTime = DoubleTime;
+                SendNetworkMessage();
+            }
+        }
+    }
+    public void SendNetworkMessage()
+    {
+        transform.GetLocalPositionAndRotation(out StoredData.Position, out StoredData.Rotation);
+        StoredData.Scale = transform.localScale;
+        BasisScene.OnNetworkMessageSend?.Invoke(MessageIndex, SerializationUtility.SerializeValue(StoredData, DataFormat.Binary), DeliveryMethod.Sequenced);
+    }
+    public void OnNetworkMessageReceived(ushort PlayerID, ushort messageIndex, byte[] buffer, DeliveryMethod DeliveryMethod)
+    {
+        if (HasMessageIndexAssigned && messageIndex == MessageIndex)
+        {
+            StoredData = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat.Binary);
+            transform.SetLocalPositionAndRotation(StoredData.Position, StoredData.Rotation);
+            transform.localScale = StoredData.Scale;
+        }
     }
 }

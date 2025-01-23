@@ -1,11 +1,7 @@
 using Basis.Scripts.BasisSdk;
 using Basis.Scripts.BasisSdk.Helpers.Editor;
 using Basis.Scripts.Editor;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -14,9 +10,10 @@ using UnityEngine.UIElements;
 [CustomEditor(typeof(BasisAvatar))]
 public partial class BasisAvatarSDKInspector : Editor
 {
-    private const string MsgIL2CPPIsNotInstalled = "IL2CPP is not installed.";
     public VisualTreeAsset visualTree;
     public BasisAvatar Avatar;
+
+    private const string MsgIL2CPPIsNotInstalled = "IL2CPP is not installed.";
     public VisualElement uiElementsRoot;
     public bool AvatarEyePositionState = false;
     public bool AvatarMouthPositionState = false;
@@ -25,19 +22,12 @@ public partial class BasisAvatarSDKInspector : Editor
     public AvatarSDKVisemes AvatarSDKVisemes = new AvatarSDKVisemes();
     public Button EventCallbackAvatarBundleButton { get; private set; }
     private bool IsIL2CPPIsInstalled;
-
+    public Texture2D Texture;
     private void OnEnable()
     {
-        visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AvatarPathConstants.uxmlPath);
+        visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(BasisPathConstants.AvataruxmlPath);
         Avatar = (BasisAvatar)target;
-        IsIL2CPPIsInstalled = CheckIfIL2CPPIsInstalled();
-    }
-
-    private static bool CheckIfIL2CPPIsInstalled()
-    {
-        var playbackEndingDirectory = BuildPipeline.GetPlaybackEngineDirectory(EditorUserBuildSettings.activeBuildTarget, BuildOptions.None, false);
-        return !string.IsNullOrEmpty(playbackEndingDirectory)
-               && Directory.Exists(Path.Combine(playbackEndingDirectory, "Variations", "il2cpp"));
+        IsIL2CPPIsInstalled = BasisBundleBuild.CheckIfIL2CPPIsInstalled();
     }
 
     public override VisualElement CreateInspectorGUI()
@@ -167,29 +157,29 @@ public partial class BasisAvatarSDKInspector : Editor
     public void SetupItems()
     {
         // Initialize Buttons
-        Button avatarEyePositionClick = BasisHelpersGizmo.Button(uiElementsRoot, AvatarPathConstants.avatarEyePositionButton);
-        Button avatarMouthPositionClick = BasisHelpersGizmo.Button(uiElementsRoot, AvatarPathConstants.avatarMouthPositionButton);
-        Button avatarBundleButton = BasisHelpersGizmo.Button(uiElementsRoot, AvatarPathConstants.AvatarBundleButton);
-        Button avatarAutomaticVisemeDetectionClick = BasisHelpersGizmo.Button(uiElementsRoot, AvatarPathConstants.AvatarAutomaticVisemeDetection);
-        Button avatarAutomaticBlinkDetectionClick = BasisHelpersGizmo.Button(uiElementsRoot, AvatarPathConstants.AvatarAutomaticBlinkDetection);
+        Button avatarEyePositionClick = BasisHelpersGizmo.Button(uiElementsRoot, BasisPathConstants.avatarEyePositionButton);
+        Button avatarMouthPositionClick = BasisHelpersGizmo.Button(uiElementsRoot, BasisPathConstants.avatarMouthPositionButton);
+        Button avatarBundleButton = BasisHelpersGizmo.Button(uiElementsRoot, BasisPathConstants.AvatarBundleButton);
+        Button avatarAutomaticVisemeDetectionClick = BasisHelpersGizmo.Button(uiElementsRoot, BasisPathConstants.AvatarAutomaticVisemeDetection);
+        Button avatarAutomaticBlinkDetectionClick = BasisHelpersGizmo.Button(uiElementsRoot, BasisPathConstants.AvatarAutomaticBlinkDetection);
 
         // Initialize Event Callbacks for Vector2 fields (for Avatar Eye and Mouth Position)
-        EventCallback<ChangeEvent<Vector2>> eventCallbackAvatarEyePosition = BasisHelpersGizmo.CallBackVector2Field(uiElementsRoot, AvatarPathConstants.avatarEyePositionField, Avatar.AvatarEyePosition);
-        EventCallback<ChangeEvent<Vector2>> eventCallbackAvatarMouthPosition = BasisHelpersGizmo.CallBackVector2Field(uiElementsRoot, AvatarPathConstants.avatarMouthPositionField, Avatar.AvatarMouthPosition);
+        EventCallback<ChangeEvent<Vector2>> eventCallbackAvatarEyePosition = BasisHelpersGizmo.CallBackVector2Field(uiElementsRoot, BasisPathConstants.avatarEyePositionField, Avatar.AvatarEyePosition);
+        EventCallback<ChangeEvent<Vector2>> eventCallbackAvatarMouthPosition = BasisHelpersGizmo.CallBackVector2Field(uiElementsRoot, BasisPathConstants.avatarMouthPositionField, Avatar.AvatarMouthPosition);
 
         // Initialize ObjectFields and assign references
-        ObjectField animatorField = uiElementsRoot.Q<ObjectField>(AvatarPathConstants.animatorField);
-        ObjectField faceBlinkMeshField = uiElementsRoot.Q<ObjectField>(AvatarPathConstants.FaceBlinkMeshField);
-        ObjectField faceVisemeMeshField = uiElementsRoot.Q<ObjectField>(AvatarPathConstants.FaceVisemeMeshField);
+        ObjectField animatorField = uiElementsRoot.Q<ObjectField>(BasisPathConstants.animatorField);
+        ObjectField faceBlinkMeshField = uiElementsRoot.Q<ObjectField>(BasisPathConstants.FaceBlinkMeshField);
+        ObjectField faceVisemeMeshField = uiElementsRoot.Q<ObjectField>(BasisPathConstants.FaceVisemeMeshField);
 
-        TextField AvatarNameField = uiElementsRoot.Q<TextField>(AvatarPathConstants.AvatarName);
-        TextField AvatarDescriptionField = uiElementsRoot.Q<TextField>(AvatarPathConstants.AvatarDescription);
+        TextField AvatarNameField = uiElementsRoot.Q<TextField>(BasisPathConstants.AvatarName);
+        TextField AvatarDescriptionField = uiElementsRoot.Q<TextField>(BasisPathConstants.AvatarDescription);
 
-        TextField AvatarpasswordField = uiElementsRoot.Q<TextField>(AvatarPathConstants.Avatarpassword);
+        TextField AvatarpasswordField = uiElementsRoot.Q<TextField>(BasisPathConstants.Avatarpassword);
 
-        ObjectField AvatarIconField = uiElementsRoot.Q<ObjectField>(AvatarPathConstants.AvatarIcon);
+        ObjectField AvatarIconField = uiElementsRoot.Q<ObjectField>(BasisPathConstants.AvatarIcon);
 
-        Label ErrorMessage = uiElementsRoot.Q<Label>(AvatarPathConstants.ErrorMessage);
+        Label ErrorMessage = uiElementsRoot.Q<Label>(BasisPathConstants.ErrorMessage);
 
         animatorField.allowSceneObjects = true;
         faceBlinkMeshField.allowSceneObjects = true;
@@ -242,7 +232,10 @@ public partial class BasisAvatarSDKInspector : Editor
             ErrorMessage.text = "";
         }
     }
-    public Texture2D Texture;
+    private async void EventCallbackAvatarBundle()
+    {
+       await BasisBundleBuild.GameObjectBundleBuild(Avatar);
+    }
     public void OnAssignTexture2D(ChangeEvent<UnityEngine.Object> Texture2D)
     {
         Texture = (Texture2D)Texture2D.newValue;
@@ -258,66 +251,6 @@ public partial class BasisAvatarSDKInspector : Editor
         Avatar.BasisBundleDescription.AssetBundleName = evt.newValue;
         EditorUtility.SetDirty(Avatar);
         AssetDatabase.Refresh();
-    }
-    private async void EventCallbackAvatarBundle()
-    {
-        if(string.IsNullOrEmpty(Avatar.BasisBundleDescription.AssetBundleName))
-        {
-            Debug.LogError("Name was Empty!");
-            EditorUtility.DisplayDialog("Missing the name", "please give a name in the field", "ok");
-            return;
-        }
-        if (string.IsNullOrEmpty(Avatar.BasisBundleDescription.AssetBundleDescription))
-        {
-            Debug.LogError("Description was Empty!");
-            EditorUtility.DisplayDialog("Missing the description", "please give a description in the field", "ok");
-            return;
-
-        }
-        BasisAssetBundleObject BasisAssetBundleObject = AssetDatabase.LoadAssetAtPath<BasisAssetBundleObject>(BasisAssetBundleObject.AssetBundleObject);
-
-        BasisBundleInformation basisBundleInformation = new BasisBundleInformation
-        {
-            BasisBundleDescription = Avatar.BasisBundleDescription
-        };
-        // Generate a random byte array
-        byte[] randomBytes = GenerateRandomBytes(32);
-
-        // Convert to Base64 string
-        string base64String = ByteArrayToBase64String(randomBytes);
-        //  Debug.Log("Base64 String: " + base64String);
-
-        // Convert to Hex string
-        string hexString = ByteArrayToHexString(randomBytes);
-        //   Debug.Log("Hex String: " + hexString);
-        await BasisAssetBundlePipeline.BuildAssetBundle(Avatar.gameObject, BasisAssetBundleObject, basisBundleInformation, hexString);
-    }
-    // Generates a random byte array of specified length
-    public byte[] GenerateRandomBytes(int length)
-    {
-        byte[] randomBytes = new byte[length];
-        using (var rng = new RNGCryptoServiceProvider())
-        {
-            rng.GetBytes(randomBytes);
-        }
-        return randomBytes;
-    }
-
-    // Converts a byte array to a Base64 encoded string
-    public string ByteArrayToBase64String(byte[] byteArray)
-    {
-        return Convert.ToBase64String(byteArray);
-    }
-
-    // Converts a byte array to a hexadecimal string
-    public string ByteArrayToHexString(byte[] byteArray)
-    {
-        StringBuilder hex = new StringBuilder(byteArray.Length * 2);
-        foreach (byte b in byteArray)
-        {
-            hex.AppendFormat("{0:x2}", b);
-        }
-        return hex.ToString();
     }
 
 }

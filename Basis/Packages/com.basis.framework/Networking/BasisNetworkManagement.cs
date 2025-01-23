@@ -485,7 +485,7 @@ namespace Basis.Scripts.Networking
                     break;
             }
         }
-        public static void RequestOwnership(string UniqueNetworkId, ushort NewOwner)
+        public static void TakeOwnership(string UniqueNetworkId, ushort NewOwner)
         {
             OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage
             {
@@ -627,22 +627,6 @@ namespace Basis.Scripts.Networking
             }
             NetworkedPlayer = null;
             return false;
-        }
-        // API to get the oldest available ushort starting from 0
-        public ushort GetOldestAvailablePlayerUshort()
-        {
-            ushort smallestValue = ushort.MaxValue; // Initialize with the maximum possible ushort value
-
-            // Iterate over the dictionary's keys
-            foreach (ushort key in Players.Keys)
-            {
-                if (key < smallestValue) // If a smaller key is found, update smallestValue
-                {
-                    smallestValue = key;
-                }
-            }
-
-            return smallestValue;
         }
 
     }
