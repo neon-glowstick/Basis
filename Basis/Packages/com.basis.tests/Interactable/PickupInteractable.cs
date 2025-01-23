@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Device_Management.Devices.Desktop;
@@ -22,6 +23,7 @@ public class PickupInteractable : InteractableObject
     [Header("References")]
     public Collider ColliderRef;
     public Rigidbody RigidRef;
+    public ParentConstraint ConstraintRef;
 
     // internal values
     private GameObject HighlightClone;
@@ -34,7 +36,13 @@ public class PickupInteractable : InteractableObject
     const string k_CloneName = "HighlightClone";
     const float k_DesktopZoopSmoothing = 0.2f;
     const float k_DesktopZoopMaxVelocity = 10f;
-    public ParentConstraint ConstraintRef;
+
+    // events
+    public Action OnPickup;
+    public Action OnDrop;
+    public Action OnPickupHoverStart;
+    public Action<bool> OnPickupHoverEnd;
+
     public void Start()
     {
         if (RigidRef == null)
@@ -147,6 +155,7 @@ public class PickupInteractable : InteractableObject
             InputSources[i] = new BasisInputWrapper(input, false);
             BasisDebug.LogWarning("Pickup Interactable found input source in list OnHover, this shouldn't happen");
         }
+        OnPickupHoverStart?.Invoke();
         HighlightObject(true);
     }
 
@@ -159,6 +168,7 @@ public class PickupInteractable : InteractableObject
             {
                 InputSources.RemoveAt(i);
             }
+            OnPickupHoverEnd?.Invoke(willInteract);
             HighlightObject(false);
         }
     }
@@ -182,7 +192,7 @@ public class PickupInteractable : InteractableObject
             // syncNetworking.IsOwner = true;
             InputSources[i] = new BasisInputWrapper(input, true);
             RequiresUpdateLoop = true;
-            //  this.transform.parent = BasisLocalPlayer.Instance.transform;
+            OnPickup?.Invoke();
             SetParentConstraint(input.transform);
         }
         else
@@ -210,15 +220,15 @@ public class PickupInteractable : InteractableObject
 
             RequiresUpdateLoop = false;
             // cleanup Desktop Manipulation since InputUpdate isnt run again till next pickup
-            if (lockLook)
+            if (pauseHead)
             {
-                BasisAvatarEyeInput.Instance.PauseLook = false;
+                BasisAvatarEyeInput.Instance.UnPauseHead(nameof(PickupInteractable) + ": " + gameObject.name);
                 targetOffset = Vector3.zero;
                 currentZoopVelocity = Vector3.zero;
-                lockLook = false;
+                pauseHead = false;
             }
             // syncNetworking.IsOwner = false;
-            // this.transform.parent = null;
+            OnDrop?.Invoke();
             SetParentConstraint(null);
         }
     }
@@ -227,8 +237,9 @@ public class PickupInteractable : InteractableObject
         var interactingInputIndex = InputSources.FindIndex(x => x.IsInteracting && x.Source != null);
         if (interactingInputIndex != -1)
         {
-
-            if (IsDesktopCenterEye(InputSources[interactingInputIndex].Source))
+            // Optionally, match the rotation.
+            //  transform.rotation = target.rotation;
+            if (Basis.Scripts.Device_Management.BasisDeviceManagement.IsUserInDesktop())
             {
                 PollDesktopManipulation();
             }
@@ -260,20 +271,18 @@ public class PickupInteractable : InteractableObject
         return ColliderRef;
     }
 
-    private bool IsDesktopCenterEye(BasisInput input)
-    {
-        return input.TryGetRole(out Basis.Scripts.TransformBinders.BoneControl.BasisBoneTrackedRole role) && role == Basis.Scripts.TransformBinders.BoneControl.BasisBoneTrackedRole.CenterEye;
-    }
-
-    private bool lockLook = false;
+    private bool pauseHead = false;
     private Vector3 targetOffset = Vector3.zero;
     private Vector3 currentZoopVelocity = Vector3.zero;
     private void PollDesktopManipulation()
     {
         if (Mouse.current.middleButton.isPressed)
         {
-            lockLook = true;
-            BasisAvatarEyeInput.Instance.PauseLook = true;
+            if(!pauseHead)
+            {
+                BasisAvatarEyeInput.Instance.PauseHead(nameof(PickupInteractable) + ": " + gameObject.name);
+                pauseHead = true;
+            }
 
             // drag rotate
             var delta = Mouse.current.delta.ReadValue();
@@ -288,13 +297,16 @@ public class PickupInteractable : InteractableObject
 
             Vector3 currentOffset = ConstraintRef.translationOffsets[0];
             if (targetOffset == Vector3.zero)
+            {
+                BasisDebug.Log("Setting initial target to current offset:" + targetOffset + " : " + currentOffset);
                 targetOffset = currentOffset;
+            }
             
             if (mouseScroll != 0)
             {
                 Transform sourceTransform = ConstraintRef.GetSource(0).sourceTransform;
 
-                Vector3 movement = DesktopZoopSpeed * mouseScroll * BasisLocalCameraDriver.Forward();
+                Vector3 movement = DesktopZoopSpeed * mouseScroll * BasisLocalCameraDriver.Instance.Camera.transform.forward;
                 Vector3 newTargetOffset = targetOffset + sourceTransform.InverseTransformVector(movement);
 
                 // moving towards camera, ignore moving closer if less than min distance
@@ -316,10 +328,19 @@ public class PickupInteractable : InteractableObject
 
             // BasisDebug.Log("Destop manipulate Pickup zoop: " + dampendOffset + " rotate: " + delta);                
         }
-        else if (lockLook)
+        else if (pauseHead)
         {
-            BasisAvatarEyeInput.Instance.PauseLook = false;
-            lockLook = false;
+            targetOffset = Vector3.zero;
+            pauseHead = false;
+            if(!BasisAvatarEyeInput.Instance.UnPauseHead(nameof(PickupInteractable) + ": " + gameObject.name))
+            {
+                BasisDebug.LogWarning(nameof(PickupInteractable) + " was unable to un-pause head movement, this is a bug!");
+            }
+        }
+        else
+        {   
+            // shouldn't need this here since pauseHead is used as a switch, but just in case...
+            targetOffset = Vector3.zero;
         }
     }
 

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Basis.Scripts.BasisSdk.Helpers;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Drivers;
@@ -25,7 +27,8 @@ namespace Basis.Scripts.Device_Management.Devices.Desktop
         public float InjectedX = 0;
         public float InjectedZ = 0;
         public bool HasEyeEvents = false;
-        public bool PauseLook = false;
+        [SerializeField]
+        private List<string> headPauseRequests = new();
         public void Initalize(string ID = "Desktop Eye", string subSystems = "BasisDesktopManagement")
         {
             BasisDebug.Log("Initalizing Avatar Eye", BasisDebug.LogTag.Input);
@@ -61,16 +64,24 @@ namespace Basis.Scripts.Device_Management.Devices.Desktop
                 HasEyeEvents = true;
             }
         }
+        public void PauseHead(string requestName)
+        {
+            headPauseRequests.Add(requestName);
+        }
+        public bool UnPauseHead(string requestName)
+        {
+            return headPauseRequests.Remove(requestName);
+        }
         private void OnCursorStateChange(CursorLockMode cursor, bool newCursorVisible)
         {
             BasisDebug.Log("cursor changed to : " + cursor.ToString() + " | Cursor Visible : " + newCursorVisible, BasisDebug.LogTag.Input);
             if (cursor == CursorLockMode.Locked)
             {
-                PauseLook = false;
+                UnPauseHead(nameof(BasisCursorManagement));
             }
             else
             {
-                PauseLook = true;
+                PauseHead(nameof(BasisCursorManagement));
             }
         }
         public new void OnDestroy()
@@ -118,7 +129,7 @@ namespace Basis.Scripts.Device_Management.Devices.Desktop
         public void HandleMouseRotation(Vector2 lookVector)
         {
             BasisPointRaycaster.ScreenPoint = Mouse.current.position.value;
-            if (!isActiveAndEnabled || PauseLook)
+            if (!isActiveAndEnabled || headPauseRequests.Count > 0)
             {
                 return;
             }
