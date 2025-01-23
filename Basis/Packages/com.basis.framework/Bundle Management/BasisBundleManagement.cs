@@ -95,7 +95,16 @@ public static class BasisBundleManagement
             }
 
             BasisDebug.Log($"Downloading bundle file from {bundleUrl}");
-
+            if(BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation == null)
+            {
+                BasisDebug.LogError("Missing BasisBundleInformation for Loaded Bundle ", BasisDebug.LogTag.System);
+                return;
+            }
+            if (BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation.BasisBundleGenerated == null)
+            {
+                BasisDebug.LogError("Missing BasisBundleGenerated for Loaded Bundle ", BasisDebug.LogTag.System);
+                return;
+            }
             string FilePathMeta = BasisIOManagement.GenerateFilePath($"{BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation.BasisBundleGenerated.AssetToLoadName}{EncryptedMetaBasisSuffix}", AssetBundlesFolder);
             string FilePathBundle = BasisIOManagement.GenerateFilePath($"{BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation.BasisBundleGenerated.AssetToLoadName}{EncryptedBundleBasisSuffix}", AssetBundlesFolder);
 
@@ -138,7 +147,7 @@ public static class BasisBundleManagement
         }
         catch (Exception ex)
         {
-            BasisDebug.LogError($"Error during download and processing of meta: {ex.Message}");
+            BasisDebug.LogError($"Error during download and processing of meta: {ex.Message} {ex.StackTrace}");
             BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation.HasError = true;
         }
     }

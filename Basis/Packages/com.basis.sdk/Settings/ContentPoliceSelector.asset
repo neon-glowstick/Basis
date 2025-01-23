@@ -158,3 +158,9 @@ MonoBehaviour:
   - UnityEngine.Rendering.Universal.DecalProjector
   - UnityEngine.VFX.VFXRenderer
   - UnityEngine.VFX.VisualEffect
+  - PickupJointInteractable
+  - PickupInteractable
+  - HoverInteractSphere
+  - ExampleButtonInteractable
+  - PlayerInteract
+  - BasisProp

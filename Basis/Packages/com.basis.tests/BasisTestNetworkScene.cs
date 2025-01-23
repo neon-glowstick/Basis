@@ -33,8 +33,8 @@ public class BasisTestNetworkScene : MonoBehaviour
         if (SceneLoadTest)
         {
             BasisNetworkSpawnItem.RequestSceneLoad(ScenePassword,
-               SceneMetaUrl,
                SceneBundleUrl,
+               SceneMetaUrl,
                false, IsPersistent, out Scene);
         }
         if (GameobjectLoadTest)
