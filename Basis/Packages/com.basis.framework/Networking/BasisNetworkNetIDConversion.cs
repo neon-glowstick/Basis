@@ -16,7 +16,7 @@ public static class BasisNetworkNetIDConversion
         // Validate input
         if (string.IsNullOrEmpty(NetworkId))
         {
-            BasisDebug.Log($"Invalid Request: NetworkId cannot be null or empty.", BasisDebug.LogTag.Networking);
+            BasisDebug.LogError($"Invalid Request: NetworkId cannot be null or empty.", BasisDebug.LogTag.Networking);
             return;
         }
 
@@ -41,7 +41,7 @@ public static class BasisNetworkNetIDConversion
     {
         if (string.IsNullOrEmpty(ServerNetIDMessage.NetIDMessage.UniqueID))
         {
-            BasisDebug.Log($"Invalid Data: Cannot add null or empty NetworkId.", BasisDebug.LogTag.Networking);
+            BasisDebug.LogError($"Invalid Data: Cannot add null or empty NetworkId.", BasisDebug.LogTag.Networking);
             return;
         }
 
@@ -60,16 +60,16 @@ public static class BasisNetworkNetIDConversion
             {
                 if (ServerNetIDMessage.UshortUniqueIDMessage.UniqueIDUshort != existingValue)
                 {
-                    BasisDebug.Log($"Conflict Detected: UniqueID '{ServerNetIDMessage.NetIDMessage.UniqueID}' already exists with a different UshortUniqueID '{existingValue}', new value is '{ServerNetIDMessage.UshortUniqueIDMessage.UniqueIDUshort}'", BasisDebug.LogTag.Networking);
+                    BasisDebug.LogError($"Conflict Detected: UniqueID '{ServerNetIDMessage.NetIDMessage.UniqueID}' already exists with a different UshortUniqueID '{existingValue}', new value is '{ServerNetIDMessage.UshortUniqueIDMessage.UniqueIDUshort}'", BasisDebug.LogTag.Networking);
                 }
                 else
                 {
-                    BasisDebug.Log($"Duplicate Entry: UniqueID '{ServerNetIDMessage.NetIDMessage.UniqueID}' with matching UshortUniqueID '{existingValue}' already exists. No changes made.", BasisDebug.LogTag.Networking);
+                    BasisDebug.LogError($"Duplicate Entry: UniqueID '{ServerNetIDMessage.NetIDMessage.UniqueID}' with matching UshortUniqueID '{existingValue}' already exists. No changes made.", BasisDebug.LogTag.Networking);
                 }
             }
             else
             {
-                BasisDebug.Log($"Unexpected Error: Failed to retrieve UniqueID '{ServerNetIDMessage.NetIDMessage.UniqueID}' despite failing to add it.", BasisDebug.LogTag.Networking);
+                BasisDebug.LogError($"Unexpected Error: Failed to retrieve UniqueID '{ServerNetIDMessage.NetIDMessage.UniqueID}' despite failing to add it.", BasisDebug.LogTag.Networking);
             }
         }
     }

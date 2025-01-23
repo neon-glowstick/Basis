@@ -6,7 +6,7 @@ public abstract class BasisContentBase : MonoBehaviour
     [SerializeField]
     public BasisBundleDescription BasisBundleDescription;
     private string networkID;
-    public Action OnNetworkIDSet;
+    public Action<string> OnNetworkIDSet;
     public string NetworkID
     {
         get
@@ -17,7 +17,7 @@ public abstract class BasisContentBase : MonoBehaviour
         set
         {
             networkID = value;
-            OnNetworkIDSet?.Invoke();
+            OnNetworkIDSet?.Invoke(networkID);
         }
     }
 }
