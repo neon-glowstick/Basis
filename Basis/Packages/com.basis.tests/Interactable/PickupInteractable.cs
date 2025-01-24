@@ -20,6 +20,8 @@ public class PickupInteractable : InteractableObject
     [Tooltip("Unity units per scroll step")]
     public float DesktopZoopSpeed = 0.2f;
     public float DesktopZoopMinDistance = 0.2f;
+    [Tooltip("Generate a mesh on start to approximate the referenced collider")]
+    public bool GenerateColliderMesh = true;
 
     [Header("References")]
     public Collider ColliderRef;
@@ -72,19 +74,22 @@ public class PickupInteractable : InteractableObject
         ColliderHighlightMat = op.WaitForCompletion();
         asyncOperationHighlightMat = op;
 
-        // NOTE: Collider mesh highlight position and size is only updated on Start(). 
-        //      If you wish to have the highlight update at runtime do that elsewhere or make a different InteractableObject Script
-        HighlightClone = ColliderClone.CloneColliderMesh(ColliderRef, gameObject.transform, k_CloneName);
-
-        if (HighlightClone != null)
+        if (GenerateColliderMesh)
         {
-            if (HighlightClone.TryGetComponent(out MeshRenderer meshRenderer))
+            // NOTE: Collider mesh highlight position and size is only updated on Start(). 
+            //      If you wish to have the highlight update at runtime do that elsewhere or make a different InteractableObject Script
+            HighlightClone = ColliderClone.CloneColliderMesh(ColliderRef, gameObject.transform, k_CloneName);
+
+            if (HighlightClone != null)
             {
-                meshRenderer.material = ColliderHighlightMat;
-            }
-            else
-            {
-                BasisDebug.LogWarning("Pickup Interactable could not find MeshRenderer component on mesh clone. Highlights will be broken");
+                if (HighlightClone.TryGetComponent(out MeshRenderer meshRenderer))
+                {
+                    meshRenderer.material = ColliderHighlightMat;
+                }
+                else
+                {
+                    BasisDebug.LogWarning("Pickup Interactable could not find MeshRenderer component on mesh clone. Highlights will be broken");
+                }
             }
         }
     }
