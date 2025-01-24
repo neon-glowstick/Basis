@@ -1,4 +1,5 @@
 using Basis.Scripts.Device_Management.Devices;
+using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Animations;
@@ -71,8 +72,8 @@ public class PickupInteractable : InteractableObject
                 BasisDebug.LogWarning("Pickup Interactable could not find MeshRenderer component on mesh clone. Highlights will be broken");
             }
         }
-
     }
+
     public void HighlightObject(bool highlight)
     {
         if (ColliderRef && HighlightClone)

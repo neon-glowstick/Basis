@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Reflection;
 using System.Xml;
 [System.Serializable]
 public class Configuration
@@ -96,6 +98,91 @@ public class Configuration
             MinThreadPoolThreads = int.Parse(doc.SelectSingleNode("/Configuration/MinThreadPoolThreads")?.InnerText ?? "100"),
             MaxThreadPoolThreads = int.Parse(doc.SelectSingleNode("/Configuration/MaxThreadPoolThreads")?.InnerText ?? "500"),
         };
+    }
+
+    /// <summary>
+    /// This code will override what is written in the config.xml if it finds 
+    /// an Environmental Variable with the same name as a public config field.
+    ///
+    /// On windows you can test this in the console:
+    ///    $env:PeerLimit = "256"
+    ///   .\BasisNetworkConsole.exe
+    /// But it is intended to allow Linux admins to override defaults during launch.
+    /// </summary>
+    public void ProcessEnvironmentalOverrides()
+    {
+        Configuration config = this;
+
+        // Override a configuration value only if we find a Environmental Variable that matches the name
+        Type type = config.GetType();
+        FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+        foreach (var field in fields)
+        {
+            string value = Environment.GetEnvironmentVariable(field.Name);
+            if ( value != null )
+            {
+                BNL.Log($"Applying Environmental Override with Field:{field.Name} Value:{value}");
+
+                if (field.FieldType == typeof(int))
+                {
+                    if (int.TryParse(value, out int number))
+                    {
+                        field.SetValue(config, number);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Could not cast to int. Failed Override");
+                    }
+                }
+                else if (field.FieldType == typeof(ushort))
+                {
+                    if (ushort.TryParse(value, out ushort number))
+                    {
+                        field.SetValue(config, number);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Could not cast to ushort. Failed Override.");
+                    }
+                }
+                else if (field.FieldType == typeof(float))
+                {
+                    if (float.TryParse(value, out float number))
+                    {
+                        field.SetValue(config, number);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Could not cast to ushort. Failed Override.");
+                    }
+                }
+                else if (field.FieldType == typeof(string))
+                {
+                    field.SetValue(config, value);
+                }
+                else if (field.FieldType == typeof(bool))
+                {
+                    if (value == "true")
+                    {
+                        field.SetValue(config, true);
+                    }
+                    else if (value == "false")
+                    {
+                        field.SetValue(config, false);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Boolean field was not a true or false string. Failed Override");
+                    }
+
+                }
+                else
+                {
+                    BNL.LogWarning($"Environmental varible type could not be processed for Config Field:{field.Name} Value:{value}");
+                }
+            }
+
+        }
     }
 
     private static void CreateDefaultXml(string filePath)

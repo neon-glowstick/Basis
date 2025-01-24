@@ -6,6 +6,7 @@ using Basis.Scripts.Profiler;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using static BasisNetworkCore.Serializable.SerializableBasis;
@@ -24,6 +25,7 @@ public static class BasisNetworkGenericMessages
         BasisScene.OnNetworkMessageReceived?.Invoke(playerID, sceneDataMessage.messageIndex, sceneDataMessage.payload,deliveryMethod);
     }
     public delegate void OnNetworkMessageReceiveOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner);
+    public delegate void OnNetworkMessageReceiveOwnershipRemoved(string UniqueEntityID);
     public static void HandleOwnershipTransfer(LiteNetLib.NetPacketReader reader)
     {
         OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage();
@@ -35,6 +37,13 @@ public static class BasisNetworkGenericMessages
         OwnershipTransferMessage ownershipTransferMessage = new OwnershipTransferMessage();
         ownershipTransferMessage.Deserialize(reader);
         HandleOwnership(ownershipTransferMessage);
+    }
+    public static void HandleOwnershipRemove(LiteNetLib.NetPacketReader reader)
+    {
+        OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage();
+        OwnershipTransferMessage.Deserialize(reader);
+        BasisNetworkManagement.Instance.OwnershipPairing.Remove(OwnershipTransferMessage.ownershipID);
+        BasisNetworkManagement.OwnershipReleased?.Invoke(OwnershipTransferMessage.ownershipID);
     }
     public static void HandleOwnership(OwnershipTransferMessage OwnershipTransferMessage)
     {

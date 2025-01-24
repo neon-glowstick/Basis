@@ -1,9 +1,11 @@
 using Basis.Scripts.BasisSdk;
 using Basis.Scripts.BasisSdk.Players;
+using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Networking;
 using Basis.Scripts.Networking.NetworkedAvatar;
 using BasisSerializer.OdinSerializer;
 using LiteNetLib;
+using System;
 using UnityEngine;
 public class BasisObjectSyncNetworking : MonoBehaviour
 {
@@ -20,6 +22,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public bool IsLocalOwner = false;
     public bool HasActiveOwnership = false;
     public BasisContentBase ContentConnector;
+    public InteractableObject[] InteractableObjects;
     public void Awake()
     {
         if (ContentConnector == null && TryGetComponent<BasisContentBase>(out ContentConnector))
@@ -32,6 +35,20 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         {
             ContentConnector.OnNetworkIDSet += OnNetworkIDSet;
         }
+        InteractableObjects = this.transform.GetComponentsInChildren<InteractableObject>();
+        foreach(InteractableObject obj in InteractableObjects)
+        {
+            obj.OnInteractStartEvent += OnInteractStartEvent;
+            obj.OnInteractEndEvent += OnInteractEndEvent;
+        }
+    }
+    private void OnInteractEndEvent(BasisInput input)
+    {
+        BasisNetworkManagement.RemoveOwnership(NetworkId);
+    }
+    private void OnInteractStartEvent(BasisInput input)
+    {
+        BasisNetworkManagement.TakeOwnership(NetworkId, (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId);
     }
 
     private void OnNetworkIDSet(string NetworkID)
@@ -50,6 +67,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         BasisNetworkManagement.OnLocalPlayerLeft += OnLocalPlayerLeft;
         BasisNetworkManagement.OnRemotePlayerLeft += OnRemotePlayerLeft;
         BasisNetworkManagement.OnOwnershipTransfer += OnOwnershipTransfer;
+        BasisNetworkManagement.OwnershipReleased += OwnershipReleased;
         BasisNetworkNetIDConversion.OnNetworkIdAdded += OnNetworkIdAdded;
         _updateInterval = 1f / TargetFrequency; // Calculate interval (1/33 seconds)
         _lastUpdateTime = Time.timeAsDouble;
@@ -64,8 +82,15 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         BasisNetworkManagement.OnLocalPlayerLeft -= OnLocalPlayerLeft;
         BasisNetworkManagement.OnRemotePlayerLeft -= OnRemotePlayerLeft;
         BasisNetworkManagement.OnOwnershipTransfer -= OnOwnershipTransfer;
+        BasisNetworkManagement.OwnershipReleased -= OwnershipReleased;
         BasisNetworkNetIDConversion.OnNetworkIdAdded -= OnNetworkIdAdded;
     }
+
+    private void OwnershipReleased(string UniqueEntityID)
+    {
+
+    }
+
     private void OnOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner)
     {
         if (NetworkId == UniqueEntityID)

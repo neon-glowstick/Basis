@@ -7,7 +7,7 @@ namespace Basis.Network.Core
         /// when adding a new message we need to increase this
         /// will function up to 64
         /// </summary>
-        public const byte TotalChannels = 15;
+        public const byte TotalChannels = 16;
         /// <summary>
         /// channel zero is only used for unreliable methods
         /// we fall it through to stop bugs
@@ -46,28 +46,32 @@ namespace Basis.Network.Core
         /// </summary>
         public const byte ChangeCurrentOwnerRequest = 8;
         /// <summary>
+        /// Remove Current Ownership
+        /// </summary>
+        public const byte RemoveCurrentOwnerRequest = 9;
+        /// <summary>
         /// the audio recipients that can here
         /// </summary>
-        public const byte AudioRecipients = 9;
+        public const byte AudioRecipients = 10;
         /// <summary>
         /// Removes a players entity
         /// </summary>
-        public const byte Disconnection = 10;
+        public const byte Disconnection = 11;
         /// <summary>
         /// assign a net id (string to ushort)
         /// </summary>
-        public const byte netIDAssign = 11;
+        public const byte netIDAssign = 12;
         /// <summary>
         /// assign a array of net id (string to ushort)
         /// </summary>
-        public const byte NetIDAssigns = 12;
+        public const byte NetIDAssigns = 13;
         /// <summary>
         /// load a resource (scene,gameobject,script,asset) whatever the implementation is
         /// </summary>
-        public const byte LoadResourceMessage = 13;
+        public const byte LoadResourceMessage = 14;
         /// <summary>
         /// Unload a Resource
         /// </summary>
-        public const byte UnloadResourceMessage = 14;
+        public const byte UnloadResourceMessage = 15;
     }
 }

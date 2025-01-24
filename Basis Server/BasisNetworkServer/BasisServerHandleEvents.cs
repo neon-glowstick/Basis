@@ -242,6 +242,9 @@ namespace BasisServerHandle
                         case BasisNetworkCommons.GetCurrentOwnerRequest:
                             BasisNetworkOwnership.OwnershipResponse(reader, peer);
                             break;
+                        case BasisNetworkCommons.RemoveCurrentOwnerRequest:
+                            BasisNetworkOwnership.RemoveOwnership(reader, peer);
+                            break;
                         case BasisNetworkCommons.AudioRecipients:
                             UpdateVoiceReceivers(reader, peer);
                             break;

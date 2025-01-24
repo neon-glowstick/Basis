@@ -18,4 +18,5 @@ namespace DarkRift.Basis_Common.Serializable
              Writer.Put(ownershipID);
         }
     }
+
 }

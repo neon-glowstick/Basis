@@ -35,6 +35,7 @@ namespace Basis.Scripts.Networking
         /// fire when ownership is changed for a unique string
         /// </summary>
         public static OnNetworkMessageReceiveOwnershipTransfer OnOwnershipTransfer;
+        public static OnNetworkMessageReceiveOwnershipRemoved OwnershipReleased;
         public static ConcurrentDictionary<ushort, BasisNetworkPlayer> Players = new ConcurrentDictionary<ushort, BasisNetworkPlayer>();
         public static ConcurrentDictionary<ushort, BasisNetworkReceiver> RemotePlayers = new ConcurrentDictionary<ushort, BasisNetworkReceiver>();
         public static HashSet<ushort> JoiningPlayers = new HashSet<ushort>();
@@ -429,6 +430,13 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
+                case BasisNetworkCommons.RemoveCurrentOwnerRequest:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.HandleOwnershipRemove(Reader);
+                        Reader.Recycle();
+                    }, null);
+                    break;
                 case BasisNetworkCommons.VoiceChannel:
                     await BasisNetworkHandleVoice.HandleAudioUpdate(Reader);
                     Reader.Recycle();
@@ -484,6 +492,21 @@ namespace Basis.Scripts.Networking
                     Reader.Recycle();
                     break;
             }
+        }
+        public static void RemoveOwnership(string UniqueNetworkId)
+        {
+            OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage
+            {
+                playerIdMessage = new PlayerIdMessage
+                {
+                    playerID = (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId,
+                },
+                ownershipID = UniqueNetworkId
+            };
+            NetDataWriter netDataWriter = new NetDataWriter();
+            OwnershipTransferMessage.Serialize(netDataWriter);
+            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.RemoveCurrentOwnerRequest, DeliveryMethod.ReliableSequenced);
+            BasisNetworkProfiler.OwnershipTransferMessageCounter.Sample(netDataWriter.Length);
         }
         public static void TakeOwnership(string UniqueNetworkId, ushort NewOwner)
         {
