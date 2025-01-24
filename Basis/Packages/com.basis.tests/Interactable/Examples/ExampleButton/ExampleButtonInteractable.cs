@@ -22,9 +22,28 @@ public class ExampleButtonInteractable : InteractableObject
     public Collider ColliderRef;
     public MeshRenderer RendererRef;
 
+    private BasisInputWrapper _inputSource;
+    // Ignore provided list localy, but keep it updated for other scripts 
+    private BasisInputWrapper _InputSource {
+        get => _inputSource;
+        set {
+            if (value.Source != null)
+            {
+                Inputs = new(0);
+                Inputs.AddInputByRole(value.Source, value.IsInteracting);
+            }
+            else if (value.Source == null)
+            {
+                Inputs = new(0);
+            }
+            _inputSource = value;
+            
+        }
+    }
+
     void Start()
     {
-        InputSource = new BasisInputWrapper(null, false);
+        _InputSource = new BasisInputWrapper(null, false);
         if (ColliderRef == null)
         {
             TryGetComponent(out ColliderRef);
@@ -39,21 +58,21 @@ public class ExampleButtonInteractable : InteractableObject
 
     public override bool CanHover(BasisInput input)
     {
-        return InputSource.Source == null && IsWithinRange(input.transform.position) && isEnabled;
+        return _InputSource.Source == null && IsWithinRange(input.transform.position) && isEnabled;
     }
     public override bool CanInteract(BasisInput input)
     {
         // must be the same input hovering
         if (!IsCurrentInput(input.UniqueDeviceIdentifier)) return false;
         // dont interact again till after interacting stopped
-        if (InputSource.IsInteracting) return false;
+        if (_InputSource.IsInteracting) return false;
 
         return IsWithinRange(input.transform.position) && isEnabled;
     }
 
     public override void OnHoverStart(BasisInput input)
     {
-        InputSource = new BasisInputWrapper(input, false);
+        _InputSource = new BasisInputWrapper(input, false);
         SetColor(HoverColor);
     }
 
@@ -64,7 +83,7 @@ public class ExampleButtonInteractable : InteractableObject
             // leaving hover and wont interact this frame
             if (!willInteract)
             {
-                InputSource = new BasisInputWrapper(null, false);
+                _InputSource = new BasisInputWrapper(null, false);
                 SetColor(Color);
             }
             // Oninteract will update color
@@ -73,42 +92,42 @@ public class ExampleButtonInteractable : InteractableObject
 
     public override void OnInteractStart(BasisInput input)
     {
-        if (IsCurrentInput(input.UniqueDeviceIdentifier) && !InputSource.IsInteracting)
+        if (IsCurrentInput(input.UniqueDeviceIdentifier) && !_InputSource.IsInteracting)
         {
             // Set ownership to the local player
             // syncNetworking.IsOwner = true;
             SetColor(InteractColor);
-            InputSource = new BasisInputWrapper(input, true);
+            _InputSource = new BasisInputWrapper(input, true);
             ButtonDown?.Invoke();
         }
     }
 
     public override void OnInteractEnd(BasisInput input)
     {
-        if (IsCurrentInput(input.UniqueDeviceIdentifier) && InputSource.IsInteracting)
+        if (IsCurrentInput(input.UniqueDeviceIdentifier) && _InputSource.IsInteracting)
         {
             SetColor(Color);
-            InputSource = new BasisInputWrapper(null, false);
+            _InputSource = new BasisInputWrapper(null, false);
             ButtonUp?.Invoke();
         }
     }
     public override bool IsInteractingWith(BasisInput input)
     {
-        return InputSource.Source != null &&
-            InputSource.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier &&
-            InputSource.IsInteracting;
+        return _InputSource.Source != null &&
+            _InputSource.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier &&
+            _InputSource.IsInteracting;
     }
 
     public override bool IsHoveredBy(BasisInput input)
     {
-        return InputSource.Source != null &&
-            InputSource.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier &&
-            !InputSource.IsInteracting;
+        return _InputSource.Source != null &&
+            _InputSource.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier &&
+            !_InputSource.IsInteracting;
     }
 
     private bool IsCurrentInput(string uid)
     {
-        return InputSource.Source != null && InputSource.Source.UniqueDeviceIdentifier == uid;
+        return _InputSource.Source != null && _InputSource.Source.UniqueDeviceIdentifier == uid;
     }
 
     // set material property to a color
@@ -127,15 +146,15 @@ public class ExampleButtonInteractable : InteractableObject
         if (!isEnabled)
         {
             // clean up currently hovering/interacting
-            if (InputSource.Source != null)
+            if (_InputSource.Source != null)
             {
-                if (IsHoveredBy(InputSource.Source))
+                if (IsHoveredBy(_InputSource.Source))
                 {
-                    OnHoverEnd(InputSource.Source, false);
+                    OnHoverEnd(_InputSource.Source, false);
                 }
-                if (IsInteractingWith(InputSource.Source))
+                if (IsInteractingWith(_InputSource.Source))
                 {
-                    OnInteractEnd(InputSource.Source);
+                    OnInteractEnd(_InputSource.Source);
                 }
             }
             // setting same color every frame isnt optimal but fine for example

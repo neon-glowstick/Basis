@@ -19,21 +19,25 @@ namespace Basis.Scripts.UI
     {
         public BasisPointRaycaster BasisPointRaycaster;
 
+
         public static LayerMask UILayer = LayerMask.NameToLayer("UI");
-        public RaycastHit PhysicHit;
         public Material lineMaterial;
         public float lineWidth = 0.01f;
         public LineRenderer LineRenderer;
-        public bool CachedLinerRenderState = false;
-        public bool HasLineRenderer = false;
-        public bool HasRedicalRenderer = false;
         public static string LoadMaterialAddress = "Assets/UI/Material/RayCastMaterial.mat";
         public static string LoadUIRedicalAddress = "Assets/UI/Prefabs/highlightQuad.prefab";
         public GameObject highlightQuadInstance;
-        public Canvas FoundCanvas;
-        public RaycastResult RaycastResult = new RaycastResult();
+        
         public BasisInput BasisInput;
         private BasisDeviceMatchSettings BasisDeviceMatchableNames;
+        public bool HasLineRenderer = false;
+        public bool HasRedicalRenderer = false;
+
+        public bool CachedLinerRenderState = false;
+        public RaycastHit PhysicHit;
+        public Canvas FoundCanvas;
+        public RaycastResult RaycastResult = new RaycastResult();
+
         public BasisPointerEventData CurrentEventData;
         public bool HadRaycastUITarget = false;
         public bool WasCorrectLayer = false;
