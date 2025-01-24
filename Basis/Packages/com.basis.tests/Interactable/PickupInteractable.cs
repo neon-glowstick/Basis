@@ -338,18 +338,6 @@ public class PickupInteractable : InteractableObject
         }
     }
 
-    // TODO: netsync
-    // public void OnOwnershipTransfer(bool isOwner)
-    // {
-    //     // remove ourselves from influece
-    //     if (!isOwner)
-    //     {
-    //         transform.SetParent(null);
-    //         InputSources[0] = new InputSource(null, true);
-    //     }
-    //     // dont care otherwise, wait for hover/interact
-    // }
-
     void OnDestroy()
     {
         Destroy(HighlightClone);
