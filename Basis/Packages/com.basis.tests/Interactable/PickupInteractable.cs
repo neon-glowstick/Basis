@@ -1,11 +1,7 @@
-using System;
-using System.Linq;
 using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Device_Management.Devices.Desktop;
 using Basis.Scripts.Drivers;
 using Basis.Scripts.TransformBinders.BoneControl;
-using Unity.Mathematics;
-using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Animations;
@@ -39,12 +35,6 @@ public class PickupInteractable : InteractableObject
     const string k_CloneName = "HighlightClone";
     const float k_DesktopZoopSmoothing = 0.2f;
     const float k_DesktopZoopMaxVelocity = 10f;
-
-    // events
-    public Action OnPickup;
-    public Action OnDrop;
-    public Action OnPickupHoverStart;
-    public Action<bool> OnPickupHoverEnd;
 
     public void Start()
     {
@@ -130,7 +120,8 @@ public class PickupInteractable : InteractableObject
 
     public override bool CanHover(BasisInput input)
     {
-        return !Inputs.AnyInteracting() && 
+        return !DisableInteract &&
+            !Inputs.AnyInteracting() && 
             input.TryGetRole(out BasisBoneTrackedRole role) && 
             Inputs.TryGetByRole(role, out BasisInputWrapper found) &&
             found.Source == null && 
@@ -140,7 +131,8 @@ public class PickupInteractable : InteractableObject
     public override bool CanInteract(BasisInput input)
     {
         // currently hovering can interact only, only one interacting at a time
-        return !Inputs.AnyInteracting() && 
+        return !DisableInteract &&
+            !Inputs.AnyInteracting() && 
             Inputs.Find(input) != null &&
             input.TryGetRole(out BasisBoneTrackedRole role) &&
             Inputs.TryGetByRole(role, out BasisInputWrapper found) &&
@@ -158,7 +150,7 @@ public class PickupInteractable : InteractableObject
         if (!added)
             BasisDebug.LogWarning(nameof(PickupInteractable) + " did not find role for input on hover");
         
-        OnPickupHoverStart?.Invoke();
+        OnHoverStartEvent?.Invoke(input);
         HighlightObject(true);
     }
 
@@ -173,7 +165,7 @@ public class PickupInteractable : InteractableObject
                     BasisDebug.LogWarning(nameof(PickupInteractable) + " found input by role but could not remove by it, this is a bug.");
                 }
             }
-            OnPickupHoverEnd?.Invoke(willInteract);
+            OnHoverEndEvent?.Invoke(input, willInteract);
             HighlightObject(false);
         }
     }
@@ -194,7 +186,7 @@ public class PickupInteractable : InteractableObject
                 // syncNetworking.IsOwner = true;
                 Inputs.AddInputByRole(input, true);
                 RequiresUpdateLoop = true;
-                OnPickup?.Invoke();
+                OnInteractStartEvent?.Invoke(input);
                 SetParentConstraint(input.transform);
             }
             else
@@ -231,7 +223,7 @@ public class PickupInteractable : InteractableObject
                     pauseHead = false;
                 }
                 // syncNetworking.IsOwner = false;
-                OnDrop?.Invoke();
+                OnInteractEndEvent?.Invoke(input);
                 SetParentConstraint(null);
             }
         }
@@ -247,6 +239,12 @@ public class PickupInteractable : InteractableObject
             if (Basis.Scripts.Device_Management.BasisDeviceManagement.IsUserInDesktop())
             {
                 PollDesktopManipulation();
+                // REMOVEME: test code
+                if (Mouse.current.rightButton.isPressed)
+                {
+                    DisableInteract = Mouse.current.rightButton.isPressed;
+                }
+
             }
         }
     }

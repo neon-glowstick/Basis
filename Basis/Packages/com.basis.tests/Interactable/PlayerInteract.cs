@@ -156,7 +156,7 @@ public class PlayerInteract : MonoBehaviour
 
                     // TODO: proximity check so we dont keep interacting with objects out side of player's reach. Needs an impl that wont break under lag though. `|| !interactInput.targetObject.IsWithinRange(interactInput.input.transform)`
                     // only drop if trigger was released
-                    if (!IsInputGrabbing(interactInput.input) && interactInput.lastTarget.IsInteractingWith(interactInput.input))
+                    if (!IsInputTriggered(interactInput.input) && interactInput.lastTarget.IsInteractingWith(interactInput.input))
                     {
                         interactInput.lastTarget.OnInteractEnd(interactInput.input);
                     }
@@ -239,7 +239,7 @@ public class PlayerInteract : MonoBehaviour
         {
             // TODO: grab button instead of full trigger
             // Holding Logic: 
-            if (IsInputGrabbing(interactInput.input))
+            if (IsInputTriggered(interactInput.input))
             {
                 // clear hover (unlikely to happen since last frame, but possible)
                 if (interactInput.lastTarget.IsHoveredBy(interactInput.input))
@@ -297,7 +297,7 @@ public class PlayerInteract : MonoBehaviour
             // TODO: middle finger grab instead of full trigger
             // Pickup logic: 
             // per input an object can be either held or hovered, not both. Objects can ignore this by purposfully modifying IsHovered/IsInteracted.
-            if (IsInputGrabbing(interactInput.input))
+            if (IsInputTriggered(interactInput.input))
             {
                 // first clear hover...
                 if (hitInteractable.IsHoveredBy(interactInput.input))
@@ -335,7 +335,7 @@ public class PlayerInteract : MonoBehaviour
         return interactInput;
     }
 
-    private bool IsInputGrabbing(BasisInput input)
+    private bool IsInputTriggered(BasisInput input)
     {
         return input.InputState.GripButton || IsDesktopCenterEye(input) && input.InputState.Trigger == 1;
     }
