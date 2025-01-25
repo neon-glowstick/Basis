@@ -49,7 +49,7 @@ namespace Basis.Scripts.Drivers
         public Vector3 largerScale;
         public static Vector3 LeftEye;
         public static Vector3 RightEye;
-        
+
         public Color UnMutedMutedIconColorActive = Color.white;
         public Color UnMutedMutedIconColorInactive = Color.grey;
         public Color MutedColor = Color.grey;
