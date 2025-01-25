@@ -3,12 +3,14 @@ using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management;
 using Basis.Scripts.TransformBinders;
 using System.Collections;
+using SteamAudio;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
 using UnityEngine.XR;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Basis.Scripts.Drivers
 {
@@ -81,6 +83,11 @@ namespace Basis.Scripts.Drivers
             // Target scale for the "bounce" effect (e.g., 1.2 times larger)
             largerScale = StartingScale * 1.2f;
             UpdateMicrophoneVisuals(MicrophoneRecorder.isPaused, false);
+
+            if (SteamAudioListener != null)
+            {
+                SteamAudioManager.NotifyAudioListenerChanged();
+            }
         }
         public void MicrophoneTransmitting()
         {
