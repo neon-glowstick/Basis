@@ -88,7 +88,7 @@ public class PlayerInteract : MonoBehaviour
     private void OnInputChanged(BasisInput Input)
     {
         // TODO: need a different config value for can interact/pickup/grab. Mainly input action/trigger values
-        if (Input.BasisDeviceMatchableNames != null && Input.BasisDeviceMatchableNames.HasRayCastSupport
+        if (Input.BasisDeviceMatchSettings != null && Input.BasisDeviceMatchSettings.HasRayCastSupport
         )
         {
             AddInput(Input);
@@ -389,7 +389,7 @@ public class PlayerInteract : MonoBehaviour
         interactOrigin.transform.SetParent(input.transform);
         interactOrigin.layer = LayerMask.NameToLayer("Interactable");
         // TODO: custom config to use center of palm instead of raycast offset (IK palm? but that breaks input on a bad avi upload, no?)
-        interactOrigin.transform.SetLocalPositionAndRotation(input.BasisDeviceMatchableNames.PositionRayCastOffset, Quaternion.Euler(input.BasisDeviceMatchableNames.RotationRaycastOffset));
+        interactOrigin.transform.SetLocalPositionAndRotation(input.BasisDeviceMatchSettings.PositionRayCastOffset, Quaternion.Euler(input.BasisDeviceMatchSettings.RotationRaycastOffset));
 
         lineRenderer.enabled = false;
         lineRenderer.material = LineMaterial;

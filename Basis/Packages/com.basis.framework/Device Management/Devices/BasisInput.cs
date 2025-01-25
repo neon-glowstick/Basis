@@ -36,6 +36,8 @@ namespace Basis.Scripts.Device_Management.Devices
         public float3 AvatarRotationOffset = Vector3.zero;
 
         public bool HasRaycastSupport = false;
+        public bool HasInteractVisual = true;
+
         public string CommonDeviceIdentifier;
         public BasisVisualTracker BasisVisualTracker;
         public BasisPointRaycaster BasisPointRaycaster;//used to raycast against things like UI
@@ -43,7 +45,7 @@ namespace Basis.Scripts.Device_Management.Devices
         public AddressableGenericResource LoadedDeviceRequest;
         public event SimulationHandler AfterControlApply;
         public GameObject BasisPointRaycasterRef;
-        public BasisDeviceMatchSettings BasisDeviceMatchableNames;
+        public BasisDeviceMatchSettings BasisDeviceMatchSettings;
         [SerializeField]
         public BasisInputState InputState = new BasisInputState();
         [SerializeField]
@@ -122,7 +124,7 @@ namespace Basis.Scripts.Device_Management.Devices
                 Control.IncomingData.position = Vector3.zero;
                 Control.IncomingData.rotation = Quaternion.identity;
             }
-            if (BasisDeviceMatchableNames == null || BasisDeviceMatchableNames.HasTrackedRole == false)
+            if (BasisDeviceMatchSettings == null || BasisDeviceMatchSettings.HasTrackedRole == false)
             {
                 //unassign last
                 if (hasRoleAssigned)
@@ -162,18 +164,19 @@ namespace Basis.Scripts.Device_Management.Devices
             CommonDeviceIdentifier = unUniqueDeviceID;
             UniqueDeviceIdentifier = uniqueID;
             // lets check to see if there is a override from a devices matcher
-            BasisDeviceMatchableNames = BasisDeviceManagement.Instance.BasisDeviceNameMatcher.GetAssociatedDeviceMatchableNames(CommonDeviceIdentifier, basisBoneTrackedRole, ForceAssignTrackedRole);
-            if (BasisDeviceMatchableNames.HasTrackedRole)
+            BasisDeviceMatchSettings = BasisDeviceManagement.Instance.BasisDeviceNameMatcher.GetAssociatedDeviceMatchableNames(CommonDeviceIdentifier, basisBoneTrackedRole, ForceAssignTrackedRole);
+            if (BasisDeviceMatchSettings.HasTrackedRole)
             {
-                BasisDebug.Log("Overriding Tracker " + BasisDeviceMatchableNames.DeviceID, BasisDebug.LogTag.Input);
-                AssignRoleAndTracker(BasisDeviceMatchableNames.TrackedRole);
+                BasisDebug.Log("Overriding Tracker " + BasisDeviceMatchSettings.DeviceID, BasisDebug.LogTag.Input);
+                AssignRoleAndTracker(BasisDeviceMatchSettings.TrackedRole);
             }
 
             if (hasRoleAssigned)
             {
-                AvatarRotationOffset = BasisDeviceMatchableNames.AvatarRotationOffset;
-                AvatarPositionOffset = BasisDeviceMatchableNames.AvatarPositionOffset;
-                HasRaycastSupport = BasisDeviceMatchableNames.HasRayCastSupport;
+                AvatarRotationOffset = BasisDeviceMatchSettings.AvatarRotationOffset;
+                AvatarPositionOffset = BasisDeviceMatchSettings.AvatarPositionOffset;
+                HasRaycastSupport = BasisDeviceMatchSettings.HasRayCastSupport;
+                HasInteractVisual = BasisDeviceMatchSettings.HasInteractVisual;
                 if (HasRaycastSupport)
                 {
                   await  CreateRayCaster(this);

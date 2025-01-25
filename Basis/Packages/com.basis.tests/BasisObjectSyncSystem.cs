@@ -21,8 +21,8 @@ public class BasisObjectSyncSystem : MonoBehaviour
 
     private JobHandle syncJobHandle;
     private bool initialized = false;
-
-    private void Awake()
+    public ObjectSyncJob job;
+    public void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -34,43 +34,40 @@ public class BasisObjectSyncSystem : MonoBehaviour
         objectsToSync = new BasisObjectSyncNetworking[arrayCapacity];
     }
 
-    private void Update()
+    public void Update()
     {
         if (!initialized || objectCount == 0) return;
 
-        var job = new ObjectSyncJob
-        {
-            CurrentPositions = positions,
-            CurrentRotations = rotations,
-            CurrentScales = scales,
-            TargetPositions = targetPositions,
-            TargetRotations = targetRotations,
-            TargetScales = targetScales,
-            LerpMultipliers = lerpMultipliers,
-            DeltaTime = Time.deltaTime
-        };
+        job.DeltaTime = Time.deltaTime;
 
         syncJobHandle = job.Schedule(objectCount, 128); // Larger batch size for fewer thread syncs.
     }
 
-    private void LateUpdate()
+    public void LateUpdate()
     {
         if (!initialized || objectCount == 0) return;
 
         syncJobHandle.Complete();
 
         // Apply results back to transforms on the main thread.
-        for (int i = 0; i < objectCount; i++)
+        for (int Index = 0; Index < objectCount; Index++)
         {
-            var obj = objectsToSync[i];
+            var obj = objectsToSync[Index];
             var transform = obj.transform;
 
-            transform.SetPositionAndRotation(positions[i], rotations[i]);
-            transform.localScale = scales[i];
+            transform.SetPositionAndRotation(positions[Index], rotations[Index]);
+            transform.localScale = scales[Index];
         }
     }
-
-    public void RegisterObject(BasisObjectSyncNetworking obj)
+    public static void UnregisterObject(BasisObjectSyncNetworking obj)
+    {
+        Instance?.unregisterObject(obj);
+    }
+    public static void RegisterObject(BasisObjectSyncNetworking obj)
+    {
+        Instance?.registerObject(obj);
+    }
+    public void registerObject(BasisObjectSyncNetworking obj)
     {
         EnsureCapacity(objectCount + 1);
 
@@ -80,15 +77,15 @@ public class BasisObjectSyncSystem : MonoBehaviour
         ResizeNativeArrays(objectCount);
         UpdateNativeData();
     }
-    public void UnregisterObject(BasisObjectSyncNetworking obj)
+    public void unregisterObject(BasisObjectSyncNetworking obj)
     {
         // Find the index of the object to remove
         int removeIndex = -1;
-        for (int i = 0; i < objectCount; i++)
+        for (int Index = 0; Index < objectCount; Index++)
         {
-            if (objectsToSync[i] == obj)
+            if (objectsToSync[Index] == obj)
             {
-                removeIndex = i;
+                removeIndex = Index;
                 break;
             }
         }
@@ -112,13 +109,14 @@ public class BasisObjectSyncSystem : MonoBehaviour
         // Shift elements after the removed index to fill the gap
         for (int i = removedIndex; i < objectCount; i++)
         {
-            positions[i] = positions[i + 1];
-            rotations[i] = rotations[i + 1];
-            scales[i] = scales[i + 1];
-            targetPositions[i] = targetPositions[i + 1];
-            targetRotations[i] = targetRotations[i + 1];
-            targetScales[i] = targetScales[i + 1];
-            lerpMultipliers[i] = lerpMultipliers[i + 1];
+            int Index = i + 1;
+            positions[i] = positions[Index];
+            rotations[i] = rotations[Index];
+            scales[i] = scales[Index];
+            targetPositions[i] = targetPositions[Index];
+            targetRotations[i] = targetRotations[Index];
+            targetScales[i] = targetScales[Index];
+            lerpMultipliers[i] = lerpMultipliers[Index];
         }
     }
     private void EnsureCapacity(int requiredCapacity)
@@ -127,7 +125,7 @@ public class BasisObjectSyncSystem : MonoBehaviour
 
         // Double the capacity until it fits
         arrayCapacity = math.max(arrayCapacity * 2, requiredCapacity);
-        var newArray = new BasisObjectSyncNetworking[arrayCapacity];
+        BasisObjectSyncNetworking[] newArray = new BasisObjectSyncNetworking[arrayCapacity];
         for (int Index = 0; Index < objectCount; Index++)
         {
             newArray[Index] = objectsToSync[Index];
@@ -149,7 +147,7 @@ public class BasisObjectSyncSystem : MonoBehaviour
             targetScales.Dispose();
             lerpMultipliers.Dispose();
         }
-
+        job = new ObjectSyncJob();
         positions = new NativeArray<float3>(size, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
         rotations = new NativeArray<quaternion>(size, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
         scales = new NativeArray<float3>(size, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
@@ -158,25 +156,33 @@ public class BasisObjectSyncSystem : MonoBehaviour
         targetScales = new NativeArray<float3>(size, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
         lerpMultipliers = new NativeArray<float>(size, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
 
+        job.CurrentPositions = positions;
+        job.CurrentRotations = rotations;
+        job.CurrentScales = scales;
+        job.TargetPositions = targetPositions;
+        job.TargetRotations = targetRotations;
+        job.TargetScales = targetScales;
+        job.LerpMultipliers = lerpMultipliers;
+
         initialized = true;
     }
 
     private void UpdateNativeData()
     {
-        for (int i = 0; i < objectCount; i++)
+        for (int Index = 0; Index < objectCount; Index++)
         {
-            var obj = objectsToSync[i];
+            var obj = objectsToSync[Index];
             var transform = obj.transform;
 
             transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
-            positions[i] = position;
-            rotations[i] = rotation;
-            scales[i] = transform.localScale;
+            positions[Index] = position;
+            rotations[Index] = rotation;
+            scales[Index] = transform.localScale;
 
-            targetPositions[i] = obj.StoredData.Position;
-            targetRotations[i] = obj.StoredData.Rotation;
-            targetScales[i] = obj.StoredData.Scale;
-            lerpMultipliers[i] = obj.LerpMultiplier;
+            targetPositions[Index] = obj.StoredData.Position;
+            targetRotations[Index] = obj.StoredData.Rotation;
+            targetScales[Index] = obj.StoredData.Scale;
+            lerpMultipliers[Index] = obj.LerpMultiplier;
         }
     }
 
@@ -195,7 +201,7 @@ public class BasisObjectSyncSystem : MonoBehaviour
     }
 
     [BurstCompile]
-    private struct ObjectSyncJob : IJobParallelFor
+    public struct ObjectSyncJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<float3> TargetPositions;
         [ReadOnly] public NativeArray<quaternion> TargetRotations;

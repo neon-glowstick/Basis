@@ -77,7 +77,7 @@ namespace Basis.Scripts.UI
             CurrentEventData = new BasisPointerEventData(EventSystem.current);
             BasisInput = basisInput;
             BasisPointRaycaster = pointRaycaster;
-            BasisDeviceMatchableNames = BasisInput.BasisDeviceMatchableNames;
+            BasisDeviceMatchableNames = BasisInput.BasisDeviceMatchSettings;
             ApplyStaticDataToRaycastResult();
 
             HasLineRenderer = false;

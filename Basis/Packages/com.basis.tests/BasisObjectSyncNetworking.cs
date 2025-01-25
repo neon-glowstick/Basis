@@ -45,10 +45,12 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     private void OnInteractEndEvent(BasisInput input)
     {
         BasisNetworkManagement.RemoveOwnership(NetworkId);
+        BasisObjectSyncSystem.RegisterObject(this);
     }
     private void OnInteractStartEvent(BasisInput input)
     {
         BasisNetworkManagement.TakeOwnership(NetworkId, (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId);
+        BasisObjectSyncSystem.UnregisterObject(this);
     }
 
     private void OnNetworkIDSet(string NetworkID)
@@ -60,12 +62,8 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public void OnEnable()
     {
         HasMessageIndexAssigned = false;
-        BasisObjectSyncSystem.Instance?.RegisterObject(this);
+        BasisObjectSyncSystem.RegisterObject(this);
         BasisScene.OnNetworkMessageReceived += OnNetworkMessageReceived;
-        BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
-        BasisNetworkManagement.OnRemotePlayerJoined += OnRemotePlayerJoined;
-        BasisNetworkManagement.OnLocalPlayerLeft += OnLocalPlayerLeft;
-        BasisNetworkManagement.OnRemotePlayerLeft += OnRemotePlayerLeft;
         BasisNetworkManagement.OnOwnershipTransfer += OnOwnershipTransfer;
         BasisNetworkManagement.OwnershipReleased += OwnershipReleased;
         BasisNetworkNetIDConversion.OnNetworkIdAdded += OnNetworkIdAdded;
@@ -75,12 +73,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public void OnDisable()
     {
         HasMessageIndexAssigned = false;
-        BasisObjectSyncSystem.Instance?.UnregisterObject(this);
         BasisScene.OnNetworkMessageReceived -= OnNetworkMessageReceived;
-        BasisNetworkManagement.OnLocalPlayerJoined -= OnLocalPlayerJoined;
-        BasisNetworkManagement.OnRemotePlayerJoined -= OnRemotePlayerJoined;
-        BasisNetworkManagement.OnLocalPlayerLeft -= OnLocalPlayerLeft;
-        BasisNetworkManagement.OnRemotePlayerLeft -= OnRemotePlayerLeft;
         BasisNetworkManagement.OnOwnershipTransfer -= OnOwnershipTransfer;
         BasisNetworkManagement.OwnershipReleased -= OwnershipReleased;
         BasisNetworkNetIDConversion.OnNetworkIdAdded -= OnNetworkIdAdded;
@@ -88,7 +81,20 @@ public class BasisObjectSyncNetworking : MonoBehaviour
 
     private void OwnershipReleased(string UniqueEntityID)
     {
-
+        if (NetworkId == UniqueEntityID)
+        {
+            IsLocalOwner = false;
+            CurrentOwner = 0;
+            HasActiveOwnership = false;
+            //drop any interactable objects on this transform.
+            foreach (InteractableObject obj in InteractableObjects)
+            {
+                if (obj != null)
+                {
+                    obj.StartRemoteControl();
+                }
+            }
+        }
     }
 
     private void OnOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner)
@@ -101,6 +107,26 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             if (Rigidbody != null)
             {
                 Rigidbody.isKinematic = !IsLocalOwner;
+            }
+            if(IsLocalOwner == false)
+            {
+                foreach (InteractableObject obj in InteractableObjects)
+                {
+                    if (obj != null)
+                    {
+                        obj.StartRemoteControl();
+                    }
+                }
+            }
+            else
+            {
+                foreach (InteractableObject obj in InteractableObjects)
+                {
+                    if (obj != null)
+                    {
+                        obj.StopRemoteControl();
+                    }
+                }
             }
         }
     }
@@ -116,18 +142,6 @@ public class BasisObjectSyncNetworking : MonoBehaviour
                 BasisNetworkManagement.RequestCurrentOwnership(NetworkId);
             }
         }
-    }
-    public void OnLocalPlayerLeft(BasisNetworkPlayer player1, BasisLocalPlayer player2)
-    {
-    }
-    public void OnRemotePlayerLeft(BasisNetworkPlayer player1, BasisRemotePlayer player2)
-    {
-    }
-    public void OnRemotePlayerJoined(BasisNetworkPlayer player1, BasisRemotePlayer player2)
-    {
-    }
-    public void OnLocalPlayerJoined(BasisNetworkPlayer player1, BasisLocalPlayer player2)
-    {
     }
     public void LateUpdate()
     {
@@ -152,8 +166,6 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         if (HasMessageIndexAssigned && messageIndex == MessageIndex)
         {
             StoredData = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat.Binary);
-            transform.SetLocalPositionAndRotation(StoredData.Position, StoredData.Rotation);
-            transform.localScale = StoredData.Scale;
         }
     }
 }

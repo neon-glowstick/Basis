@@ -152,7 +152,7 @@ public class BasisUIOffsetsMenu : BasisUIBase
 
             foreach (BasisInput Input in BasisDeviceManagement.Instance.AllInputDevices)
             {
-                if (Input.BasisDeviceMatchableNames.DeviceID == BasisDeviceMatchableNames.DeviceID)
+                if (Input.BasisDeviceMatchSettings.DeviceID == BasisDeviceMatchableNames.DeviceID)
                 {
                     Input.AvatarPositionOffset = BasisDeviceMatchableNames.AvatarPositionOffset;
                     Input.AvatarRotationOffset = BasisDeviceMatchableNames.AvatarRotationOffset;
@@ -181,12 +181,12 @@ public class BasisUIOffsetsMenu : BasisUIBase
         {
             foreach (BasisInput input in BasisDeviceManagement.Instance.AllInputDevices)
             {
-                if (input.BasisDeviceMatchableNames.DeviceID == match.DeviceID)
+                if (input.BasisDeviceMatchSettings.DeviceID == match.DeviceID)
                 {
                     input.AvatarPositionOffset = match.AvatarPositionOffset;
                     input.AvatarRotationOffset = match.AvatarRotationOffset;
                     BasisDebug.Log("Loaded for " + input.UniqueDeviceIdentifier);
-                    input.BasisDeviceMatchableNames = match; // Use deep clone here
+                    input.BasisDeviceMatchSettings = match; // Use deep clone here
                 }
             }
         }

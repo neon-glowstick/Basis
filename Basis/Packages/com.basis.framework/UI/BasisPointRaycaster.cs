@@ -38,7 +38,7 @@ namespace Basis.Scripts.UI
         public void Initialize(BasisInput basisInput)
         {
             BasisInput = basisInput;
-            BasisDeviceMatchableNames = BasisInput.BasisDeviceMatchableNames;
+            BasisDeviceMatchableNames = BasisInput.BasisDeviceMatchSettings;
             PhysicHits = new RaycastHit[k_MaxPhysicHitCount];
 
             // Get the layer number for "Ignore Raycast" layer

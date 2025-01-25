@@ -1,12 +1,10 @@
 using System;
-using System.Linq;
 using Basis.Scripts.Device_Management.Devices;
-using Basis.Scripts.TransformBinders.BoneControl;
 using UnityEngine;
 
 // Needs Rigidbody for hover sphere `OnTriggerStay`
 [System.Serializable]
-public abstract class InteractableObject: MonoBehaviour 
+public abstract partial class InteractableObject: MonoBehaviour 
 {
     public InputSources Inputs = new(0);
 
@@ -21,20 +19,7 @@ public abstract class InteractableObject: MonoBehaviour
             // remove hover and interacting on disable
             if (value)
             {
-                foreach (var input in Inputs.ToArray())
-                {
-                    if (input.Source != null)
-                    {
-                        if (IsHoveredBy(input.Source))
-                        {
-                            OnHoverEnd(input.Source, false);
-                        }
-                        if (IsInteractingWith(input.Source))
-                        {
-                            OnInteractEnd(input.Source);
-                        }
-                    }
-                }
+                Clear();
                 OnInteractDisable?.Invoke();
             }
             else
@@ -51,7 +36,13 @@ public abstract class InteractableObject: MonoBehaviour
     public Quaternion equipRot;
     [NonSerialized]
     public bool RequiresUpdateLoop;
-
+    /// <summary>
+    /// 1. to block interaction when puppeted.
+    /// 2. (example) iskinematic set
+    /// depending on puppeted state.
+    /// </summary>
+    [HideInInspector]
+    public bool IsPuppeted = false;
     // Delegates for interaction events
     public Action<BasisInput> OnInteractStartEvent;
     public Action<BasisInput> OnInteractEndEvent;
@@ -115,144 +106,36 @@ public abstract class InteractableObject: MonoBehaviour
     }
 
     public abstract void InputUpdate();
-
-    public struct BasisInputWrapper
+    /// <summary>
+    /// clear is the generic,
+    /// a ungeneric would be drop
+    /// </summary>
+    public virtual void Clear()
     {
-        public BasisInputWrapper(BasisInput source, bool isInteracting)
+        BasisInputWrapper[] InputArray = Inputs.ToArray();
+        int count = InputArray.Length;
+        for (int i = 0; i < count; i++)
         {
-            Source = source;
-            IsInteracting = isInteracting;
-        }
-
-        public BasisInput Source { get; set; }
-
-        /// <summary>
-        /// - true: source interacting with object
-        /// - false: source hovering
-        /// If not either, this source should not be in the list!
-        /// </summary>
-        public bool IsInteracting { get; set; }
-    }
-
-    public struct InputSources {
-        public BasisInputWrapper desktopCenterEye, leftHand, rightHand;
-        public BasisInputWrapper[] extras;
-        
-        public InputSources(uint extrasCount)
-        {
-            desktopCenterEye = default;
-            leftHand = default;
-            rightHand = default;
-            extras = new BasisInputWrapper[(int)extrasCount];
-        }
-
-        public readonly bool AnyInteracting(bool skipExtras = true)
-        {
-            bool interacting = leftHand.Source != null && leftHand.IsInteracting || 
-                            rightHand.Source != null && rightHand.IsInteracting || 
-                            desktopCenterEye.Source != null && desktopCenterEye.IsInteracting;
-            if (!skipExtras)
+            BasisInputWrapper input = InputArray[i];
+            if (input.Source != null)
             {
-                interacting |= extras.Any(x => x.Source != null && x.IsInteracting);
-            }
-            return interacting;
-        }
-
-        public readonly BasisInputWrapper? Find(BasisInput input)
-        {
-            if (input == null)
-                return null;
-            string inUDI = input.UniqueDeviceIdentifier;
-            var found = Array.Find(ToArray(), x => x.Source != null && x.Source.UniqueDeviceIdentifier == inUDI);
-            // not found
-            if (found.Source == null)
-                return null;
-            return found;
-        }
-        public readonly bool Contains(BasisInput input, bool skipExtras = true)
-        {
-            string inUDI = input != null ? input.UniqueDeviceIdentifier : "";
-
-            bool contains = leftHand.Source != null && leftHand.Source.UniqueDeviceIdentifier == inUDI || 
-                            rightHand.Source != null && rightHand.Source.UniqueDeviceIdentifier == inUDI || 
-                            desktopCenterEye.Source != null && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI;
-
-            if (!skipExtras)
-            {
-                contains |= extras.Any(x => x.Source != null && x.Source.UniqueDeviceIdentifier == inUDI);
-            }
-            return contains;
-        }
-
-        public readonly BasisInputWrapper[] ToArray()
-        {
-            BasisInputWrapper[] primary = new BasisInputWrapper[] {
-                desktopCenterEye,
-                leftHand,
-                rightHand,
-            };
-            if (extras.Length != 0)
-                return primary.Concat(extras).ToArray();
-            return primary;
-        }
-
-        public bool AddInputByRole(BasisInput input, bool isInteracting)
-        {
-            if (input.TryGetRole(out BasisBoneTrackedRole role))
-            {
-                switch (role)
+                if (IsHoveredBy(input.Source))
                 {
-                    case BasisBoneTrackedRole.CenterEye:
-                        desktopCenterEye = new BasisInputWrapper(input, isInteracting);
-                        return true;
-                    case BasisBoneTrackedRole.LeftHand:
-                        leftHand = new BasisInputWrapper(input, isInteracting);
-                        return true;
-                    case BasisBoneTrackedRole.RightHand:
-                        rightHand = new BasisInputWrapper(input, isInteracting);
-                        return true;
-                    default:
-                        return false;
+                    OnHoverEnd(input.Source, false);
+                }
+                if (IsInteractingWith(input.Source))
+                {
+                    OnInteractEnd(input.Source);
                 }
             }
-            return false;
-
         }
-        public readonly bool TryGetByRole(BasisBoneTrackedRole role, out BasisInputWrapper input)
-        {
-            input = default;
-            switch (role)
-            {
-                case BasisBoneTrackedRole.CenterEye:
-                    input = desktopCenterEye;
-                    return true;
-                case BasisBoneTrackedRole.LeftHand:
-                    input = leftHand;
-                    return true;
-                case BasisBoneTrackedRole.RightHand:
-                    input = rightHand;
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        public bool RemoveByRole(BasisBoneTrackedRole role)
-        {
-            switch (role)
-            {
-                case BasisBoneTrackedRole.CenterEye:
-                    desktopCenterEye = default;
-                    return true;
-                case BasisBoneTrackedRole.LeftHand:
-                    leftHand = default;
-                    return true;
-                case BasisBoneTrackedRole.RightHand:
-                    rightHand = default;
-                    return true;
-                default:
-                    return false;
-            }
-        }
+    }
+    public virtual void StartRemoteControl()
+    {
+        IsPuppeted = true;
+    }
+    public virtual void StopRemoteControl()
+    {
+        IsPuppeted = false;
     }
 }

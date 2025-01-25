@@ -21,12 +21,12 @@ namespace Basis.Scripts.Device_Management.Devices
         [SerializeField] private bool menuButton;
         [SerializeField] private bool primaryButtonGetState;
         [SerializeField] private bool secondaryButtonGetState;
-        [SerializeField] private bool secondary2DAxisClick;
+        [SerializeField] private bool secondary2DAxisClick;//for example scrollwheel click on desktop
         [SerializeField] private bool primary2DAxisClick;
         [SerializeField] private float trigger;
         [SerializeField] private float secondaryTrigger;
         [SerializeField] private Vector2 primary2DAxis;
-        [SerializeField] private Vector2 secondary2DAxis;
+        [SerializeField] private Vector2 secondary2DAxis;//for example scrollwheel on desktop
 
         public bool GripButton
         {
