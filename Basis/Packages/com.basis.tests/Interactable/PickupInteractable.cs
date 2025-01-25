@@ -238,13 +238,7 @@ public class PickupInteractable : InteractableObject
             //  transform.rotation = target.rotation;
             if (Basis.Scripts.Device_Management.BasisDeviceManagement.IsUserInDesktop())
             {
-                PollDesktopManipulation();
-                // REMOVEME: test code
-                if (Mouse.current.rightButton.isPressed)
-                {
-                    DisableInteract = Mouse.current.rightButton.isPressed;
-                }
-
+                PollDesktopManipulation(Inputs.desktopCenterEye.Source);
             }
         }
     }
@@ -271,13 +265,13 @@ public class PickupInteractable : InteractableObject
     private bool pauseHead = false;
     private Vector3 targetOffset = Vector3.zero;
     private Vector3 currentZoopVelocity = Vector3.zero;
-    private void PollDesktopManipulation()
+    private void PollDesktopManipulation(BasisInput DesktopEye)
     {
-        if (Mouse.current.middleButton.isPressed)
+        if (DesktopEye.InputState.Secondary2DAxisClick)
         {
             if(!pauseHead)
             {
-                BasisAvatarEyeInput.Instance.PauseHead(nameof(PickupInteractable) + ": " + gameObject.name);
+                BasisAvatarEyeInput.Instance.PauseHead($"{nameof(PickupInteractable)}: {gameObject.GetInstanceID()}");
                 pauseHead = true;
             }
 
@@ -290,7 +284,7 @@ public class PickupInteractable : InteractableObject
             ConstraintRef.SetRotationOffset(0, rotation.eulerAngles);
 
             // scroll zoop
-            float mouseScroll = Mouse.current.scroll.ReadValue().y; // only ever 1, 0, -1
+            float mouseScroll = DesktopEye.InputState.Secondary2DAxis.y; // only ever 1, 0, -1
 
             Vector3 currentOffset = ConstraintRef.translationOffsets[0];
             if (targetOffset == Vector3.zero)
@@ -303,7 +297,7 @@ public class PickupInteractable : InteractableObject
             {
                 Transform sourceTransform = ConstraintRef.GetSource(0).sourceTransform;
 
-                Vector3 movement = DesktopZoopSpeed * mouseScroll * BasisLocalCameraDriver.Instance.Camera.transform.forward;
+                Vector3 movement = DesktopZoopSpeed * mouseScroll * BasisLocalCameraDriver.Forward();
                 Vector3 newTargetOffset = targetOffset + sourceTransform.InverseTransformVector(movement);
 
                 // moving towards camera, ignore moving closer if less than min distance
@@ -329,7 +323,7 @@ public class PickupInteractable : InteractableObject
         {
             targetOffset = Vector3.zero;
             pauseHead = false;
-            if(!BasisAvatarEyeInput.Instance.UnPauseHead(nameof(PickupInteractable) + ": " + gameObject.name))
+            if(!BasisAvatarEyeInput.Instance.UnPauseHead($"{nameof(PickupInteractable)}: {gameObject.GetInstanceID()}"))
             {
                 BasisDebug.LogWarning(nameof(PickupInteractable) + " was unable to un-pause head movement, this is a bug!");
             }

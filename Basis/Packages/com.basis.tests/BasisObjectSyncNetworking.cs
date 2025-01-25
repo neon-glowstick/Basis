@@ -1,11 +1,8 @@
 using Basis.Scripts.BasisSdk;
-using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Networking;
-using Basis.Scripts.Networking.NetworkedAvatar;
 using BasisSerializer.OdinSerializer;
 using LiteNetLib;
-using System;
 using UnityEngine;
 public class BasisObjectSyncNetworking : MonoBehaviour
 {
@@ -45,12 +42,12 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     private void OnInteractEndEvent(BasisInput input)
     {
         BasisNetworkManagement.RemoveOwnership(NetworkId);
-        BasisObjectSyncSystem.RegisterObject(this);
+       // BasisObjectSyncSystem.RegisterObject(this);
     }
     private void OnInteractStartEvent(BasisInput input)
     {
         BasisNetworkManagement.TakeOwnership(NetworkId, (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId);
-        BasisObjectSyncSystem.UnregisterObject(this);
+     //  BasisObjectSyncSystem.UnregisterObject(this);
     }
 
     private void OnNetworkIDSet(string NetworkID)
@@ -62,7 +59,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public void OnEnable()
     {
         HasMessageIndexAssigned = false;
-        BasisObjectSyncSystem.RegisterObject(this);
+      //  BasisObjectSyncSystem.RegisterObject(this);
         BasisScene.OnNetworkMessageReceived += OnNetworkMessageReceived;
         BasisNetworkManagement.OnOwnershipTransfer += OnOwnershipTransfer;
         BasisNetworkManagement.OwnershipReleased += OwnershipReleased;
