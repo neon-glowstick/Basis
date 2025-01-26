@@ -9,17 +9,20 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public ushort MessageIndex = 0;
     public bool HasMessageIndexAssigned;
     public string NetworkId;
-    public BasisPositionRotationScale StoredData = new BasisPositionRotationScale();
-    public float LerpMultiplier = 3f;
-    public Rigidbody Rigidbody;
     public int TargetFrequency = 10; // Target update frequency in Hz (10 times per second)
     private double _updateInterval; // Time interval between updates
     private double _lastUpdateTime; // Last update timestamp
     public ushort CurrentOwner;
     public bool IsLocalOwner = false;
     public bool HasActiveOwnership = false;
+
+    public BasisPositionRotationScale StoredData = new BasisPositionRotationScale();
+    public float LerpMultiplier = 3f;
+    public Rigidbody Rigidbody;
     public BasisContentBase ContentConnector;
     public InteractableObject[] InteractableObjects;
+    public DeliveryMethod DeliveryMethod = DeliveryMethod.Sequenced;
+    public DataFormat DataFormat = DataFormat.Binary;
     public void Awake()
     {
         if (ContentConnector == null && TryGetComponent<BasisContentBase>(out ContentConnector))
@@ -33,7 +36,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             ContentConnector.OnNetworkIDSet += OnNetworkIDSet;
         }
         InteractableObjects = this.transform.GetComponentsInChildren<InteractableObject>();
-        foreach(InteractableObject obj in InteractableObjects)
+        foreach (InteractableObject obj in InteractableObjects)
         {
             obj.OnInteractStartEvent += OnInteractStartEvent;
             obj.OnInteractEndEvent += OnInteractEndEvent;
@@ -42,12 +45,12 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     private void OnInteractEndEvent(BasisInput input)
     {
         BasisNetworkManagement.RemoveOwnership(NetworkId);
-       // BasisObjectSyncSystem.RegisterObject(this);
+        BasisObjectSyncSystem.StartApplyRemoteData(this);
     }
     private void OnInteractStartEvent(BasisInput input)
     {
         BasisNetworkManagement.TakeOwnership(NetworkId, (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId);
-     //  BasisObjectSyncSystem.UnregisterObject(this);
+        BasisObjectSyncSystem.StopApplyRemoteData(this);
     }
 
     private void OnNetworkIDSet(string NetworkID)
@@ -59,13 +62,15 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public void OnEnable()
     {
         HasMessageIndexAssigned = false;
-      //  BasisObjectSyncSystem.RegisterObject(this);
         BasisScene.OnNetworkMessageReceived += OnNetworkMessageReceived;
         BasisNetworkManagement.OnOwnershipTransfer += OnOwnershipTransfer;
         BasisNetworkManagement.OwnershipReleased += OwnershipReleased;
         BasisNetworkNetIDConversion.OnNetworkIdAdded += OnNetworkIdAdded;
         _updateInterval = 1f / TargetFrequency; // Calculate interval (1/33 seconds)
         _lastUpdateTime = Time.timeAsDouble;
+
+        StartRemoteControl();
+        BasisObjectSyncSystem.StartApplyRemoteData(this);
     }
     public void OnDisable()
     {
@@ -84,16 +89,10 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             CurrentOwner = 0;
             HasActiveOwnership = false;
             //drop any interactable objects on this transform.
-            foreach (InteractableObject obj in InteractableObjects)
-            {
-                if (obj != null)
-                {
-                    obj.StartRemoteControl();
-                }
-            }
+            StartRemoteControl();
+            BasisObjectSyncSystem.StartApplyRemoteData(this);
         }
     }
-
     private void OnOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner)
     {
         if (NetworkId == UniqueEntityID)
@@ -105,25 +104,15 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             {
                 Rigidbody.isKinematic = !IsLocalOwner;
             }
-            if(IsLocalOwner == false)
+            if (IsLocalOwner == false)
             {
-                foreach (InteractableObject obj in InteractableObjects)
-                {
-                    if (obj != null)
-                    {
-                        obj.StartRemoteControl();
-                    }
-                }
+                StartRemoteControl();
+                BasisObjectSyncSystem.StartApplyRemoteData(this);
             }
             else
             {
-                foreach (InteractableObject obj in InteractableObjects)
-                {
-                    if (obj != null)
-                    {
-                        obj.StopRemoteControl();
-                    }
-                }
+                StopRemoteControl();
+                BasisObjectSyncSystem.StopApplyRemoteData(this);
             }
         }
     }
@@ -156,13 +145,33 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     {
         transform.GetLocalPositionAndRotation(out StoredData.Position, out StoredData.Rotation);
         StoredData.Scale = transform.localScale;
-        BasisScene.OnNetworkMessageSend?.Invoke(MessageIndex, SerializationUtility.SerializeValue(StoredData, DataFormat.Binary), DeliveryMethod.Sequenced);
+        BasisScene.OnNetworkMessageSend?.Invoke(MessageIndex, SerializationUtility.SerializeValue(StoredData, DataFormat),DeliveryMethod);
     }
     public void OnNetworkMessageReceived(ushort PlayerID, ushort messageIndex, byte[] buffer, DeliveryMethod DeliveryMethod)
     {
         if (HasMessageIndexAssigned && messageIndex == MessageIndex)
         {
-            StoredData = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat.Binary);
+            StoredData = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat);
+        }
+    }
+    public void StartRemoteControl()
+    {
+        foreach (InteractableObject obj in InteractableObjects)
+        {
+            if (obj != null)
+            {
+                obj.StartRemoteControl();
+            }
+        }
+    }
+    public void StopRemoteControl()
+    {
+        foreach (InteractableObject obj in InteractableObjects)
+        {
+            if (obj != null)
+            {
+                obj.StartRemoteControl();
+            }
         }
     }
 }

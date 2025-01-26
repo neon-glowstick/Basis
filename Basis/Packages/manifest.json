@@ -1,15 +1,5 @@
 {
   "dependencies": {
-    "com.basis.addressables": "https://github.com/BasisVR/BasisAddressables.git",
-    "com.basis.console": "https://github.com/BasisVR/BasisConsoleDisplay.git",
-    "com.basis.gizmos": "https://github.com/BasisVR/BasisGizmos.git",
-    "com.basis.odinserializer": "https://github.com/BasisVR/odin-serializer.git",
-    "com.basis.visualtrackers": "https://github.com/BasisVR/BasisVisualTrackers.git",
-    "com.hecomi.ulipsync": "https://github.com/BasisVR/uLipSync.git",
-    "com.llealloo.audiolink": "https://github.com/BasisVR/audiolink.git",
-    "com.naelstrof.jigglephysics": "https://github.com/BasisVR/UnityJigglePhysics.git",
-    "com.steam.steamaudio": "https://github.com/BasisVR/steam-audio.git",
-    "com.steam.steamvr": "https://github.com/BasisVR/steamvr_unity_plugin.git",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.addressables": "2.2.2",
     "com.unity.animation.rigging": "1.3.0",

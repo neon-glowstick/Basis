@@ -25,9 +25,9 @@ public class BasisTestNetworkScene : MonoBehaviour
     public string GameobjectMetaUrl = "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedMeta";
     public string GameobjectBundleUrl = "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedBundle";
 
-    public string PropPassword = "9ef6b1330c1d25e2c869c3ba3e1fc995e5cb8de6c909a367460547527a1dc832";
-    public string PropMetaUrl = "https://BasisFramework.b-cdn.net/Props/DX11/43fc50ae-5c50-4593-bae7-b50bf23115b1_638733039928212608.BasisEncyptedMeta";
-    public string PropBundleUrl = "https://BasisFramework.b-cdn.net/Props/DX11/43fc50ae-5c50-4593-bae7-b50bf23115b1_638733039928212608.BasisEncyptedBundle";
+    public string PropPassword = "28d6240548cae8229e169777686b4b967ca23b924abb96565823206989795215";
+    public string PropMetaUrl = "https://BasisFramework.b-cdn.net/Props/DX11/a78e45e8-471d-4d9a-85fe-325bcceab982_638734352920637052.BasisEncyptedMeta";
+    public string PropBundleUrl = "https://BasisFramework.b-cdn.net/Props/DX11/a78e45e8-471d-4d9a-85fe-325bcceab982_638734352920637052.BasisEncyptedBundle";
     public void Awake()
     {
         BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;

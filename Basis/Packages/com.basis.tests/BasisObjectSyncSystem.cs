@@ -1,3 +1,4 @@
+using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -22,6 +23,7 @@ public class BasisObjectSyncSystem : MonoBehaviour
     private JobHandle syncJobHandle;
     private bool initialized = false;
     public ObjectSyncJob job;
+    public int BatchSize = 16;
     public void Awake()
     {
         if (Instance != null && Instance != this)
@@ -39,10 +41,8 @@ public class BasisObjectSyncSystem : MonoBehaviour
         if (!initialized || objectCount == 0) return;
 
         job.DeltaTime = Time.deltaTime;
-
-        syncJobHandle = job.Schedule(objectCount, 128); // Larger batch size for fewer thread syncs.
+        syncJobHandle = job.Schedule(objectCount, BatchSize);
     }
-
     public void LateUpdate()
     {
         if (!initialized || objectCount == 0) return;
@@ -52,23 +52,38 @@ public class BasisObjectSyncSystem : MonoBehaviour
         // Apply results back to transforms on the main thread.
         for (int Index = 0; Index < objectCount; Index++)
         {
-            var obj = objectsToSync[Index];
-            var transform = obj.transform;
+            BasisObjectSyncNetworking obj = objectsToSync[Index];
+            Transform transform = obj.transform;
 
-            transform.SetPositionAndRotation(positions[Index], rotations[Index]);
+            transform.SetLocalPositionAndRotation(positions[Index], rotations[Index]);
             transform.localScale = scales[Index];
         }
     }
-    public static void UnregisterObject(BasisObjectSyncNetworking obj)
+    public static void StopApplyRemoteData(BasisObjectSyncNetworking obj)
     {
-        Instance?.unregisterObject(obj);
+        if (Instance == null)
+        {
+            BasisDebug.LogError("Missing Instance of " + nameof(BasisObjectSyncSystem));
+            return;
+        }
+        Instance.unregisterObject(obj);
     }
-    public static void RegisterObject(BasisObjectSyncNetworking obj)
+    public static void StartApplyRemoteData(BasisObjectSyncNetworking obj)
     {
-        Instance?.registerObject(obj);
+        if (Instance == null)
+        {
+            BasisDebug.LogError("Missing Instance of " + nameof(BasisObjectSyncSystem));
+            return;
+        }
+        Instance.registerObject(obj);
     }
     public void registerObject(BasisObjectSyncNetworking obj)
     {
+        if (objectsToSync.Contains(obj))
+        {
+            BasisDebug.LogError($"Already Have This Registered {obj.GetInstanceID()}");
+            return;
+        }
         EnsureCapacity(objectCount + 1);
 
         objectsToSync[objectCount] = obj;
@@ -76,9 +91,16 @@ public class BasisObjectSyncSystem : MonoBehaviour
 
         ResizeNativeArrays(objectCount);
         UpdateNativeData();
+        // Dynamically adjust batch size based on object count
+        BatchSize = CalculateBatchSize(objectCount);
     }
     public void unregisterObject(BasisObjectSyncNetworking obj)
     {
+        if (objectsToSync.Contains(obj) == false)
+        {
+            BasisDebug.LogError($"No Registered Object {obj.GetInstanceID()}");
+            return;
+        }
         // Find the index of the object to remove
         int removeIndex = -1;
         for (int Index = 0; Index < objectCount; Index++)
@@ -90,14 +112,18 @@ public class BasisObjectSyncSystem : MonoBehaviour
             }
         }
 
-        if (removeIndex == -1) return; // Object not found
-
+        if (removeIndex == -1)
+        {
+            return; // Object not found
+        }
         // Move the last object in the list to fill the gap
         objectsToSync[removeIndex] = objectsToSync[objectCount - 1];
         objectCount--;
 
         // Compact the NativeArrays
         CompactNativeArrays(removeIndex);
+        // Dynamically adjust batch size based on object count
+        BatchSize = CalculateBatchSize(objectCount);
     }
 
     /// <summary>
@@ -174,7 +200,7 @@ public class BasisObjectSyncSystem : MonoBehaviour
             var obj = objectsToSync[Index];
             var transform = obj.transform;
 
-            transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+            transform.GetLocalPositionAndRotation(out Vector3 position, out Quaternion rotation);
             positions[Index] = position;
             rotations[Index] = rotation;
             scales[Index] = transform.localScale;
@@ -198,6 +224,21 @@ public class BasisObjectSyncSystem : MonoBehaviour
             targetScales.Dispose();
             lerpMultipliers.Dispose();
         }
+    }
+    /// <summary>
+    /// Calculates an optimized batch size based on the number of objects.
+    /// </summary>
+    /// <param name="elementCount">Total number of elements</param>
+    /// <returns>Optimized batch size</returns>
+    private int CalculateBatchSize(int elementCount)
+    {
+        if (elementCount < 64)
+            return 1;  // No need for batching on small counts
+        if (elementCount < 512)
+            return 16; // Small batch sizes for moderate workloads
+        if (elementCount < 2048)
+            return 64; // Balanced performance for mid-range counts
+        return 128;    // Larger batch size for heavy workloads
     }
 
     [BurstCompile]

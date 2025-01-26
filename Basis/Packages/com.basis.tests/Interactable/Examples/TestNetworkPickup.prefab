@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 6583899668879688022}
   - component: {fileID: 2949146011986281948}
   - component: {fileID: -152726361909712221}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: TestNetworkPickup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -139,12 +139,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 690ab0b52a9b06b4498ad303592416aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  disableInteract: 0
   InteractRange: 1
-  CanEquip: 1
+  CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
   equipRot: {x: 0, y: 0, z: 0, w: 0}
-  RequiresUpdateLoop: 0
+  IsPuppeted: 0
   KinematicWhileInteracting: 1
+  DesktopRotateSpeed: 0.1
+  DesktopZoopSpeed: 0.2
+  DesktopZoopMinDistance: 0.2
+  GenerateColliderMesh: 1
   ColliderRef: {fileID: 5957042272599879760}
   RigidRef: {fileID: 2949146011986281948}
   ConstraintRef: {fileID: 0}
@@ -190,10 +195,13 @@ MonoBehaviour:
   MessageIndex: 0
   HasMessageIndexAssigned: 0
   NetworkId: 
-  LerpMultiplier: 3
-  Rigidbody: {fileID: 2949146011986281948}
   TargetFrequency: 10
   CurrentOwner: 0
   IsLocalOwner: 0
   HasActiveOwnership: 0
+  LerpMultiplier: 3
+  Rigidbody: {fileID: 2949146011986281948}
   ContentConnector: {fileID: 923673149091474816}
+  InteractableObjects: []
+  DeliveryMethod: 0
+  DataFormat: 0
