@@ -6,7 +6,6 @@ using Basis.Scripts.Profiler;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using static BasisNetworkCore.Serializable.SerializableBasis;

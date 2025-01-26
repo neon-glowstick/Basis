@@ -28,6 +28,8 @@ public class BasisTestNetworkScene : MonoBehaviour
     public string PropPassword = "28d6240548cae8229e169777686b4b967ca23b924abb96565823206989795215";
     public string PropMetaUrl = "https://BasisFramework.b-cdn.net/Props/DX11/a78e45e8-471d-4d9a-85fe-325bcceab982_638734352920637052.BasisEncyptedMeta";
     public string PropBundleUrl = "https://BasisFramework.b-cdn.net/Props/DX11/a78e45e8-471d-4d9a-85fe-325bcceab982_638734352920637052.BasisEncyptedBundle";
+    public bool OverrideSpawnPosition;
+    public Vector3 Position;
     public void Awake()
     {
         BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
@@ -35,6 +37,14 @@ public class BasisTestNetworkScene : MonoBehaviour
     }
     public void OnEnable()
     {
+        if(OverrideSpawnPosition)
+        {
+            Position = this.transform.position;
+        }
+        else
+        {
+            Position = BasisLocalPlayer.Instance.transform.position;
+        }
         if (SceneLoadTest)
         {
             BasisNetworkSpawnItem.RequestSceneLoad(ScenePassword,
@@ -47,14 +57,14 @@ public class BasisTestNetworkScene : MonoBehaviour
             BasisNetworkSpawnItem.RequestGameObjectLoad(GameobjectPassword,
                  GameobjectBundleUrl,
                  GameobjectMetaUrl,
-                 false, BasisLocalPlayer.Instance.transform.position, Quaternion.identity, Vector3.one, IsPersistent, out Gameobject);
+                 false, Position, Quaternion.identity, Vector3.one, IsPersistent, out Gameobject);
         }
         if (PropLoadTest)
         {
             BasisNetworkSpawnItem.RequestGameObjectLoad(PropPassword,
                  PropBundleUrl,
                  PropMetaUrl,
-                 false, BasisLocalPlayer.Instance.transform.position, Quaternion.identity, Vector3.one, IsPersistent, out Gameobject);
+                 false, Position, Quaternion.identity, Vector3.one, IsPersistent, out Gameobject);
         }
     }
     public void OnDisable()

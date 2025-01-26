@@ -138,12 +138,11 @@ namespace Basis.Scripts.Networking.Recievers
                         // Complete the jobs and apply the results
                         EuroFilterHandle.Complete();
 
+
                         ApplyPoseData(Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, enableEuroFilter ? EuroValuesOutput : musclesPreEuro);
                         PoseHandler.SetHumanPose(ref HumanPose);
 
                         RemotePlayer.RemoteBoneDriver.SimulateAndApply(DeltaTime);
-
-                        //come back to this later!  RemotePlayer.Avatar.FaceVisemeMesh.transform.position = RemotePlayer.MouthControl.OutgoingWorldData.position;
                     }
                     if (interpolationTime >= 1 && PayloadQueue.TryDequeue(out AvatarBuffer result))
                     {
@@ -217,6 +216,8 @@ namespace Basis.Scripts.Networking.Recievers
             // Apply scaling to position
             Vector3 ScaledPosition = Vector3.Scale(Position, Scaling);  // Apply the scaling
 
+            //come back to this later!
+            RemotePlayer.BasisAvatar.transform.position = ScaledPosition;
             // BasisDebug.Log("ScaledPosition " + ScaledPosition);
             // Apply pose data
             HumanPose.bodyPosition = ScaledPosition;

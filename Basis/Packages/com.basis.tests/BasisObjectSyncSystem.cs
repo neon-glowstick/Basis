@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
@@ -5,13 +6,14 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class BasisObjectSyncSystem : MonoBehaviour
+public partial class BasisObjectSyncSystem : MonoBehaviour
 {
     public static BasisObjectSyncSystem Instance { get; private set; }
 
     private BasisObjectSyncNetworking[] objectsToSync;
     private int objectCount = 0; // Number of active objects
     private int arrayCapacity = 16; // Initial capacity
+
     private NativeArray<float3> positions;
     private NativeArray<quaternion> rotations;
     private NativeArray<float3> scales;
@@ -38,14 +40,40 @@ public class BasisObjectSyncSystem : MonoBehaviour
 
     public void Update()
     {
-        if (!initialized || objectCount == 0) return;
+        double timeAsDouble = Time.timeAsDouble;
+        for (int Index = 0; Index < CachedCount; Index++)
+        {
+            objectSyncNetworkings[Index].LateUpdateTime(timeAsDouble);
+        }
 
+        if (!initialized || objectCount == 0)
+        {
+            return;
+        }
+
+        for (int Index = 0; Index < objectCount; Index++)
+        {
+            BasisObjectSyncNetworking obj = objectsToSync[Index];
+
+            positions[Index] = obj.Current.Position;
+            rotations[Index] = obj.Current.Rotation;
+            scales[Index] = obj.Current.Scale;
+
+            targetPositions[Index] = obj.Next.Position;
+            targetRotations[Index] = obj.Next.Rotation;
+            targetScales[Index] = obj.Next.Scale;
+
+            lerpMultipliers[Index] = obj.LerpMultiplier;
+        }
         job.DeltaTime = Time.deltaTime;
         syncJobHandle = job.Schedule(objectCount, BatchSize);
     }
     public void LateUpdate()
     {
-        if (!initialized || objectCount == 0) return;
+        if (!initialized || objectCount == 0)
+        {
+            return;
+        }
 
         syncJobHandle.Complete();
 
@@ -53,10 +81,13 @@ public class BasisObjectSyncSystem : MonoBehaviour
         for (int Index = 0; Index < objectCount; Index++)
         {
             BasisObjectSyncNetworking obj = objectsToSync[Index];
-            Transform transform = obj.transform;
+            obj.Current.Position = positions[Index];
+            obj.Current.Rotation = rotations[Index];
+            obj.Current.Scale = scales[Index];
 
-            transform.SetLocalPositionAndRotation(positions[Index], rotations[Index]);
-            transform.localScale = scales[Index];
+            Transform transform = obj.transform;
+            transform.SetLocalPositionAndRotation(obj.Current.Position, obj.Current.Rotation);
+            transform.localScale = obj.Current.Scale;
         }
     }
     public static void StopApplyRemoteData(BasisObjectSyncNetworking obj)
@@ -66,7 +97,7 @@ public class BasisObjectSyncSystem : MonoBehaviour
             BasisDebug.LogError("Missing Instance of " + nameof(BasisObjectSyncSystem));
             return;
         }
-        Instance.unregisterObject(obj);
+        Instance.UnRegisterObject(obj);
     }
     public static void StartApplyRemoteData(BasisObjectSyncNetworking obj)
     {
@@ -75,9 +106,9 @@ public class BasisObjectSyncSystem : MonoBehaviour
             BasisDebug.LogError("Missing Instance of " + nameof(BasisObjectSyncSystem));
             return;
         }
-        Instance.registerObject(obj);
+        Instance.RegisterObject(obj);
     }
-    public void registerObject(BasisObjectSyncNetworking obj)
+    public void RegisterObject(BasisObjectSyncNetworking obj)
     {
         if (objectsToSync.Contains(obj))
         {
@@ -90,11 +121,10 @@ public class BasisObjectSyncSystem : MonoBehaviour
         objectCount++;
 
         ResizeNativeArrays(objectCount);
-        UpdateNativeData();
         // Dynamically adjust batch size based on object count
         BatchSize = CalculateBatchSize(objectCount);
     }
-    public void unregisterObject(BasisObjectSyncNetworking obj)
+    public void UnRegisterObject(BasisObjectSyncNetworking obj)
     {
         if (objectsToSync.Contains(obj) == false)
         {
@@ -157,7 +187,7 @@ public class BasisObjectSyncSystem : MonoBehaviour
             newArray[Index] = objectsToSync[Index];
         }
 
-        objectsToSync = newArray;
+        objectsToSync = newArray; 
     }
 
     private void ResizeNativeArrays(int size)
@@ -193,25 +223,6 @@ public class BasisObjectSyncSystem : MonoBehaviour
         initialized = true;
     }
 
-    private void UpdateNativeData()
-    {
-        for (int Index = 0; Index < objectCount; Index++)
-        {
-            var obj = objectsToSync[Index];
-            var transform = obj.transform;
-
-            transform.GetLocalPositionAndRotation(out Vector3 position, out Quaternion rotation);
-            positions[Index] = position;
-            rotations[Index] = rotation;
-            scales[Index] = transform.localScale;
-
-            targetPositions[Index] = obj.StoredData.Position;
-            targetRotations[Index] = obj.StoredData.Rotation;
-            targetScales[Index] = obj.StoredData.Scale;
-            lerpMultipliers[Index] = obj.LerpMultiplier;
-        }
-    }
-
     private void OnDestroy()
     {
         if (initialized)
@@ -240,27 +251,27 @@ public class BasisObjectSyncSystem : MonoBehaviour
             return 64; // Balanced performance for mid-range counts
         return 128;    // Larger batch size for heavy workloads
     }
+    public static BasisObjectSyncNetworking[] objectSyncNetworkings = new BasisObjectSyncNetworking[] { };
+    public static List<BasisObjectSyncNetworking> LocallyOwnedSync = new List<BasisObjectSyncNetworking>();
+    public static int CachedCount = 0;
 
-    [BurstCompile]
-    public struct ObjectSyncJob : IJobParallelFor
+    public static void AddLocallyOwnedPickup(BasisObjectSyncNetworking Sync)
     {
-        [ReadOnly] public NativeArray<float3> TargetPositions;
-        [ReadOnly] public NativeArray<quaternion> TargetRotations;
-        [ReadOnly] public NativeArray<float3> TargetScales;
-        [ReadOnly] public NativeArray<float> LerpMultipliers;
-        [ReadOnly] public float DeltaTime;
-
-        public NativeArray<float3> CurrentPositions;
-        public NativeArray<quaternion> CurrentRotations;
-        public NativeArray<float3> CurrentScales;
-
-        public void Execute(int index)
+        if (!LocallyOwnedSync.Contains(Sync))
         {
-            float lerp = LerpMultipliers[index] * DeltaTime;
-
-            CurrentPositions[index] = math.lerp(CurrentPositions[index], TargetPositions[index], lerp);
-            CurrentRotations[index] = math.slerp(CurrentRotations[index], TargetRotations[index], lerp);
-            CurrentScales[index] = math.lerp(CurrentScales[index], TargetScales[index], lerp);
+            LocallyOwnedSync.Add(Sync);
+            CachedCount = LocallyOwnedSync.Count;
+            objectSyncNetworkings = LocallyOwnedSync.ToArray();
         }
     }
+
+    public static void RemoveLocallyOwnedPickup(BasisObjectSyncNetworking Sync)
+    {
+        if (LocallyOwnedSync.Remove(Sync))
+        {
+            CachedCount = LocallyOwnedSync.Count;
+            objectSyncNetworkings = LocallyOwnedSync.ToArray();
+        }
+    }
+
 }

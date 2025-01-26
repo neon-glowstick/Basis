@@ -16,11 +16,13 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public bool IsLocalOwner = false;
     public bool HasActiveOwnership = false;
 
-    public BasisPositionRotationScale StoredData = new BasisPositionRotationScale();
+    public BasisPositionRotationScale Current = new BasisPositionRotationScale();
+    public BasisPositionRotationScale Next = new BasisPositionRotationScale();
+
     public float LerpMultiplier = 3f;
     public Rigidbody Rigidbody;
     public BasisContentBase ContentConnector;
-    public InteractableObject[] InteractableObjects;
+    public InteractableObject InteractableObjects;
     public DeliveryMethod DeliveryMethod = DeliveryMethod.Sequenced;
     public DataFormat DataFormat = DataFormat.Binary;
     public void Awake()
@@ -35,12 +37,23 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         {
             ContentConnector.OnNetworkIDSet += OnNetworkIDSet;
         }
-        InteractableObjects = this.transform.GetComponentsInChildren<InteractableObject>();
-        foreach (InteractableObject obj in InteractableObjects)
+        InteractableObjects = this.transform.GetComponentInChildren<InteractableObject>();
+        if (InteractableObjects != null)
         {
-            obj.OnInteractStartEvent += OnInteractStartEvent;
-            obj.OnInteractEndEvent += OnInteractEndEvent;
+            InteractableObjects.OnInteractStartEvent += OnInteractStartEvent;
+            InteractableObjects.OnInteractEndEvent += OnInteractEndEvent;
         }
+        this.transform.GetLocalPositionAndRotation(out Current.Position, out Current.Rotation);
+        Current.Scale = this.transform.localScale;
+
+        Next.Scale = Current.Scale;
+        Next.Position = Current.Position;
+        Next.Rotation = Current.Rotation;
+    }
+    public void OnDestroy()
+    {
+        BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
+        BasisObjectSyncSystem.StopApplyRemoteData(this);
     }
     private void OnInteractEndEvent(BasisInput input)
     {
@@ -114,9 +127,20 @@ public class BasisObjectSyncNetworking : MonoBehaviour
                 StopRemoteControl();
                 BasisObjectSyncSystem.StopApplyRemoteData(this);
             }
+            OwnedPickupSet();
         }
     }
-
+    public void OwnedPickupSet()
+    {
+        if (IsLocalOwner && HasMessageIndexAssigned)
+        {
+            BasisObjectSyncSystem.AddLocallyOwnedPickup(this);
+        }
+        else
+        {
+            BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
+        }
+    }
     public void OnNetworkIdAdded(string uniqueId, ushort ushortId)
     {
         if (NetworkId == uniqueId)
@@ -127,51 +151,42 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             {
                 BasisNetworkManagement.RequestCurrentOwnership(NetworkId);
             }
+            OwnedPickupSet();
         }
     }
-    public void LateUpdate()
+    public void LateUpdateTime(double DoubleTime)
     {
-        if (IsLocalOwner && HasMessageIndexAssigned)
+        if (DoubleTime - _lastUpdateTime >= _updateInterval)
         {
-            double DoubleTime = Time.timeAsDouble;
-            if (DoubleTime - _lastUpdateTime >= _updateInterval)
-            {
-                _lastUpdateTime = DoubleTime;
-                SendNetworkMessage();
-            }
+            _lastUpdateTime = DoubleTime;
+            SendNetworkMessage();
         }
     }
     public void SendNetworkMessage()
     {
-        transform.GetLocalPositionAndRotation(out StoredData.Position, out StoredData.Rotation);
-        StoredData.Scale = transform.localScale;
-        BasisScene.OnNetworkMessageSend?.Invoke(MessageIndex, SerializationUtility.SerializeValue(StoredData, DataFormat),DeliveryMethod);
+        transform.GetLocalPositionAndRotation(out Current.Position, out Current.Rotation);
+        Current.Scale = transform.localScale;
+        BasisScene.OnNetworkMessageSend?.Invoke(MessageIndex, SerializationUtility.SerializeValue(Current, DataFormat),DeliveryMethod);
     }
     public void OnNetworkMessageReceived(ushort PlayerID, ushort messageIndex, byte[] buffer, DeliveryMethod DeliveryMethod)
     {
         if (HasMessageIndexAssigned && messageIndex == MessageIndex)
         {
-            StoredData = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat);
+            Current = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat);
         }
     }
     public void StartRemoteControl()
     {
-        foreach (InteractableObject obj in InteractableObjects)
+        if (InteractableObjects != null)
         {
-            if (obj != null)
-            {
-                obj.StartRemoteControl();
-            }
+            InteractableObjects.StartRemoteControl();
         }
     }
     public void StopRemoteControl()
     {
-        foreach (InteractableObject obj in InteractableObjects)
+        if (InteractableObjects != null)
         {
-            if (obj != null)
-            {
-                obj.StartRemoteControl();
-            }
+            InteractableObjects.StartRemoteControl();
         }
     }
 }
