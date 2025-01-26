@@ -124,8 +124,7 @@ public class PickupInteractable : InteractableObject
             !Inputs.AnyInteracting() && 
             input.TryGetRole(out BasisBoneTrackedRole role) && 
             Inputs.TryGetByRole(role, out BasisInputWrapper found) &&
-            found.Source == null && 
-            !found.IsInteracting &&
+            found.State == InteractInputState.Ignored &&
             IsWithinRange(input.transform.position);
     }
     public override bool CanInteract(BasisInput input)
@@ -133,20 +132,19 @@ public class PickupInteractable : InteractableObject
         // currently hovering can interact only, only one interacting at a time
         return !DisableInteract &&
             !Inputs.AnyInteracting() && 
-            Inputs.Find(input) != null &&
+            Inputs.FindExcludeExtras(input) != null &&
             input.TryGetRole(out BasisBoneTrackedRole role) &&
             Inputs.TryGetByRole(role, out BasisInputWrapper found) &&
-            found.Source != null && 
-            !found.IsInteracting &&
+            found.State == InteractInputState.Hovering &&
             IsWithinRange(input.transform.position);
     }
 
     public override void OnHoverStart(BasisInput input)
     {
-        var found = Inputs.Find(input);
-        var added = Inputs.AddInputByRole(input, false);
+        var found = Inputs.FindExcludeExtras(input);
         if (found != null)
             BasisDebug.LogWarning(nameof(PickupInteractable) + " found input source in list OnHover, this shouldn't happen");
+        var added = Inputs.ChangeStateByRole(found.Value.Role, InteractInputState.Hovering);
         if (!added)
             BasisDebug.LogWarning(nameof(PickupInteractable) + " did not find role for input on hover");
         
@@ -160,7 +158,7 @@ public class PickupInteractable : InteractableObject
         {
             if (!willInteract)
             {
-                if (!Inputs.RemoveByRole(role))
+                if (!Inputs.ChangeStateByRole(role, InteractInputState.Ignored))
                 {
                     BasisDebug.LogWarning(nameof(PickupInteractable) + " found input by role but could not remove by it, this is a bug.");
                 }
@@ -174,7 +172,7 @@ public class PickupInteractable : InteractableObject
         if(input.TryGetRole(out BasisBoneTrackedRole role) && Inputs.TryGetByRole(role, out BasisInputWrapper wrapper))
         {
             // same input that was highlighting previously
-            if (!wrapper.IsInteracting)
+            if (wrapper.State == InteractInputState.Hovering)
             {
                 if (RigidRef != null && KinematicWhileInteracting)
                 {
@@ -184,9 +182,11 @@ public class PickupInteractable : InteractableObject
 
                 // Set ownership to the local player
                 // syncNetworking.IsOwner = true;
-                Inputs.AddInputByRole(input, true);
+                Inputs.ChangeStateByRole(wrapper.Role, InteractInputState.Interacting);
                 RequiresUpdateLoop = true;
                 OnInteractStartEvent?.Invoke(input);
+                // TODO: use calculated position & rotation of the bone we need custom parent constraint for this!
+                // wrapper.BoneControl.OutgoingWorldData
                 SetParentConstraint(input.transform);
             }
             else
@@ -204,9 +204,9 @@ public class PickupInteractable : InteractableObject
     {
         if(input.TryGetRole(out BasisBoneTrackedRole role) && Inputs.TryGetByRole(role, out BasisInputWrapper wrapper))
         {
-            if (wrapper.IsInteracting)
+            if (wrapper.State == InteractInputState.Interacting)
             {
-                Inputs.RemoveByRole(role);
+                Inputs.ChangeStateByRole(wrapper.Role, InteractInputState.Ignored);
 
                 if (KinematicWhileInteracting && RigidRef != null)
                 {
@@ -243,17 +243,16 @@ public class PickupInteractable : InteractableObject
         }
     }
 
-
     public override bool IsInteractingWith(BasisInput input)
     {
-        var found = Inputs.Find(input);
-        return found.HasValue && found.Value.IsInteracting;
+        var found = Inputs.FindExcludeExtras(input);
+        return found.HasValue && found.Value.State == InteractInputState.Interacting;
     }
 
     public override bool IsHoveredBy(BasisInput input)
     {
-        var found = Inputs.Find(input);
-        return found.HasValue && !found.Value.IsInteracting;
+        var found = Inputs.FindExcludeExtras(input);
+        return found.HasValue && found.Value.State == InteractInputState.Hovering;
     }
 
     // this is cached, use it

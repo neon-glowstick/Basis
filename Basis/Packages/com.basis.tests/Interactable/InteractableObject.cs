@@ -3,7 +3,7 @@ using Basis.Scripts.Device_Management.Devices;
 using UnityEngine;
 
 // Needs Rigidbody for hover sphere `OnTriggerStay`
-[System.Serializable]
+[Serializable]
 public abstract partial class InteractableObject: MonoBehaviour 
 {
     public InputSources Inputs = new(0);
@@ -67,6 +67,7 @@ public abstract partial class InteractableObject: MonoBehaviour
         return Vector3.Distance(transform.position, source) <= InteractRange;
     }
 
+    
     /// <summary>
     /// Gets collider on self, override with cached get whenever possible.
     /// </summary>
@@ -106,6 +107,7 @@ public abstract partial class InteractableObject: MonoBehaviour
     }
 
     public abstract void InputUpdate();
+
     /// <summary>
     /// clear is the generic,
     /// a ungeneric would be drop

@@ -8,9 +8,11 @@ using UnityEngine.AddressableAssets;
 using Unity.Burst;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Basis.Scripts.TransformBinders.BoneControl;
+using UnityEngine.Profiling;
 
 public class PlayerInteract : MonoBehaviour
 {
+
 
     [Tooltip("How far the player can interact with objects. Must > hoverDistance")]
     public float raycastDistance = 1.0f;
@@ -49,10 +51,11 @@ public class PlayerInteract : MonoBehaviour
     public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
 
     const string k_InteractableLayer = "Interactable";
+    const int k_UpdatePriority = 201;
     public LayerMask InteractableLayerMask;
     private void Start()
     {
-        BasisLocalPlayer.Instance.LocalBoneDriver.OnSimulate += Simulate;
+        BasisLocalPlayer.Instance.LocalBoneDriver.ReadyToRead.AddAction(k_UpdatePriority, PollSystem);
         var Device = BasisDeviceManagement.Instance.AllInputDevices;
         Device.OnListAdded += OnInputChanged;
         Device.OnListItemRemoved += OnInputRemoved;
@@ -70,7 +73,7 @@ public class PlayerInteract : MonoBehaviour
         {
             asyncOperationLineMaterial.Release();
         }
-        BasisLocalPlayer.Instance.LocalBoneDriver.OnSimulate -= Simulate;
+        BasisLocalPlayer.Instance.LocalBoneDriver.ReadyToRead.RemoveAction(k_UpdatePriority, PollSystem);
         var Device = BasisDeviceManagement.Instance.AllInputDevices;
         Device.OnListAdded -= OnInputChanged;
         Device.OnListItemRemoved -= OnInputRemoved;
@@ -104,8 +107,9 @@ public class PlayerInteract : MonoBehaviour
 
     // simulate after IK update
     [BurstCompile]
-    private void Simulate()
+    private void PollSystem()
     {
+        Profiler.BeginSample("Interactable System");
         if (InteractInputs == null)
         {
             return;
@@ -230,6 +234,7 @@ public class PlayerInteract : MonoBehaviour
                 input.lineRenderer.enabled = false;
             }
         }
+        Profiler.EndSample();
     }
 
     private InteractInput UpdatePickupState(InteractableObject hitInteractable, InteractInput interactInput)

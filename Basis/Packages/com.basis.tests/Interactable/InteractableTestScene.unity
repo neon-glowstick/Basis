@@ -1017,7 +1017,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 690ab0b52a9b06b4498ad303592416aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  disableInteract: 1
+  disableInteract: 0
   InteractRange: 1
   CanEquip: 0
   equipPos: {x: 0, y: 0, z: 0}
