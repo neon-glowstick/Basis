@@ -10,6 +10,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public bool HasMessageIndexAssigned;
     public string NetworkId;
     public int TargetFrequency = 10; // Target update frequency in Hz (10 times per second)
+    public float NetworkLerpSpeed = 7;
     private double _updateInterval; // Time interval between updates
     private double _lastUpdateTime; // Last update timestamp
     public ushort CurrentOwner;
@@ -57,8 +58,9 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     }
     private void OnInteractEndEvent(BasisInput input)
     {
-        BasisNetworkManagement.RemoveOwnership(NetworkId);
+    //    BasisNetworkManagement.RemoveOwnership(NetworkId);
     //    BasisObjectSyncSystem.StartApplyRemoteData(this);
+
     }
     private void OnInteractStartEvent(BasisInput input)
     {
@@ -154,7 +156,6 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             OwnedPickupSet();
         }
     }
-    public float Speed = 7;
     public void LateUpdate()
     {
         if (IsLocalOwner)
@@ -164,7 +165,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         }
         else
         {
-            float Output = Speed * Time.deltaTime;
+            float Output = NetworkLerpSpeed * Time.deltaTime;
             Current.Rotation = Quaternion.Slerp(Current.Rotation, Next.Rotation, Output);
             Current.Position = Vector3.Lerp(Current.Position, Next.Position, Output);
             Current.Scale = Vector3.Lerp(Current.Scale, Next.Scale, Output);
@@ -196,16 +197,10 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     }
     public void StartRemoteControl()
     {
-        if (InteractableObjects != null)
-        {
-            InteractableObjects.StartRemoteControl();
-        }
+        InteractableObjects?.StartRemoteControl();
     }
     public void StopRemoteControl()
     {
-        if (InteractableObjects != null)
-        {
-            InteractableObjects.StopRemoteControl();
-        }
+        InteractableObjects?.StopRemoteControl();
     }
 }
