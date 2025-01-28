@@ -83,7 +83,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         _lastUpdateTime = Time.timeAsDouble;
 
         StartRemoteControl();
-        BasisObjectSyncSystem.StartApplyRemoteData(this);
+     //   BasisObjectSyncSystem.StartApplyRemoteData(this);
     }
     public void OnDisable()
     {
@@ -119,13 +119,13 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             }
             if (IsLocalOwner == false)
             {
-                StartRemoteControl();
-          //      BasisObjectSyncSystem.StartApplyRemoteData(this);
+                //   StartRemoteControl();
+                //      BasisObjectSyncSystem.StartApplyRemoteData(this);
             }
             else
             {
-                StopRemoteControl();
-             //   BasisObjectSyncSystem.StopApplyRemoteData(this);
+             StopRemoteControl();
+                //   BasisObjectSyncSystem.StopApplyRemoteData(this);
             }
             OwnedPickupSet();
         }
@@ -154,12 +154,23 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             OwnedPickupSet();
         }
     }
+    public float Speed = 7;
     public void LateUpdate()
     {
-        if (IsLocalOwner && HasMessageIndexAssigned)
+        if (IsLocalOwner)
         {
             double timeAsDouble = Time.timeAsDouble;
             LateUpdateTime(timeAsDouble);
+        }
+        else
+        {
+            float Output = Speed * Time.deltaTime;
+            Current.Rotation = Quaternion.Slerp(Current.Rotation, Next.Rotation, Output);
+            Current.Position = Vector3.Lerp(Current.Position, Next.Position, Output);
+            Current.Scale = Vector3.Lerp(Current.Scale, Next.Scale, Output);
+
+            transform.SetLocalPositionAndRotation(Current.Position, Current.Rotation);
+            transform.localScale = Current.Scale;
         }
     }
     public void LateUpdateTime(double DoubleTime)
@@ -180,9 +191,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     {
         if (HasMessageIndexAssigned && messageIndex == MessageIndex)
         {
-            Current = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat);
-            transform.SetLocalPositionAndRotation(Current.Position, Current.Rotation);
-            transform.localScale = Current.Scale;
+            Next = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat);
         }
     }
     public void StartRemoteControl()
