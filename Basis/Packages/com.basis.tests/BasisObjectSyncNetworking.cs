@@ -52,18 +52,18 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     }
     public void OnDestroy()
     {
-        BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
-        BasisObjectSyncSystem.StopApplyRemoteData(this);
+   //     BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
+   //     BasisObjectSyncSystem.StopApplyRemoteData(this);
     }
     private void OnInteractEndEvent(BasisInput input)
     {
         BasisNetworkManagement.RemoveOwnership(NetworkId);
-        BasisObjectSyncSystem.StartApplyRemoteData(this);
+    //    BasisObjectSyncSystem.StartApplyRemoteData(this);
     }
     private void OnInteractStartEvent(BasisInput input)
     {
         BasisNetworkManagement.TakeOwnership(NetworkId, (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId);
-        BasisObjectSyncSystem.StopApplyRemoteData(this);
+    //    BasisObjectSyncSystem.StopApplyRemoteData(this);
     }
 
     private void OnNetworkIDSet(string NetworkID)
@@ -103,7 +103,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             HasActiveOwnership = false;
             //drop any interactable objects on this transform.
             StartRemoteControl();
-            BasisObjectSyncSystem.StartApplyRemoteData(this);
+        //    BasisObjectSyncSystem.StartApplyRemoteData(this);
         }
     }
     private void OnOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner)
@@ -120,12 +120,12 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             if (IsLocalOwner == false)
             {
                 StartRemoteControl();
-                BasisObjectSyncSystem.StartApplyRemoteData(this);
+          //      BasisObjectSyncSystem.StartApplyRemoteData(this);
             }
             else
             {
                 StopRemoteControl();
-                BasisObjectSyncSystem.StopApplyRemoteData(this);
+             //   BasisObjectSyncSystem.StopApplyRemoteData(this);
             }
             OwnedPickupSet();
         }
@@ -134,11 +134,11 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     {
         if (IsLocalOwner && HasMessageIndexAssigned)
         {
-            BasisObjectSyncSystem.AddLocallyOwnedPickup(this);
+         //   BasisObjectSyncSystem.AddLocallyOwnedPickup(this);
         }
         else
         {
-            BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
+         //   BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
         }
     }
     public void OnNetworkIdAdded(string uniqueId, ushort ushortId)
@@ -152,6 +152,14 @@ public class BasisObjectSyncNetworking : MonoBehaviour
                 BasisNetworkManagement.RequestCurrentOwnership(NetworkId);
             }
             OwnedPickupSet();
+        }
+    }
+    public void LateUpdate()
+    {
+        if (IsLocalOwner && HasMessageIndexAssigned)
+        {
+            double timeAsDouble = Time.timeAsDouble;
+            LateUpdateTime(timeAsDouble);
         }
     }
     public void LateUpdateTime(double DoubleTime)
@@ -173,6 +181,8 @@ public class BasisObjectSyncNetworking : MonoBehaviour
         if (HasMessageIndexAssigned && messageIndex == MessageIndex)
         {
             Current = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat);
+            transform.SetLocalPositionAndRotation(Current.Position, Current.Rotation);
+            transform.localScale = Current.Scale;
         }
     }
     public void StartRemoteControl()
@@ -186,7 +196,7 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     {
         if (InteractableObjects != null)
         {
-            InteractableObjects.StartRemoteControl();
+            InteractableObjects.StopRemoteControl();
         }
     }
 }

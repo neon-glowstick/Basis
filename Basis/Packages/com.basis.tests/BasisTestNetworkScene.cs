@@ -21,13 +21,13 @@ public class BasisTestNetworkScene : MonoBehaviour
     public string SceneMetaUrl = "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedMeta";
     public string SceneBundleUrl = "https://BasisFramework.b-cdn.net/Worlds/DX11/3dd6aa45-a685-4ed2-ba6d-2d9c2f3c1765_638652274774362697.BasisEncyptedBundle";
 
-    public string GameobjectPassword = "Aurellia";
-    public string GameobjectMetaUrl = "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedMeta";
-    public string GameobjectBundleUrl = "https://BasisFramework.b-cdn.net/Avatars/DX11/ThirdParty/84df873f-4857-47da-88ea-c7b604793489_638661962010243564.BasisEncyptedBundle";
+    public string GameobjectPassword = "862eb77aa76d193284a806f040deb6c6b9d4866bef63f7c829237d524fb979d2";
+    public string GameobjectMetaUrl = "https://BasisFramework.b-cdn.net/Props/DX11/NetworkedTestPickup/ec0fdd4d-9eb2-467c-9b52-40f05932f859_638736352879974628.BasisEncyptedMeta";
+    public string GameobjectBundleUrl = "https://BasisFramework.b-cdn.net/Props/DX11/NetworkedTestPickup/ec0fdd4d-9eb2-467c-9b52-40f05932f859_638736352879974628.BasisEncyptedBundle";
 
     public string PropPassword = "28d6240548cae8229e169777686b4b967ca23b924abb96565823206989795215";
-    public string PropMetaUrl = "https://BasisFramework.b-cdn.net/Props/DX11/a78e45e8-471d-4d9a-85fe-325bcceab982_638734352920637052.BasisEncyptedMeta";
-    public string PropBundleUrl = "https://BasisFramework.b-cdn.net/Props/DX11/a78e45e8-471d-4d9a-85fe-325bcceab982_638734352920637052.BasisEncyptedBundle";
+    public string PropMetaUrl = "https://BasisFramework.b-cdn.net/Props/DX11/90516234-6412-4a1e-a45f-c3f8dfbd7071_638735227126189132.BasisEncyptedMeta";
+    public string PropBundleUrl = "https://BasisFramework.b-cdn.net/Props/DX11/90516234-6412-4a1e-a45f-c3f8dfbd7071_638735227126189132.BasisEncyptedBundle";
     public bool OverrideSpawnPosition;
     public Vector3 Position;
     public void Awake()

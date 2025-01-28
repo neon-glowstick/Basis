@@ -177,7 +177,9 @@ namespace Basis.Network.Server.Ownership
                 }
                 else
                 {
-                    BNL.LogError($"Ownership failed to switch ObjectId " + objectId + " is not in dictionary");
+                    AddOwnership(objectId, newOwnerId);
+                    return true;
+                    //BNL.LogError($"Ownership failed to switch ObjectId " + objectId + " is not in dictionary");
                 }
 
                 BNL.LogError($"Object with ID {objectId} does not exist or ownership change failed.");
