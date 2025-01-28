@@ -15,7 +15,10 @@ namespace Basis.Network.Core.Serializable
             {
                 if (Reader.TryGetUShort(out ushort msgLength))
                 {
-                    bytes = new byte[msgLength];
+                    if (bytes == null || bytes.Length != msgLength)
+                    {
+                        bytes = new byte[msgLength];
+                    }
                     Reader.GetBytes(bytes, msgLength);
                 }
                 else

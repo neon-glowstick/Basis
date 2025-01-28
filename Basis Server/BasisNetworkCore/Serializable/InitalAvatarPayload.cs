@@ -30,7 +30,10 @@ namespace BasisNetworkCore.Serializable
                     {
                         throw new ArgumentException($"Invalid recipientsSize: {payloadSize}");
                     }
-                    payload = new byte[payloadSize];
+                    if (payload == null || payload.Length != payloadSize)
+                    {
+                        payload = new byte[payloadSize];
+                    }
                     if (!Writer.TryGetBytesWithLength(out payload))
                     {
                         throw new ArgumentException($"Failed to read payload!.");

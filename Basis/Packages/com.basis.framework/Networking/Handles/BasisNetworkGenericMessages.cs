@@ -9,6 +9,7 @@ using LiteNetLib.Utils;
 using System.Threading.Tasks;
 using UnityEngine;
 using static BasisNetworkCore.Serializable.SerializableBasis;
+using static DarkRift.Basis_Common.Serializable.SerializableBasis;
 using static SerializableBasis;
 
 

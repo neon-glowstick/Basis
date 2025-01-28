@@ -1,6 +1,4 @@
 using LiteNetLib.Utils;
-using System;
-
 namespace BasisNetworkCore.Serializable
 {
     public static partial class SerializableBasis
@@ -34,7 +32,7 @@ namespace BasisNetworkCore.Serializable
                 }
                 else
                 {
-                    Console.Error.WriteLine($"Unable to read remaining bytes: {bytes}");
+                  BNL.LogError($"Unable to read remaining bytes: {bytes}");
                 }
             }
 
@@ -46,7 +44,7 @@ namespace BasisNetworkCore.Serializable
                 }
                 else
                 {
-                    Console.Error.WriteLine("Unable to serialize. Field was null or empty.");
+                    BNL.LogError("Unable to serialize. Field was null or empty.");
                 }
             }
         }
@@ -64,7 +62,7 @@ namespace BasisNetworkCore.Serializable
                 }
                 else
                 {
-                    Console.Error.WriteLine($"Unable to read remaining bytes: {bytes}");
+                    BNL.LogError($"Unable to read remaining bytes: {bytes}");
                 }
             }
 
@@ -85,16 +83,20 @@ namespace BasisNetworkCore.Serializable
                 if (bytes >= sizeof(ushort))
                 {
                     MessageCount = reader.GetUShort();
-                    Messages = new ServerNetIDMessage[MessageCount];
-                    for (int i = 0; i < MessageCount; i++)
+                    if (Messages == null || Messages.Length != MessageCount)
                     {
-                        Messages[i] = new ServerNetIDMessage();
-                        Messages[i].Deserialize(reader);
+                        Messages = new ServerNetIDMessage[MessageCount];
+                    }
+                    for (int Index = 0; Index < MessageCount; Index++)
+                    {
+                        Messages[Index] = new ServerNetIDMessage();
+                        Messages[Index].Deserialize(reader);
                     }
                 }
                 else
                 {
-                    Console.Error.WriteLine($"Unable to read remaining bytes for MessageCount. Available: {bytes}");
+                    Messages = null;
+                    BNL.LogError($"Unable to read remaining bytes for MessageCount. Available: {bytes}");
                 }
             }
 
@@ -103,14 +105,15 @@ namespace BasisNetworkCore.Serializable
                 if (Messages != null)
                 {
                     writer.Put((ushort)Messages.Length);
-                    foreach (var message in Messages)
+                    for (int Index = 0; Index < Messages.Length; Index++)
                     {
+                        ServerNetIDMessage message = Messages[Index];
                         message.Serialize(writer);
                     }
                 }
                 else
                 {
-                    Console.Error.WriteLine("Unable to serialize. Messages array was null.");
+                    BNL.LogError("Unable to serialize. Messages array was null.");
                 }
             }
         }

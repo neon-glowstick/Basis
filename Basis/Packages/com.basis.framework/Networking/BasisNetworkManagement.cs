@@ -7,7 +7,6 @@ using Basis.Scripts.Networking.Recievers;
 using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
 using Basis.Scripts.TransformBinders.BoneControl;
-using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -20,6 +19,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static BasisNetworkGenericMessages;
+using static DarkRift.Basis_Common.Serializable.SerializableBasis;
 using static SerializableBasis;
 namespace Basis.Scripts.Networking
 {

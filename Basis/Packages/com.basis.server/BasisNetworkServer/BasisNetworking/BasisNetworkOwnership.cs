@@ -1,10 +1,10 @@
 using Basis.Network.Core;
 using BasisNetworkCore;
-using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using static DarkRift.Basis_Common.Serializable.SerializableBasis;
 namespace Basis.Network.Server.Ownership
 {
     public static class BasisNetworkOwnership

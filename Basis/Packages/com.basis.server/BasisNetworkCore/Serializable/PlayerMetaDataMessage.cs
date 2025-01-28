@@ -1,7 +1,4 @@
-
-using DarkRift;
 using LiteNetLib.Utils;
-
 public static partial class SerializableBasis
 {
     public struct PlayerMetaDataMessage

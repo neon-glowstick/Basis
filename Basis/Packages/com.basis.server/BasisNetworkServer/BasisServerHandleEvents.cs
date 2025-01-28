@@ -81,7 +81,7 @@ namespace BasisServerHandle
             BasisNetworkOwnership.RemovePlayerOwnership(id);
             BasisSavedState.RemovePlayer(peer);
             BasisServerReductionSystem.RemovePlayer(peer);
-            if (Peers.Count == 0)
+            if (Peers.IsEmpty)
             {
                 BasisNetworkIDDatabase.Reset();
                 BasisNetworkResourceManagement.Reset();
@@ -158,20 +158,23 @@ namespace BasisServerHandle
                     chunkedNetPeerArray.SetPeer(PeerId, newPeer);
                     BasisPlayerArray.AddPlayer(newPeer);
                     BNL.Log($"Peer connected: {newPeer.Id}");
-                    ReadyMessage readyMessage = new ReadyMessage();
+
+                    ReadyMessage readyMessage = ThreadSafeMessagePool<ReadyMessage>.Rent();
+
+
                     readyMessage.Deserialize(request.Data, false);
                     if (readyMessage.WasDeserializedCorrectly())
                     {
                         ServerNetIDMessage[] SUIM = BasisNetworkIDDatabase.GetAllNetworkID();
-                        ServerUniqueIDMessages ServerUniqueIDMessageArray = new ServerUniqueIDMessages
-                        {
-                            Messages = SUIM
-                        };
+                        ServerUniqueIDMessages ServerUniqueIDMessageArray = ThreadSafeMessagePool<ServerUniqueIDMessages>.Rent();
+                        ServerUniqueIDMessageArray.Messages = SUIM;
+
                         NetDataWriter Writer = new NetDataWriter(true, 4);
                         ServerUniqueIDMessageArray.Serialize(Writer);
                         newPeer.Send(Writer, BasisNetworkCommons.NetIDAssigns, DeliveryMethod.ReliableOrdered);
                         SendRemoteSpawnMessage(newPeer, readyMessage);
                         BasisNetworkResourceManagement.SendOutAllResources(newPeer);
+                        ThreadSafeMessagePool<ServerUniqueIDMessages>.Return(ServerUniqueIDMessageArray);
                     }
                     else
                     {
@@ -179,6 +182,7 @@ namespace BasisServerHandle
                         BasisPlayerArray.RemovePlayer(newPeer);
                         RejectWithReason(request, "Payload Provided was invalid!");
                     }
+                    ThreadSafeMessagePool<ReadyMessage>.Return(readyMessage);
                 }
                 else
                 {
@@ -326,7 +330,7 @@ namespace BasisServerHandle
 
         public static void HandleVoiceMessage(NetPacketReader Reader, NetPeer peer)
         {
-            AudioSegmentDataMessage audioSegment = new AudioSegmentDataMessage();
+            AudioSegmentDataMessage audioSegment = ThreadSafeMessagePool<AudioSegmentDataMessage>.Rent();
             audioSegment.Deserialize(Reader);
             Reader.Recycle();
             ServerAudioSegmentMessage ServerAudio = new ServerAudioSegmentMessage
@@ -334,6 +338,7 @@ namespace BasisServerHandle
                 audioSegmentData = audioSegment
             };
             SendVoiceMessageToClients(ServerAudio, BasisNetworkCommons.VoiceChannel, peer);
+            ThreadSafeMessagePool<AudioSegmentDataMessage>.Return(audioSegment);
         }
 
         public static void SendVoiceMessageToClients(ServerAudioSegmentMessage audioSegment, byte channel, NetPeer sender)

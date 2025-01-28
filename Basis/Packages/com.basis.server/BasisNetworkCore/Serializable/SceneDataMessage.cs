@@ -28,7 +28,10 @@ public static partial class SerializableBasis
                 {
                     throw new ArgumentException($"Invalid recipientsSize: {recipientsSize}");
                 }
-                recipients = new ushort[recipientsSize];
+                if (recipients == null || recipients.Length != recipientsSize)
+                {
+                    recipients = new ushort[recipientsSize];
+                }
                 for (int index = 0; index < recipientsSize; index++)
                 {
                     if (!Writer.TryGetUShort(out recipients[index]))
@@ -40,7 +43,14 @@ public static partial class SerializableBasis
                 // Read remaining bytes as payload
                 if (Writer.AvailableBytes > 0)
                 {
-                    payload = Writer.GetRemainingBytes();
+                    if (payload != null && payload.Length == Writer.AvailableBytes)
+                    {
+                        Writer.GetBytes(payload, Writer.AvailableBytes);
+                    }
+                    else
+                    {
+                        payload = Writer.GetRemainingBytes();
+                    }
                 }
             }
             else

@@ -27,8 +27,10 @@ public static partial class SerializableBasis
             int ushortCount = remainingBytes / sizeof(ushort);
 
             // Initialize the array with the calculated size
-            users = new ushort[ushortCount];
-
+            if (users == null || users.Length != ushortCount)
+            {
+                users = new ushort[ushortCount];
+            }
             // Read each ushort value into the array
             for (int index = 0; index < ushortCount; index++)
             {
@@ -37,10 +39,13 @@ public static partial class SerializableBasis
         }
         public void Serialize(NetDataWriter Writer)
         {
-            int Count = users.Length;
-            for (int Index = 0; Index < Count; Index++)
+            if (users != null)
             {
-                Writer.Put(users[Index]);
+                int Count = users.Length;
+                for (int Index = 0; Index < Count; Index++)
+                {
+                    Writer.Put(users[Index]);
+                }
             }
         }
     }
