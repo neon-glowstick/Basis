@@ -48,22 +48,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b7151ccf11e9fe47b59aeba34c68e4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LocalCameraDriver: {fileID: 0}
-  directionToCamera: {x: 0, y: 0, z: 0}
+  dirToCamera: {x: 0, y: 0, z: 0}
   HipTarget:
-    TargetControl:
-      LerpAmountNormal: 0
-      LerpAmountFastMovement: 0
-      AngleBeforeSpeedup: 0
-      HasRotationalTarget: 0
-      HasLineDraw: 0
-      LineDrawIndex: 0
-      HasTarget: 0
-      Offset:
-        x: 0
-        y: 0
-        z: 0
-      LerpAmount: 0
+    LerpAmountNormal: 0
+    LerpAmountFastMovement: 0
+    AngleBeforeSpeedup: 0
+    HasRotationalTarget: 0
+    HasLineDraw: 0
+    LineDrawIndex: 0
+    HasTarget: 0
+    Offset:
+      x: 0
+      y: 0
+      z: 0
+    LerpAmount: 0
     OutGoingData:
       rotation:
         value:
@@ -157,19 +155,18 @@ MonoBehaviour:
     rotationWeight: 1
     GeneralLocation: 0
   MouthTarget:
-    TargetControl:
-      LerpAmountNormal: 0
-      LerpAmountFastMovement: 0
-      AngleBeforeSpeedup: 0
-      HasRotationalTarget: 0
-      HasLineDraw: 0
-      LineDrawIndex: 0
-      HasTarget: 0
-      Offset:
-        x: 0
-        y: 0
-        z: 0
-      LerpAmount: 0
+    LerpAmountNormal: 0
+    LerpAmountFastMovement: 0
+    AngleBeforeSpeedup: 0
+    HasRotationalTarget: 0
+    HasLineDraw: 0
+    LineDrawIndex: 0
+    HasTarget: 0
+    Offset:
+      x: 0
+      y: 0
+      z: 0
+    LerpAmount: 0
     OutGoingData:
       rotation:
         value:
@@ -273,6 +270,8 @@ MonoBehaviour:
   OutOfRangeColor: {r: 0.10622106, g: 0.23037562, b: 0.2924528, a: 0.7490196}
   transitionDuration: 0.3
   returnDelay: 0.4
+  cachedDirection: {x: 0, y: 0, z: 0}
+  cachedRotation: {x: 0, y: 0, z: 0, w: 0}
   HasRendererCheckWiredUp: 0
   IsVisible: 1
 --- !u!1 &3714582096794801474
@@ -532,10 +531,10 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 1
-  m_Size: {x: 50, y: 2}
+  m_Size: {x: 10.24, y: 10.24}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5171251715006460910
@@ -619,10 +618,10 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 1
-  m_Size: {x: 50, y: 10}
+  m_Size: {x: 10.24, y: 10.24}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5440282022702647150

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 namespace Basis.Scripts.Avatar
@@ -161,8 +162,9 @@ namespace Basis.Scripts.Avatar
         }
         public static async Task<GameObject> DownloadAndLoadAvatar(BasisLoadableBundle BasisLoadableBundle, BasisPlayer BasisPlayer)
         {
+            Guid UniqueID = new Guid();
             GameObject Output = await BasisLoadHandler.LoadGameObjectBundle(BasisLoadableBundle, true, BasisPlayer.ProgressReportAvatarLoad, new CancellationToken(), BasisPlayer.transform.position, Quaternion.identity,Vector3.one,false, BasisPlayer.transform);
-            BasisPlayer.ProgressReportAvatarLoad.ReportProgress(100, "Setting Position");
+            BasisPlayer.ProgressReportAvatarLoad.ReportProgress(UniqueID.ToString(), 100, "Setting Position");
             Output.transform.SetPositionAndRotation(BasisPlayer.transform.position, Quaternion.identity);
             return Output;
         }

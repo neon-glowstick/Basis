@@ -20,7 +20,7 @@ public static class BasisIOManagement
     public static async Task DownloadFile(string url, string localFilePath, BasisProgressReport progressCallback, CancellationToken cancellationToken = default)
     {
         BasisDebug.Log($"Starting file download from {url}");
-
+        Guid UniqueID = new Guid();
         // Null or empty URL check
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -62,7 +62,7 @@ public static class BasisIOManagement
                 }
 
                 // Report progress (0% to 100%)
-                progressCallback.ReportProgress(asyncOperation.webRequest.downloadProgress * 100, "downloading data");
+                progressCallback.ReportProgress(UniqueID.ToString(), asyncOperation.webRequest.downloadProgress * 100, "downloading data");
                 // BasisDebug.Log("downloading file " + asyncOperation.webRequest.downloadProgress);
                 await Task.Yield();
             }
@@ -168,6 +168,7 @@ public static class BasisIOManagement
             BasisDebug.LogError($"Source file not found: {sourceFilePath}");
             return false;
         }
+        Guid UniqueID = new Guid();
 
         try
         {
@@ -189,7 +190,7 @@ public static class BasisIOManagement
 
                     // Calculate and report progress
                     float progress = (float)totalBytesCopied / totalBytes;
-                    Report.ReportProgress(progress * 100, "copying data");
+                    Report.ReportProgress(UniqueID.ToString(), progress * 100, "copying data");
 
                     // Allow other tasks to run
                     await Task.Yield();

@@ -20,7 +20,7 @@ namespace Basis.Scripts.Device_Management
     public partial class BasisDeviceManagement : MonoBehaviour
     {
         public bool FireOffNetwork = true;
-        public bool HasEvents = false;
+        public static bool HasEvents = false;
         public const string InvalidConst = "Invalid";
         public string[] BakedInCommandLineArgs = new string[] { };
         public static string NetworkManagement = "NetworkManagement";
@@ -61,7 +61,7 @@ namespace Basis.Scripts.Device_Management
         public event Action<string> OnBootModeChanged;
         public event Action<string> OnBootModeStopped;
         public delegate Task InitializationCompletedHandler();
-        public event InitializationCompletedHandler OnInitializationCompleted;
+        public static event InitializationCompletedHandler OnInitializationCompleted;
         public BasisDeviceNameMatcher BasisDeviceNameMatcher;
         [SerializeField]
         public BasisObservableList<BasisInput> AllInputDevices = new BasisObservableList<BasisInput>();
@@ -106,6 +106,7 @@ namespace Basis.Scripts.Device_Management
                 BasisXRManagement.CheckForPass -= CheckForPass;
 
                 OnInitializationCompleted -= RunAfterInitialized;
+                HasEvents = false;
             }
         }
         public static void UnassignFBTrackers()

@@ -169,7 +169,7 @@ namespace Basis.Scripts.UI.NamePlate
                 BasisRemotePlayer.FaceRenderer.DestroyCalled -= AvatarUnloaded;
             }
         }
-        private void OnProgressStart()
+        private void OnProgressStart(string UniqueID)
         {
             EnqueueOnMainThread(() =>
             {
@@ -177,7 +177,7 @@ namespace Basis.Scripts.UI.NamePlate
                 Loadingtext.gameObject.SetActive(true);
             });
         }
-        private void OnProgressComplete()
+        private void OnProgressComplete(string UniqueID)
         {
             EnqueueOnMainThread(() =>
             {
@@ -185,12 +185,12 @@ namespace Basis.Scripts.UI.NamePlate
                 Loadingbar.gameObject.SetActive(false);
             });
         }
-        public void ProgresReport(float progress, string info)
+        public void ProgresReport(string UniqueID, float progress, string info)
         {
             EnqueueOnMainThread(() =>
             {
                 Loadingtext.text = info;
-                UpdateProgressBar(progress);
+                UpdateProgressBar( UniqueID, progress);
             });
         }
         private static void EnqueueOnMainThread(Action action)
@@ -200,7 +200,7 @@ namespace Basis.Scripts.UI.NamePlate
                 RemoteNamePlateDriver.actions.Enqueue(action);
             } 
         }
-        public void UpdateProgressBar(float progress)
+        public void UpdateProgressBar(string UniqueID,float progress)
         {
             Vector2 scale = Loadingbar.size;
             scale.x = progress/2;

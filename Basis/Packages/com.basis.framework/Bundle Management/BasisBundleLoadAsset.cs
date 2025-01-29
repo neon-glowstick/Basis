@@ -1,5 +1,7 @@
 using Basis.Scripts.BasisSdk;
+using System;
 using System.Threading.Tasks;
+using System.Xml;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 public static class BasisBundleLoadAsset
@@ -48,6 +50,7 @@ public static class BasisBundleLoadAsset
     }
     public static async Task<Scene> LoadSceneFromBundleAsync(BasisTrackedBundleWrapper bundle, bool MakeActiveScene, BasisProgressReport progressCallback)
     {
+        Guid UniqueID = new Guid();
         bool AssignedIncrement = false;
         string[] scenePaths = bundle.AssetBundle.GetAllScenePaths();
         if (scenePaths.Length == 0)
@@ -63,7 +66,7 @@ public static class BasisBundleLoadAsset
             // Track scene loading progress
             while (!asyncLoad.isDone)
             {
-                progressCallback.ReportProgress(50 + asyncLoad.progress * 50, "loading scene"); // Progress from 50 to 100 during scene load
+                progressCallback.ReportProgress(UniqueID.ToString(),50 + asyncLoad.progress * 50, "loading scene"); // Progress from 50 to 100 during scene load
                 await Task.Yield();
             }
 
@@ -79,7 +82,7 @@ public static class BasisBundleLoadAsset
                     AssignedIncrement = bundle.Increment();
                 }
                 BasisDebug.Log("Scene set as active: " + loadedScene.name);
-                progressCallback.ReportProgress(100, "loading scene"); // Set progress to 100 when done
+                progressCallback.ReportProgress(UniqueID.ToString(), 100, "loading scene"); // Set progress to 100 when done
                 return loadedScene;
             }
             else

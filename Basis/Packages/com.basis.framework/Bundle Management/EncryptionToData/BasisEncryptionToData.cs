@@ -1,4 +1,5 @@
 using BasisSerializer.OdinSerializer;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -11,9 +12,9 @@ public static class BasisEncryptionToData
         {
             VP = Password
         };
-
+        Guid UniqueID = new Guid();
         // Decrypt the file asynchronously
-        byte[] LoadedBundleData = await BasisEncryptionWrapper.DecryptFileAsync(BasisPassword, FilePath, progressCallback, 8388608);
+        byte[] LoadedBundleData = await BasisEncryptionWrapper.DecryptFileAsync(UniqueID.ToString(), BasisPassword, FilePath, progressCallback, 8388608);
 
         // Start the AssetBundle loading process from memory with CRC check
         AssetBundleCreateRequest assetBundleCreateRequest = AssetBundle.LoadFromMemoryAsync(LoadedBundleData, CRC);
@@ -33,7 +34,7 @@ public static class BasisEncryptionToData
                 lastReportedProgress = progress;
 
                 // Call the progress callback with the current progress
-                progressCallback.ReportProgress(progress, "loading bundle");
+                progressCallback.ReportProgress(UniqueID.ToString(),progress, "loading bundle");
             }
 
             // Wait a short period before checking again to avoid busy waiting
@@ -41,7 +42,7 @@ public static class BasisEncryptionToData
         }
 
         // Ensure progress reaches 100% after completion
-        progressCallback.ReportProgress(100, "loading bundle");
+        progressCallback.ReportProgress(UniqueID.ToString(), 100, "loading bundle");
 
         // Await the request completion
         await assetBundleCreateRequest;
@@ -54,8 +55,9 @@ public static class BasisEncryptionToData
         {
             VP = BasisLoadableBundle.UnlockPassword
         };
+        Guid UniqueID = new Guid();
         // BasisDebug.Log("BasisLoadableBundle.UnlockPassword" + BasisLoadableBundle.UnlockPassword);
-        byte[] LoadedMetaData = await BasisEncryptionWrapper.DecryptFileAsync(BasisPassword, FilePath, progressCallback, 81920);
+        byte[] LoadedMetaData = await BasisEncryptionWrapper.DecryptFileAsync(UniqueID.ToString(), BasisPassword, FilePath, progressCallback, 81920);
         BasisDebug.Log("Converting decrypted meta file to BasisBundleInformation...", BasisDebug.LogTag.Event);
         BasisLoadableBundle.BasisBundleInformation = ConvertBytesToJson(LoadedMetaData);
         return BasisLoadableBundle;

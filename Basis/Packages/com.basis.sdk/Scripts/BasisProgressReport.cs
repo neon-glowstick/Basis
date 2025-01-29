@@ -3,9 +3,9 @@ using System;
 public class BasisProgressReport
 {
     // Delegate definitions for various stages of progress
-    public delegate void ProgressStart();
-    public delegate void ProgressReportState(float progress, string eventDescription);
-    public delegate void ProgressComplete();
+    public delegate void ProgressStart(string UniqueID);
+    public delegate void ProgressReportState(string UniqueID, float progress, string eventDescription);
+    public delegate void ProgressComplete(string UniqueID);
 
     // Event handlers that can be set by the user
     public event ProgressStart OnProgressStart;
@@ -18,12 +18,12 @@ public class BasisProgressReport
     /// <summary>
     /// Initializes and starts the progress reporting, invoking the start callback.
     /// </summary>
-    public void StartProgress()
+    public void StartProgress(string UniqueID)
     {
         if (_isProgressStarted) return; // Prevent starting if already in progress
 
         _isProgressStarted = true;
-        OnProgressStart?.Invoke();
+        OnProgressStart?.Invoke(UniqueID);
     }
 
     /// <summary>
@@ -32,31 +32,31 @@ public class BasisProgressReport
     /// </summary>
     /// <param name="progress">A float value between 0 and 100 representing the progress.</param>
     /// <param name="eventDescription">A string describing the current event or stage.</param>
-    public void ReportProgress(float progress, string eventDescription)
+    public void ReportProgress(string UniqueID, float progress, string eventDescription)
     {
         if (!_isProgressStarted)
         {
-            StartProgress();
+            StartProgress(UniqueID);
         }
 
         progress = Math.Clamp(progress, 0f, 100f); // Ensuring progress is within bounds
-        OnProgressReport?.Invoke(progress, eventDescription);
+        OnProgressReport?.Invoke(UniqueID, progress, eventDescription);
 
         // Automatically complete progress if it reaches 100
         if (progress >= 100f)
         {
-            CompleteProgress();
+            CompleteProgress(UniqueID);
         }
     }
 
     /// <summary>
     /// Completes the progress reporting, invokes the complete callback, and resets state.
     /// </summary>
-    public void CompleteProgress()
+    public void CompleteProgress(string UniqueID)
     {
         if (!_isProgressStarted) return; // Prevent completing if not started
 
-        OnProgressComplete?.Invoke();
+        OnProgressComplete?.Invoke(UniqueID);
         _isProgressStarted = false; // Reset progress state for reuse
     }
 }
