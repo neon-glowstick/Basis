@@ -1,4 +1,4 @@
-﻿using Basis.Network.Core;
+using Basis.Network.Core;
 using System;
 using System.IO;
 using System.Net;
@@ -97,7 +97,28 @@ namespace Basis.Network.Server
 
                     using (StreamWriter writer = new StreamWriter(context.Response.OutputStream))
                     {
-                        writer.WriteLine($"{{\"listening\": true, \"startTime\": \"{startTime:yyyy-MM-ddTHH:mm:ss.fffZ}\", \"version\": \"{BasisNetworkVersion.ServerVersion}\"}}");
+                        if (  BasisNetworkServer.Configuration.EnableStatistics )
+                        {
+			    int ServerCount = BasisNetworkServer.server.ConnectedPeersCount; // Current user count
+			    long sent = BasisNetworkServer.server.Statistics.BytesSent; 
+			    long recv = BasisNetworkServer.server.Statistics.BytesReceived;
+			    int capacity = BasisNetworkServer.Configuration.PeerLimit;
+			    DateTime accessed = DateTime.Now;
+
+                            string output = $"{{\"listening\": true, " +
+                                $"\"visitors\": \"{ServerCount}\", " + // This is CCU but we are using non gaming terminology on purpose.
+                                $"\"capacity\": \"{capacity}\", " +
+                                $"\"sent\": \"{sent}\", " + // Bytes sent
+                                $"\"recv\": \"{recv}\", " + // Bytes recieved 
+                                $"\"currentTime\": \"{accessed:yyyy-MM-ddTHH:mm:ss.fffZ}\", " +
+                                $"\"startTime\": \"{startTime:yyyy-MM-ddTHH:mm:ss.fffZ}\", " +
+                                $"\"version\": \"{BasisNetworkVersion.ServerVersion}\"}}";
+                            writer.WriteLine(output);
+                        }
+                        else
+                        {
+                            writer.WriteLine($"{{\"listening\": true, \"startTime\": \"{startTime:yyyy-MM-ddTHH:mm:ss.fffZ}\", \"version\": \"{BasisNetworkVersion.ServerVersion}\"}}");
+                        }
                     }
                 }
             }
