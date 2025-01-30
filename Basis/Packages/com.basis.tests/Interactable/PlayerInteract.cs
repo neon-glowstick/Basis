@@ -56,9 +56,9 @@ public class PlayerInteract : MonoBehaviour
     private void Start()
     {
         BasisLocalPlayer.Instance.LocalBoneDriver.ReadyToRead.AddAction(k_UpdatePriority, PollSystem);
-        var Device = BasisDeviceManagement.Instance.AllInputDevices;
-        Device.OnListAdded += OnInputChanged;
-        Device.OnListItemRemoved += OnInputRemoved;
+        var Devices = BasisDeviceManagement.Instance.AllInputDevices;
+        Devices.OnListAdded += OnInputChanged;
+        Devices.OnListItemRemoved += OnInputRemoved;
 
         // TODO add default layer ect to mask
         InteractableLayerMask = LayerMask.NameToLayer(k_InteractableLayer);

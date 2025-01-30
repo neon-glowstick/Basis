@@ -1,5 +1,8 @@
 using System;
+using System.Threading.Tasks;
+using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management.Devices;
+using Basis.Scripts.Drivers;
 using UnityEngine;
 
 // Needs Rigidbody for hover sphere `OnTriggerStay`
@@ -30,12 +33,14 @@ public abstract partial class InteractableObject: MonoBehaviour
         }
     }
     public float InteractRange = 1.0f;
-    [Space(5)]
-    public bool CanEquip = false;
-    public Vector3 equipPos;
-    public Quaternion equipRot;
+    [Space(10)]
+    public bool Equippable = false;
+    [Tooltip("Provide an offset for interactable to use, e.g holding position")]
+    public Vector3 StrictPosition;
+    public Quaternion StrictRotation;
+
     [NonSerialized]
-    public bool RequiresUpdateLoop;
+    public bool RequiresUpdateLoop = false;
     /// <summary>
     /// 1. to block interaction when puppeted.
     /// 2. (example) iskinematic set
@@ -50,6 +55,46 @@ public abstract partial class InteractableObject: MonoBehaviour
     public Action<BasisInput, bool> OnHoverEndEvent;
     public Action OnInteractEnable;
     public Action OnInteractDisable; 
+
+    // Having Start/OnDestroy as virtuals is icky but I cant think of a more elegant way of doing this.
+    // We already recommend calling the base method for Interact/Hover Start/End, so hopefully it wont be too big an issue.
+    public virtual void Awake()
+    {
+        BasisLocalPlayer.OnLocalPlayerCreatedAndReady += () => 
+        {
+            var Devices = Basis.Scripts.Device_Management.BasisDeviceManagement.Instance.AllInputDevices;
+            Devices.OnListAdded += OnInputAdded;
+            Devices.OnListItemRemoved += OnInputRemoved;
+        };
+    }
+
+    public virtual void OnDestroy()
+    {
+        var Devices = Basis.Scripts.Device_Management.BasisDeviceManagement.Instance.AllInputDevices;
+        Devices.OnListAdded -= OnInputAdded;
+        Devices.OnListItemRemoved -= OnInputRemoved;
+    }
+
+    private void OnInputAdded(BasisInput input)
+    {
+        // dont expect to add non-role inputs
+        // NOTE: when extra (non role) inputs are needed we are going to need to rewrite this
+        if(!input.TryGetRole(out Basis.Scripts.TransformBinders.BoneControl.BasisBoneTrackedRole r))
+            return;
+
+        
+        if(!Inputs.SetInputByRole(input, InteractInputState.Ignored))
+            BasisDebug.LogError("New input added not setup as expected by InteractableObject");
+        else
+            Debug.Log($"Input added: {Inputs.TryGetByRole(r, out BasisInputWrapper w)}, {w.Source.gameObject.name}, {w.GetState()}", input.gameObject);
+    }
+
+    private void OnInputRemoved(BasisInput input)
+    {        
+        if (input.TryGetRole(out Basis.Scripts.TransformBinders.BoneControl.BasisBoneTrackedRole role))
+            if (!Inputs.RemoveByRole(role))
+                BasisDebug.LogError("Something went wrong while removing input");
+    }
 
     /// <summary>
     /// Check if object is within range based on its transform and Interact Range.

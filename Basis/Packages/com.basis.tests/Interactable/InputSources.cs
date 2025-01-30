@@ -27,12 +27,12 @@ public abstract partial class InteractableObject
 
         public readonly bool AnyInteracting(bool skipExtras = true)
         {
-            bool influencing = IsInfluencing(desktopCenterEye.State) ||
-                            IsInfluencing(leftHand.State) ||
-                            IsInfluencing(rightHand.State);
+            bool influencing = IsInfluencing(desktopCenterEye.GetState()) ||
+                            IsInfluencing(leftHand.GetState()) ||
+                            IsInfluencing(rightHand.GetState());
             if (!skipExtras)
             {
-                influencing |= extras.Any(x => IsInfluencing(x.State));
+                influencing |= extras.Any(x => IsInfluencing(x.GetState()));
             }
             return influencing;
         }
@@ -43,15 +43,15 @@ public abstract partial class InteractableObject
                 return null;
             // done this way to avoid the array GC alloc
             var inUDI = input.UniqueDeviceIdentifier;
-            if (desktopCenterEye.State != InteractInputState.NotAdded && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI)
+            if (desktopCenterEye.GetState() != InteractInputState.NotAdded && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI)
             {
                 return desktopCenterEye;
             }
-            else if (leftHand.State != InteractInputState.NotAdded && leftHand.Source.UniqueDeviceIdentifier == inUDI)
+            else if (leftHand.GetState() != InteractInputState.NotAdded && leftHand.Source.UniqueDeviceIdentifier == inUDI)
             {
                 return leftHand;
             }
-            else if (rightHand.State != InteractInputState.NotAdded && rightHand.Source.UniqueDeviceIdentifier == inUDI)
+            else if (rightHand.GetState() != InteractInputState.NotAdded && rightHand.Source.UniqueDeviceIdentifier == inUDI)
             {
                 return rightHand;
             }
@@ -60,17 +60,19 @@ public abstract partial class InteractableObject
         }
 
 
-        public readonly bool Contains(BasisInput input, bool skipExtras = true)
+        public readonly bool IsInputAdded(BasisInput input, bool skipExtras = true)
         {
-            string inUDI = input != null ? input.UniqueDeviceIdentifier : "";
+            if (input == null)
+                return false;
+            string inUDI = input.UniqueDeviceIdentifier;
 
-            bool contains = leftHand.State != InteractInputState.NotAdded && leftHand.Source.UniqueDeviceIdentifier == inUDI || 
-                            rightHand.State != InteractInputState.NotAdded && rightHand.Source.UniqueDeviceIdentifier == inUDI || 
-                            desktopCenterEye.State != InteractInputState.NotAdded && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI;
+            bool contains = leftHand.GetState() != InteractInputState.NotAdded && leftHand.Source.UniqueDeviceIdentifier == inUDI || 
+                            rightHand.GetState() != InteractInputState.NotAdded && rightHand.Source.UniqueDeviceIdentifier == inUDI || 
+                            desktopCenterEye.GetState() != InteractInputState.NotAdded && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI;
 
             if (!skipExtras)
             {
-                contains |= extras.Any(x => x.State != InteractInputState.NotAdded && x.Source.UniqueDeviceIdentifier == inUDI);
+                contains |= extras.Any(x => x.GetState() != InteractInputState.NotAdded && x.Source.UniqueDeviceIdentifier == inUDI);
             }
             return contains;
         }
@@ -86,7 +88,7 @@ public abstract partial class InteractableObject
             return primary;
         }
 
-        public bool AddInput(BasisInput input, InteractInputState state)
+        public bool SetInputByRole(BasisInput input, InteractInputState state)
         {
             var created = BasisInputWrapper.TryNewTracking(input, state, out BasisInputWrapper wrapper);
             if (!created)
@@ -131,14 +133,11 @@ public abstract partial class InteractableObject
             switch (role)
             {
                 case BasisBoneTrackedRole.CenterEye:
-                    desktopCenterEye.State = newState;
-                    return true;
+                    return desktopCenterEye.TrySetState(newState);
                 case BasisBoneTrackedRole.LeftHand:
-                    leftHand.State = newState;
-                    return true;
+                    return leftHand.TrySetState(newState);
                 case BasisBoneTrackedRole.RightHand:
-                    rightHand.State = newState;
-                    return true;
+                    return rightHand.TrySetState(newState);
                 default:
                     return false;
             }
