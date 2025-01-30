@@ -1,4 +1,5 @@
 using Basis.Scripts.BasisSdk.Players;
+using Basis.Scripts.Device_Management;
 using Basis.Scripts.Networking;
 using Basis.Scripts.TransformBinders.BoneControl;
 using System;
@@ -37,9 +38,7 @@ namespace Basis.Scripts.UI.NamePlate
             HipTarget = hipTarget;
             MouthTarget = BasisRemotePlayer.MouthControl;
             Text.text = BasisRemotePlayer.DisplayName;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport += ProgresReport;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressComplete += OnProgressComplete;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressStart += OnProgressStart;
+            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport += ProgressReport;
             BasisRemotePlayer.AudioReceived += OnAudioReceived;
             BasisRemotePlayer.OnAvatarSwitched += RebuildRenderCheck;
             BasisRemotePlayer.OnAvatarSwitchedFallBack += RebuildRenderCheck;
@@ -154,9 +153,7 @@ namespace Basis.Scripts.UI.NamePlate
         }
         public void OnDestroy()
         {
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport -= ProgresReport;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressComplete -= OnProgressComplete;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressStart -= OnProgressStart;
+            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport -= ProgressReport;
             BasisRemotePlayer.AudioReceived -= OnAudioReceived;
             DeInitalizeCallToRender();
             RemoteNamePlateDriver.Instance.RemoveNamePlate(this);
@@ -169,36 +166,33 @@ namespace Basis.Scripts.UI.NamePlate
                 BasisRemotePlayer.FaceRenderer.DestroyCalled -= AvatarUnloaded;
             }
         }
-        private void OnProgressStart(string UniqueID)
+        public bool HasProgressBarVisible = false;
+        public void ProgressReport(string UniqueID, float progress, string info)
         {
-            EnqueueOnMainThread(() =>
-            {
-                Loadingbar.gameObject.SetActive(true);
-                Loadingtext.gameObject.SetActive(true);
-            });
-        }
-        private void OnProgressComplete(string UniqueID)
-        {
-            EnqueueOnMainThread(() =>
-            {
-                Loadingtext.gameObject.SetActive(false);
-                Loadingbar.gameObject.SetActive(false);
-            });
-        }
-        public void ProgresReport(string UniqueID, float progress, string info)
-        {
-            EnqueueOnMainThread(() =>
-            {
-                Loadingtext.text = info;
-                UpdateProgressBar( UniqueID, progress);
-            });
-        }
-        private static void EnqueueOnMainThread(Action action)
-        {
-            lock (RemoteNamePlateDriver.actions)
-            {
-                RemoteNamePlateDriver.actions.Enqueue(action);
-            } 
+            BasisDeviceManagement.EnqueueOnMainThread(() =>
+              {
+                  if (progress == 100)
+                  {
+                      if (HasProgressBarVisible)
+                      {
+                          Loadingtext.gameObject.SetActive(false);
+                          Loadingbar.gameObject.SetActive(false);
+                          HasProgressBarVisible = false;
+                      }
+                  }
+                  else
+                  {
+                      if (HasProgressBarVisible == false)
+                      {
+                          Loadingbar.gameObject.SetActive(true);
+                          Loadingtext.gameObject.SetActive(true);
+                          HasProgressBarVisible = true;
+                      }
+
+                      Loadingtext.text = info;
+                      UpdateProgressBar(UniqueID, progress);
+                  }
+              });
         }
         public void UpdateProgressBar(string UniqueID,float progress)
         {

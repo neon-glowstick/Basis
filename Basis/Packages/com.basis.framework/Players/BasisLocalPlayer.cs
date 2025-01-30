@@ -102,6 +102,7 @@ namespace Basis.Scripts.BasisSdk.Players
             {
                 BasisDebug.LogError("Cant Find Scene Factory");
             }
+            BasisUILoadingBar.Initalize();
         }
         public async Task LoadInitalAvatar(BasisDataStore.BasisSavedAvatar LastUsedAvatar)
         {
@@ -201,6 +202,7 @@ namespace Basis.Scripts.BasisSdk.Players
             }
             MicrophoneRecorder.OnPausedAction -= OnPausedEvent;
             LocalBoneDriver.DeInitalzeGizmos();
+            BasisUILoadingBar.DeInitalize();
         }
         public void DriveAudioToViseme()
         {

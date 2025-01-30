@@ -50,7 +50,7 @@ public static class BasisBundleLoadAsset
     }
     public static async Task<Scene> LoadSceneFromBundleAsync(BasisTrackedBundleWrapper bundle, bool MakeActiveScene, BasisProgressReport progressCallback)
     {
-        Guid UniqueID = new Guid();
+        Guid UniqueID = Guid.NewGuid();
         bool AssignedIncrement = false;
         string[] scenePaths = bundle.AssetBundle.GetAllScenePaths();
         if (scenePaths.Length == 0)

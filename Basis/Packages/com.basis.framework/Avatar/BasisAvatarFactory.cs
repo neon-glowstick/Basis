@@ -162,7 +162,7 @@ namespace Basis.Scripts.Avatar
         }
         public static async Task<GameObject> DownloadAndLoadAvatar(BasisLoadableBundle BasisLoadableBundle, BasisPlayer BasisPlayer)
         {
-            Guid UniqueID = new Guid();
+            Guid UniqueID = Guid.NewGuid();
             GameObject Output = await BasisLoadHandler.LoadGameObjectBundle(BasisLoadableBundle, true, BasisPlayer.ProgressReportAvatarLoad, new CancellationToken(), BasisPlayer.transform.position, Quaternion.identity,Vector3.one,false, BasisPlayer.transform);
             BasisPlayer.ProgressReportAvatarLoad.ReportProgress(UniqueID.ToString(), 100, "Setting Position");
             Output.transform.SetPositionAndRotation(BasisPlayer.transform.position, Quaternion.identity);

@@ -1,5 +1,6 @@
 using Basis.Scripts.Addressable_Driver;
 using Basis.Scripts.Addressable_Driver.Enums;
+using Basis.Scripts.Device_Management;
 using Basis.Scripts.Drivers;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,21 @@ using UnityEngine;
 
 namespace Basis.Scripts.UI.UI_Panels
 {
+    [Serializable]
+    public class LoadingOperationData
+    {
+        public string Key;
+        public float Percentage;
+        public string Display;
+
+        public LoadingOperationData(string key, float percentage, string display)
+        {
+            Key = key;
+            Percentage = percentage;
+            Display = display;
+        }
+    }
+
     public class BasisUILoadingBar : BasisUIBase
     {
         public TextMeshPro TextMeshPro;
@@ -17,97 +33,85 @@ namespace Basis.Scripts.UI.UI_Panels
 
         public Vector3 Position;
         public Quaternion Rotation;
-        // Dictionary to manage multiple loading operations by unique keys
-        private static readonly Dictionary<string, LoadingOperation> loadingOperations = new Dictionary<string, LoadingOperation>();
 
-        // Class to encapsulate each loading operation
-        private class LoadingOperation
-        {
-            public float Percentage;
-            public string Display;
+        [SerializeField]
+        private List<LoadingOperationData> loadingOperations = new List<LoadingOperationData>();
 
-            public LoadingOperation(float percentage, string display)
-            {
-                Percentage = percentage;
-                Display = display;
-            }
-        }
         public static void Initalize()
         {
-            BasisSceneLoadDriver.progressCallback.OnProgressReport += ProgresReport;
-            BasisSceneLoadDriver.progressCallback.OnProgressStart += StartProgress;
-            BasisSceneLoadDriver.progressCallback.OnProgressComplete += OnProgressComplete;
+            Debug.Log("Initializing Loading Bar Event Handlers...");
+            BasisSceneLoadDriver.progressCallback.OnProgressReport += ProgressReport;
         }
+
         public static void DeInitalize()
         {
-            BasisSceneLoadDriver.progressCallback.OnProgressReport -= ProgresReport;
-            BasisSceneLoadDriver.progressCallback.OnProgressStart -= StartProgress;
-            BasisSceneLoadDriver.progressCallback.OnProgressComplete -= OnProgressComplete;
+            Debug.Log("DeInitializing Loading Bar Event Handlers...");
+            BasisSceneLoadDriver.progressCallback.OnProgressReport -= ProgressReport;
         }
 
-        private static void ProgresReport(string UniqueID, float progress, string info)
+        private static void ProgressReport(string UniqueID, float progress, string info)
         {
-            TryGetInstance();
-            Instance.AddOrUpdateDisplay(info, progress, info);
-        }
-        private static void StartProgress(string UniqueID)
-        {
-            TryGetInstance();
-            //   Instance.AddOrUpdateDisplay("SceneLoad", 0, "SceneLoad");
-        }
-
-        private static void OnProgressComplete(string UniqueID)
-        {
-            if (Instance != null)
+            BasisDeviceManagement.EnqueueOnMainThread(() =>
             {
-                Instance.RemoveDisplay(UniqueID);
-            }
+                if (progress == 100)
+                {
+                    Debug.Log($"Progress Complete - ID: {UniqueID}");
+                    Instance?.RemoveDisplay(UniqueID);
+                }
+                else
+                {
+                    Debug.Log($"Progress Report - ID: {UniqueID}, Progress: {progress}, Info: {info}");
+                    if (Instance == null)
+                    {
+                        Debug.Log("Creating Loading Bar Instance...");
+                        AddressableGenericResource resource = new AddressableGenericResource(LoadingBar, AddressableExpectedResult.SingleItem);
+                        BasisUIBase.OpenMenuNow(resource);
+                    }
+                    Instance.AddOrUpdateDisplay(UniqueID, progress, info);
+                }
+            });
         }
-
-        public static void TryGetInstance()
+        public static void CloseLoadingBar()
         {
-            if (Instance == null)
+            BasisDeviceManagement.EnqueueOnMainThread(() =>
             {
-                AddressableGenericResource resource = new AddressableGenericResource(LoadingBar, AddressableExpectedResult.SingleItem);
-                BasisUIBase.OpenMenuNow(resource);
-            }
-        }
-
-        public static void CloseLoadingbar()
-        {
-            if (Instance != null)
-            {
-                Instance = null;
-                GameObject.Destroy(Instance.gameObject);
-            }
+                if (Instance != null)
+                {
+                    Debug.Log("Closing Loading Bar...");
+                    GameObject.Destroy(Instance.gameObject);
+                    Instance = null;
+                }
+            });
         }
 
         public void AddOrUpdateDisplay(string key, float percentage, string display)
         {
-            EnqueueOnMainThread(() =>
+            Debug.Log($"Add/Update Display - Key: {key}, Percentage: {percentage}, Display: {display}");
+            var operation = loadingOperations.Find(op => op.Key == key);
+            if (operation != null)
             {
-                if (loadingOperations.ContainsKey(key))
-                {
-                    // Update existing operation
-                    loadingOperations[key].Percentage = percentage;
-                    loadingOperations[key].Display = display;
-                }
-                else
-                {
-                    // Add new operation
-                    loadingOperations[key] = new LoadingOperation(percentage, display);
-                }
-                ProcessQueue();
-            });
+                Debug.Log($"Updating Existing Operation - Key: {key}");
+                operation.Percentage = percentage;
+                operation.Display = display;
+            }
+            else
+            {
+                Debug.Log($"Adding New Operation - Key: {key}");
+                loadingOperations.Add(new LoadingOperationData(key, percentage, display));
+            }
+            ProcessQueue();
         }
 
         public void RemoveDisplay(string key)
         {
-            EnqueueOnMainThread(() =>
+            Debug.Log($"Removing Display - Key: {key}");
+            BasisDeviceManagement.EnqueueOnMainThread(() =>
             {
-                if (loadingOperations.ContainsKey(key))
+                var operation = loadingOperations.Find(op => op.Key == key);
+                if (operation != null)
                 {
-                    loadingOperations.Remove(key);
+                    loadingOperations.Remove(operation);
+                    Debug.Log($"Display Removed - Key: {key}");
                 }
 
                 if (loadingOperations.Count > 0)
@@ -116,42 +120,43 @@ namespace Basis.Scripts.UI.UI_Panels
                 }
                 else
                 {
-                    CloseLoadingbar(); // No operations left, destroy the loading bar
+                    Debug.Log("No operations left, closing loading bar...");
+                    CloseLoadingBar();
                 }
             });
         }
 
         private void ProcessQueue()
         {
+            Debug.Log("Processing Queue...");
             if (loadingOperations.Count > 0 && Instance != null)
             {
-                // Get the first operation in the dictionary
                 var operation = GetFirstLoadingOperation();
                 if (operation != null)
                 {
+                    Debug.Log($"Updating Display with Operation - Percentage: {operation.Percentage}, Display: {operation.Display}");
                     UpdateDisplay(operation.Percentage, operation.Display);
                 }
             }
         }
 
-        private LoadingOperation GetFirstLoadingOperation()
+        private LoadingOperationData GetFirstLoadingOperation()
         {
-            foreach (var operation in loadingOperations.Values)
-            {
-                return operation;
-            }
-            return null;
+            Debug.Log("Fetching First Loading Operation...");
+            return loadingOperations.Count > 0 ? loadingOperations[0] : null;
         }
 
         private void UpdateDisplay(float percentage, string display)
         {
+            Debug.Log($"Updating Display - Percentage: {percentage}, Display: {display}");
             TextMeshPro.text = display;
-            float value = percentage * 25;
+            float value = percentage / 4f;
             Renderer.size = new Vector2(value, 2);
         }
 
         public override void InitalizeEvent()
         {
+            Debug.Log("Initializing Loading Bar UI Event...");
             Instance = this;
             this.transform.parent = BasisLocalCameraDriver.Instance.transform;
             this.transform.SetLocalPositionAndRotation(Position, Rotation);
@@ -159,30 +164,7 @@ namespace Basis.Scripts.UI.UI_Panels
 
         public override void DestroyEvent()
         {
-        }
-
-        // Queue to hold actions that need to be run on the main thread
-        private static readonly Queue<Action> mainThreadActions = new Queue<Action>();
-
-        private void Update()
-        {
-            // Process actions on the main thread
-            lock (mainThreadActions)
-            {
-                while (mainThreadActions.Count != 0)
-                {
-                    mainThreadActions.Dequeue()?.Invoke();
-                }
-            }
-        }
-
-        // Helper method to enqueue actions to be executed on the main thread
-        private static void EnqueueOnMainThread(Action action)
-        {
-            lock (mainThreadActions)
-            {
-                mainThreadActions.Enqueue(action);
-            }
+            Debug.Log("Destroying Loading Bar UI Event...");
         }
     }
 }

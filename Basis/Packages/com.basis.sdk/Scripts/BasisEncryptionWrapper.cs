@@ -12,40 +12,60 @@ public static class BasisEncryptionWrapper
     private const int IvSize = 16; // Size of the IV in bytes (128 bits)
     public static async Task<byte[]> EncryptDataAsync(string UniqueID,byte[] dataToEncrypt, BasisPassword RandomizedPassword, BasisProgressReport reportProgress = null)
     {
-        reportProgress.ReportProgress(UniqueID, 0f, "Encrypting Data");
-        var encryptedData = await Task.Run(async () => await Encrypt(UniqueID, RandomizedPassword, dataToEncrypt, reportProgress)); // Run encryption on a separate thread
-        reportProgress.ReportProgress(UniqueID, 100f, "Encrypting Data");
-        return encryptedData;
+        try
+        {
+            var encryptedData = await Task.Run(async () => await Encrypt(UniqueID, RandomizedPassword, dataToEncrypt, reportProgress)); // Run encryption on a separate thread
+            return encryptedData;
+        }
+        finally
+        {
+            reportProgress.ReportProgress(UniqueID, 100, "Failure");
+        }
     }
 
     public static async Task<byte[]> DecryptDataAsync(string UniqueID, byte[] dataToDecrypt, BasisPassword Randomizedpassword, BasisProgressReport reportProgress = null)
     {
-        reportProgress.ReportProgress(UniqueID, 0f, "Decrypting Data");
-        var decryptedData = await Task.Run(async () => await Decrypt(UniqueID, Randomizedpassword.VP, dataToDecrypt, reportProgress)); // Run decryption on a separate thread
-        reportProgress.ReportProgress(UniqueID, 100f, "Decrypting Data");
-        return decryptedData.Item1;
+        try
+        {
+            var decryptedData = await Task.Run(async () => await Decrypt(UniqueID, Randomizedpassword.VP, dataToDecrypt, reportProgress)); // Run decryption on a separate thread
+            return decryptedData.Item1;
+        }
+        finally
+        {
+            reportProgress.ReportProgress(UniqueID, 100, "Failure");
+        }
     }
 
     private static async Task<byte[]> Encrypt(string UniqueID, BasisPassword password, byte[] dataToEncrypt, BasisProgressReport reportProgress = null)
     {
+        if (dataToEncrypt == null || dataToEncrypt.Length == 0)
+        {
+            reportProgress?.ReportProgress(UniqueID, 0f, "Encryption Failed: Missing Data");
+            Debug.LogError("Missing Data To Encrypt");
+            return null;
+        }
+
+        reportProgress?.ReportProgress(UniqueID, 5f, "Initializing Encryption");
+
         byte[] salt = new byte[SaltSize];
         using (var rng = new RNGCryptoServiceProvider())
         {
             rng.GetBytes(salt); // Fill the salt with random bytes
         }
 
-        reportProgress.ReportProgress(UniqueID, 10f, "Encrypting Data");
+        reportProgress?.ReportProgress(UniqueID, 15f, "Generated Salt");
 
         using (var key = new Rfc2898DeriveBytes(password.VP, salt, 10000))
         {
             var keyBytes = key.GetBytes(KeySize);
-            var iv = new byte[IvSize];
+
+            byte[] iv = new byte[IvSize];
             using (var rng = new RNGCryptoServiceProvider())
             {
                 rng.GetBytes(iv); // Generate a random IV
             }
 
-            reportProgress.ReportProgress(UniqueID, 20f, "Encrypting Data");
+            reportProgress?.ReportProgress(UniqueID, 25f, "Generated IV");
 
             using (var aes = Aes.Create())
             {
@@ -55,18 +75,24 @@ public static class BasisEncryptionWrapper
                 using (var msEncrypt = new MemoryStream())
                 {
                     // Write the salt and IV to the memory stream
-                  await  msEncrypt.WriteAsync(salt, 0, salt.Length);
-                  await  msEncrypt.WriteAsync(iv, 0, iv.Length);
+                    await msEncrypt.WriteAsync(salt, 0, salt.Length);
+                    reportProgress?.ReportProgress(UniqueID, 40f, "Salt Written");
+
+                    await msEncrypt.WriteAsync(iv, 0, iv.Length);
+                    reportProgress?.ReportProgress(UniqueID, 50f, "IV Written");
 
                     using (var cryptoStream = new CryptoStream(msEncrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
                     {
-                      await  cryptoStream.WriteAsync(dataToEncrypt, 0, dataToEncrypt.Length);
+                        await cryptoStream.WriteAsync(dataToEncrypt, 0, dataToEncrypt.Length);
+                        reportProgress?.ReportProgress(UniqueID, 70f, "Data Encrypted");
                     }
 
-                    reportProgress.ReportProgress(UniqueID, 90f, "Encrypting Data");
+                    reportProgress?.ReportProgress(UniqueID, 90f, "Finalizing Encryption");
 
-                    // Get the encrypted data from the memory stream
-                    return msEncrypt.ToArray();
+                    byte[] encryptedData = msEncrypt.ToArray();
+
+                    reportProgress?.ReportProgress(UniqueID, 100f, "Encryption Complete");
+                    return encryptedData;
                 }
             }
         }
@@ -76,24 +102,26 @@ public static class BasisEncryptionWrapper
     {
         if (dataToDecrypt == null || dataToDecrypt.Length == 0)
         {
+            reportProgress?.ReportProgress(UniqueID, 0f, "Decryption Failed: Missing Data");
             Debug.LogError("Missing Data To Decrypt");
-            return new(null, null, null);
+            return (null, null, null);
         }
 
-        reportProgress.ReportProgress(UniqueID,10f, "Decrypting Data");
+        reportProgress?.ReportProgress(UniqueID, 5f, "Initializing Decryption");
 
         using (var msDecrypt = new MemoryStream(dataToDecrypt))
         {
             // Read the salt and IV from the memory stream
             byte[] salt = new byte[SaltSize];
-           await msDecrypt.ReadAsync(salt, 0, SaltSize);
+            reportProgress?.ReportProgress(UniqueID, 20f, "Salt Read");
+            await msDecrypt.ReadAsync(salt, 0, SaltSize);
 
             byte[] iv = new byte[IvSize];
-           await msDecrypt.ReadAsync(iv, 0, IvSize);
-
-            reportProgress.ReportProgress(UniqueID, 20f, "Decrypting Data");
-
+            reportProgress?.ReportProgress(UniqueID, 30f, "IV Read");
+            await msDecrypt.ReadAsync(iv, 0, IvSize);
             // Generate the key using the password and salt
+            reportProgress?.ReportProgress(UniqueID, 40f, "Deriving Key");
+
             using (var key = new Rfc2898DeriveBytes(RandomizedString, salt, 10000))
             {
                 var keyBytes = key.GetBytes(KeySize);
@@ -103,15 +131,21 @@ public static class BasisEncryptionWrapper
                     aes.Key = keyBytes;
                     aes.IV = iv;
 
+                    reportProgress?.ReportProgress(UniqueID, 60f, "Setting Up Decryption");
+
                     // Use a CryptoStream to decrypt the remaining data
                     using (var cryptoStream = new CryptoStream(msDecrypt, aes.CreateDecryptor(), CryptoStreamMode.Read))
                     {
                         using (var msOutput = new MemoryStream())
                         {
-                            cryptoStream.CopyTo(msOutput);
-                            byte[] output = msOutput.ToArray();
-                            reportProgress.ReportProgress(UniqueID, 90f, "Decrypting Data");
+                            reportProgress?.ReportProgress(UniqueID, 70f, "Decrypting Data Stream");
 
+                            await cryptoStream.CopyToAsync(msOutput);
+                            reportProgress?.ReportProgress(UniqueID, 90f, "Finalizing Decryption");
+
+                            byte[] output = msOutput.ToArray();
+
+                            reportProgress?.ReportProgress(UniqueID, 100f, "Decryption Complete");
                             return (output, salt, iv);
                         }
                     }
@@ -201,7 +235,7 @@ public static class BasisEncryptionWrapper
 
     private static async Task<byte[]> ReadAllBytesAsync(string UniqueID, string filePath, BasisProgressReport reportProgress, int bufferSize = 4194304) // Default 4MB buffer size
     {
-        reportProgress.ReportProgress(UniqueID, 0f, "reading Data");
+        reportProgress.ReportProgress(UniqueID, 0f, "Reading Data");
 
         var fileInfo = new FileInfo(filePath);
         byte[] data = new byte[fileInfo.Length];
@@ -220,7 +254,7 @@ public static class BasisEncryptionWrapper
             }
         }
 
-        reportProgress.ReportProgress(UniqueID, 100f, "reading Data");
+        reportProgress.ReportProgress(UniqueID, 100f, "Reading Data");
         return data;
     }
 }

@@ -20,7 +20,7 @@ public static class BasisIOManagement
     public static async Task DownloadFile(string url, string localFilePath, BasisProgressReport progressCallback, CancellationToken cancellationToken = default)
     {
         BasisDebug.Log($"Starting file download from {url}");
-        Guid UniqueID = new Guid();
+        Guid UniqueID = Guid.NewGuid();
         // Null or empty URL check
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -168,7 +168,7 @@ public static class BasisIOManagement
             BasisDebug.LogError($"Source file not found: {sourceFilePath}");
             return false;
         }
-        Guid UniqueID = new Guid();
+        Guid UniqueID = Guid.NewGuid();
 
         try
         {

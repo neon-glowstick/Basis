@@ -479,5 +479,25 @@ namespace Basis.Scripts.Device_Management
 
             UseAbleDeviceConfigs = deviceDictionary.Values.ToList();
         }
+        private static readonly Queue<Action> mainThreadActions = new Queue<Action>();
+        public void Update()
+        {
+            lock (mainThreadActions)
+            {
+                while (mainThreadActions.Count != 0)
+                {
+                    mainThreadActions.Dequeue()?.Invoke();
+                }
+            }
+        }
+
+        public static void EnqueueOnMainThread(Action action)
+        {
+            Debug.Log("Enqueueing Action on Main Thread...");
+            lock (mainThreadActions)
+            {
+                mainThreadActions.Enqueue(action);
+            }
+        }
     }
 }

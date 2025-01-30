@@ -12,7 +12,7 @@ public static class BasisEncryptionToData
         {
             VP = Password
         };
-        Guid UniqueID = new Guid();
+        Guid UniqueID = Guid.NewGuid();
         // Decrypt the file asynchronously
         byte[] LoadedBundleData = await BasisEncryptionWrapper.DecryptFileAsync(UniqueID.ToString(), BasisPassword, FilePath, progressCallback, 8388608);
 
@@ -55,7 +55,7 @@ public static class BasisEncryptionToData
         {
             VP = BasisLoadableBundle.UnlockPassword
         };
-        Guid UniqueID = new Guid();
+        Guid UniqueID = Guid.NewGuid();
         // BasisDebug.Log("BasisLoadableBundle.UnlockPassword" + BasisLoadableBundle.UnlockPassword);
         byte[] LoadedMetaData = await BasisEncryptionWrapper.DecryptFileAsync(UniqueID.ToString(), BasisPassword, FilePath, progressCallback, 81920);
         BasisDebug.Log("Converting decrypted meta file to BasisBundleInformation...", BasisDebug.LogTag.Event);
