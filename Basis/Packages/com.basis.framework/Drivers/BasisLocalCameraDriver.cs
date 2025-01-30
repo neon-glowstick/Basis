@@ -52,7 +52,7 @@ namespace Basis.Scripts.Drivers
         
         public Color UnMutedMutedIconColorActive = Color.white;
         public Color UnMutedMutedIconColorInactive = Color.grey;
-
+        public Color MutedColor = Color.grey;
         public void OnEnable()
         {
             if (BasisHelpers.CheckInstance(Instance))
@@ -93,13 +93,15 @@ namespace Basis.Scripts.Drivers
         {
             SpriteRendererIcon.color = UnMutedMutedIconColorActive;
             SpriteRendererIconTransform.localScale = largerScale;
+            LocalIsTransmitting = true;
         }
         public void MicrophoneNotTransmitting()
         {
             SpriteRendererIcon.color = UnMutedMutedIconColorInactive;
             SpriteRendererIconTransform.localScale = StartingScale;
+            LocalIsTransmitting = false;
         }
-
+        public bool LocalIsTransmitting = false;
         private void OnPausedEvent(bool IsMuted)
         {
             UpdateMicrophoneVisuals(IsMuted,true);
@@ -121,6 +123,7 @@ namespace Basis.Scripts.Drivers
                     AudioSource.PlayOneShot(MuteSound);
 
                 }
+                SpriteRendererIcon.color = MutedColor;
                 // Start a new coroutine for the scale animation
                 scaleCoroutine = StartCoroutine(ScaleIcons(SpriteRendererIcon.gameObject));
             }
@@ -132,6 +135,15 @@ namespace Basis.Scripts.Drivers
                 if (PlaySound)
                 {
                     AudioSource.PlayOneShot(UnMuteSound);
+                }
+                if (LocalIsTransmitting)
+                {
+                    SpriteRendererIcon.color = UnMutedMutedIconColorActive;
+
+                }
+                else
+                {
+                    SpriteRendererIcon.color = UnMutedMutedIconColorInactive;
                 }
                 // Start a new coroutine for the scale animation
                 scaleCoroutine = StartCoroutine(ScaleIcons(SpriteRendererIconTransform.gameObject));

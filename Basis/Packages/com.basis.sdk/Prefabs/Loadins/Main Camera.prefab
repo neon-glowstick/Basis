@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 309437807573434354}
   - component: {fileID: 5438786761859189477}
   m_Layer: 5
-  m_Name: Parent
+  m_Name: Microphone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -55,7 +55,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: dcd160d4672c98e499e856ca0e45d858, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -75,7 +75,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 32767
   m_Sprite: {fileID: 21300000, guid: df4c5b7b152475f48adb88ead5775eb0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -295,8 +295,10 @@ MonoBehaviour:
   duration: 0.35
   halfDuration: 0
   largerScale: {x: 0, y: 0, z: 0}
-  UnMutedMutedIconColorActive: {r: 1, g: 1, b: 1, a: 1}
-  UnMutedMutedIconColorInactive: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  UnMutedMutedIconColorActive: {r: 1, g: 1, b: 1, a: 0.6745098}
+  UnMutedMutedIconColorInactive: {r: 0.5, g: 0.5, b: 0.5, a: 0.6745098}
+  MutedColor: {r: 1, g: 0, b: 0, a: 0.6784314}
+  LocalIsTransmitting: 0
 --- !u!114 &5985133177976618905
 MonoBehaviour:
   m_ObjectHideFlags: 0
