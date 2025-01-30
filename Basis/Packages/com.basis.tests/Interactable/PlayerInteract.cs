@@ -50,6 +50,7 @@ public class PlayerInteract : MonoBehaviour
 
     public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
 
+    const string k_DefaultLayer = "Default";
     const string k_InteractableLayer = "Interactable";
     const int k_UpdatePriority = 201;
     public LayerMask InteractableLayerMask;
@@ -60,8 +61,7 @@ public class PlayerInteract : MonoBehaviour
         Devices.OnListAdded += OnInputChanged;
         Devices.OnListItemRemoved += OnInputRemoved;
 
-        // TODO add default layer ect to mask
-        InteractableLayerMask = LayerMask.NameToLayer(k_InteractableLayer);
+        InteractableLayerMask = (1 << LayerMask.NameToLayer(k_InteractableLayer)) | (1 << LayerMask.NameToLayer(k_DefaultLayer));
 
         AsyncOperationHandle<Material> op = Addressables.LoadAssetAsync<Material>(LoadMaterialAddress);
         LineMaterial = op.WaitForCompletion();
@@ -133,9 +133,8 @@ public class PlayerInteract : MonoBehaviour
             RaycastHit rayHit;
             InteractableObject hitInteractable = null;
             bool isValidRayHit = interactInput.input.BasisPointRaycaster.FirstHit(out rayHit, raycastDistance) &&
-                (rayHit.collider.gameObject.layer & InteractableLayerMask) != 0 &&
+                ((1 << rayHit.collider.gameObject.layer) & InteractableLayerMask) != 0 &&
                 rayHit.collider.TryGetComponent(out hitInteractable);
-
 
             if (isValidRayHit || hoverSphere.HoverTarget != null)
             {
