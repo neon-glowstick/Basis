@@ -140,8 +140,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TextMeshPro: {fileID: 8170679948311503506}
   Renderer: {fileID: 3652315698683992607}
-  Position: {x: 0, y: 0, z: 0}
+  Position: {x: 12, y: -1.6, z: 0}
   Rotation: {x: 0, y: 0, z: 0, w: 0}
+  loadingOperations: []
 --- !u!1 &6057643791731809901
 GameObject:
   m_ObjectHideFlags: 0

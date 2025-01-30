@@ -1,5 +1,6 @@
 using Basis.Network;
 using Basis.Network.Server;
+using BasisNetworking.InitalData;
 
 namespace Basis
 {
@@ -41,6 +42,7 @@ namespace Basis
                 try
                 {
                     BasisNetworkServer.StartServer(config);
+                    BasisLoadableLoader.LoadXML("initalresources");
                 }
                 catch (Exception ex)
                 {
@@ -48,7 +50,6 @@ namespace Basis
                     // Optionally, handle server restart or log critical errors
                 }
             }, cancellationToken);
-
             // Register a shutdown hook to clean up resources when the application is terminated
             AppDomain.CurrentDomain.ProcessExit += async (sender, eventArgs) =>
             {
