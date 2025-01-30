@@ -23,43 +23,10 @@ namespace BasisNetworking.InitalData
                     Directory.CreateDirectory(newFolderPath);
                     BNL.Log("Folder created successfully: " + newFolderPath);
                     // Provide an example XML file content for the user to copy or uncomment
-                    string exampleXml = @"<Resource>
-    <!-- Mode of the configuration -->
-    <Mode>0</Mode>
-    <!-- Network ID -->
-    <LoadedNetID></LoadedNetID>
-    <!-- Unlock password -->
-    <UnlockPassword></UnlockPassword>
-    <!-- Meta URL -->
-    <MetaURL></MetaURL>
-    <!-- Bundle URL -->
-    <BundleURL></BundleURL>
-    <!-- Local load flag -->
-    <IsLocalLoad>false</IsLocalLoad>
-
-    <!-- Position values -->
-    <PositionX>0</PositionX>
-    <PositionY>0</PositionY>
-    <PositionZ>0</PositionZ>
-
-    <!-- Quaternion values -->
-    <QuaternionX>0</QuaternionX>
-    <QuaternionY>0</QuaternionY>
-    <QuaternionZ>0</QuaternionZ>
-    <QuaternionW>1</QuaternionW>
-
-    <!-- Scale values -->
-    <ScaleX>1</ScaleX>
-    <ScaleY>1</ScaleY>
-    <ScaleZ>1</ScaleZ>
-
-    <!-- Persist flag -->
-    <Persist>false</Persist>
-</Resource>";
 
                     string exampleFilePath = Path.Combine(newFolderPath, "ExampleConfigdisabled.xml[remove]");
                     File.WriteAllText(exampleFilePath, exampleXml);
-                    Console.WriteLine("Example XML file created at: " + exampleFilePath);
+                    BNL.Log("Example XML file created at: " + exampleFilePath);
                 }
 
                 BasisLoadableConfiguration[] configurations = BasisLoadableConfiguration.LoadAllFromFolder(FolderName);
@@ -100,5 +67,38 @@ namespace BasisNetworking.InitalData
                 Persist = config.Persist
             };
         }
+        public const string exampleXml = @"<Resource>
+    <!-- Mode of the configuration -->
+    <Mode>0</Mode>
+    <!-- Network ID -->
+    <LoadedNetID></LoadedNetID>
+    <!-- Unlock password -->
+    <UnlockPassword></UnlockPassword>
+    <!-- Meta URL -->
+    <MetaURL></MetaURL>
+    <!-- Bundle URL -->
+    <BundleURL></BundleURL>
+    <!-- Local load flag -->
+    <IsLocalLoad>false</IsLocalLoad>
+
+    <!-- Position values -->
+    <PositionX>0</PositionX>
+    <PositionY>0</PositionY>
+    <PositionZ>0</PositionZ>
+
+    <!-- Quaternion values -->
+    <QuaternionX>0</QuaternionX>
+    <QuaternionY>0</QuaternionY>
+    <QuaternionZ>0</QuaternionZ>
+    <QuaternionW>1</QuaternionW>
+
+    <!-- Scale values -->
+    <ScaleX>1</ScaleX>
+    <ScaleY>1</ScaleY>
+    <ScaleZ>1</ScaleZ>
+
+    <!-- Persist flag -->
+    <Persist>false</Persist>
+</Resource>";
     }
 }
