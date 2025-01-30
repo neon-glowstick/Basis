@@ -49,7 +49,7 @@ namespace Basis.Scripts.UI.UI_Panels
             BasisSceneLoadDriver.progressCallback.OnProgressReport -= ProgressReport;
         }
 
-        private static void ProgressReport(string UniqueID, float progress, string info)
+        public static void ProgressReport(string UniqueID, float progress, string info)
         {
             BasisDeviceManagement.EnqueueOnMainThread(() =>
             {

@@ -8,6 +8,7 @@ using Basis.Scripts.TransformBinders;
 using Basis.Scripts.TransformBinders.BoneControl;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -479,25 +480,19 @@ namespace Basis.Scripts.Device_Management
 
             UseAbleDeviceConfigs = deviceDictionary.Values.ToList();
         }
-        private static readonly Queue<Action> mainThreadActions = new Queue<Action>();
         public void Update()
         {
-            lock (mainThreadActions)
+            while (mainThreadActions.TryDequeue(out var action))
             {
-                while (mainThreadActions.Count != 0)
-                {
-                    mainThreadActions.Dequeue()?.Invoke();
-                }
+                action.Invoke();
             }
         }
-
+        private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
         public static void EnqueueOnMainThread(Action action)
         {
             Debug.Log("Enqueueing Action on Main Thread...");
-            lock (mainThreadActions)
-            {
-                mainThreadActions.Enqueue(action);
-            }
+            if (action == null) return;
+            mainThreadActions.Enqueue(action);
         }
     }
 }

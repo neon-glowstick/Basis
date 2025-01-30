@@ -28,11 +28,11 @@ namespace Basis.Scripts.Drivers
         public static event System.Action InstanceExists;
         public BasisLockToInput BasisLockToInput;
         public bool HasEvents = false;
-        public Canvas MicrophoneCanvas;
         public Transform CanvasTransform;
-        public RawImage MicrophoneMutedIcon;
-        public RawImage MicrophoneUnMutedIcon;
-        public Transform MicrophoneUnMutedIconTransform;
+        public SpriteRenderer SpriteRendererIcon;
+        public Transform SpriteRendererIconTransform;
+        public Sprite SpriteMicrophoneOn;
+        public Sprite SpriteMicrophoneOff;
 
         public Vector3 DesktopMicrophoneViewportPosition = new(0.2f, 0.15f, 1f); // Adjust as needed for canvas position and depth
         public Vector3 VRMicrophoneOffset = new Vector3(-0.0004f, -0.0015f, 2f);
@@ -78,7 +78,7 @@ namespace Basis.Scripts.Drivers
                 HasEvents = true;
             }
             halfDuration = duration / 2f; // Time to scale up and down
-            StartingScale = MicrophoneMutedIcon.transform.localScale;
+            StartingScale = SpriteRendererIcon.transform.localScale;
             // Target scale for the "bounce" effect (e.g., 1.2 times larger)
             largerScale = StartingScale * 1.2f;
             UpdateMicrophoneVisuals(MicrophoneRecorder.isPaused, false);
@@ -87,16 +87,17 @@ namespace Basis.Scripts.Drivers
             {
                 SteamAudioManager.NotifyAudioListenerChanged();
             }
+                            SpriteRendererIcon.gameObject.SetActive(true);
         }
         public void MicrophoneTransmitting()
         {
-            MicrophoneUnMutedIcon.color = UnMutedMutedIconColorActive;
-            MicrophoneUnMutedIconTransform.localScale = largerScale;
+            SpriteRendererIcon.color = UnMutedMutedIconColorActive;
+            SpriteRendererIconTransform.localScale = largerScale;
         }
         public void MicrophoneNotTransmitting()
         {
-            MicrophoneUnMutedIcon.color = UnMutedMutedIconColorInactive;
-            MicrophoneUnMutedIconTransform.localScale = StartingScale;
+            SpriteRendererIcon.color = UnMutedMutedIconColorInactive;
+            SpriteRendererIconTransform.localScale = StartingScale;
         }
 
         private void OnPausedEvent(bool IsMuted)
@@ -113,30 +114,27 @@ namespace Basis.Scripts.Drivers
             }
             if (IsMuted)
             {
-               // BasisDebug.Log(nameof(UpdateMicrophoneVisuals) + IsMuted);
-
-                MicrophoneMutedIcon.gameObject.SetActive(true);
-                MicrophoneUnMutedIcon.gameObject.SetActive(false);
+                // BasisDebug.Log(nameof(UpdateMicrophoneVisuals) + IsMuted);
+                SpriteRendererIcon.sprite = SpriteMicrophoneOff;
                 if (PlaySound)
                 {
                     AudioSource.PlayOneShot(MuteSound);
 
                 }
                 // Start a new coroutine for the scale animation
-                scaleCoroutine = StartCoroutine(ScaleIcons(MicrophoneMutedIcon.gameObject));
+                scaleCoroutine = StartCoroutine(ScaleIcons(SpriteRendererIcon.gameObject));
             }
             else
             {
-               // BasisDebug.Log(nameof(UpdateMicrophoneVisuals) + IsMuted);
+                // BasisDebug.Log(nameof(UpdateMicrophoneVisuals) + IsMuted);
 
-                MicrophoneMutedIcon.gameObject.SetActive(false);
-                MicrophoneUnMutedIcon.gameObject.SetActive(true);
+                SpriteRendererIcon.sprite = SpriteMicrophoneOn;
                 if (PlaySound)
                 {
                     AudioSource.PlayOneShot(UnMuteSound);
                 }
                 // Start a new coroutine for the scale animation
-                scaleCoroutine = StartCoroutine(ScaleIcons(MicrophoneUnMutedIcon.gameObject));
+                scaleCoroutine = StartCoroutine(ScaleIcons(SpriteRendererIconTransform.gameObject));
             }
         }
         private IEnumerator ScaleIcons(GameObject iconToScale)
