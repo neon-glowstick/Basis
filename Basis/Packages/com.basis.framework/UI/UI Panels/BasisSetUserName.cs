@@ -1,11 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Basis.Scripts.Drivers;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Common;
 using Basis.Scripts.Networking;
-using System.Threading.Tasks;
 namespace Basis.Scripts.UI.UI_Panels
 {
     public class BasisSetUserName : MonoBehaviour
@@ -69,9 +67,10 @@ namespace Basis.Scripts.UI.UI_Panels
                     BasisNetworkManagement.Instance.Password = Password.text;
                     BasisNetworkManagement.Instance.IsHostMode = HostMode.isOn;
                     ushort.TryParse(Port.text, out BasisNetworkManagement.Instance.Port);
-                    await CreateAssetBundle();
                     BasisNetworkManagement.Instance.Connect();
                     Ready.interactable = false;
+                    BasisDebug.Log("connecting to default");
+                    Destroy(this.gameObject);
                 }
             }
             else
@@ -80,20 +79,6 @@ namespace Basis.Scripts.UI.UI_Panels
                 // Re-enable button interaction if username is empty
                 Ready.interactable = true;
             }
-        }
-
-        public async Task CreateAssetBundle()
-        {
-            BasisDebug.Log("connecting to default");
-            if (BundledContentHolder.Instance.UseAddressablesToLoadScene)
-            {
-                await BasisSceneLoadDriver.LoadSceneAddressables(BundledContentHolder.Instance.DefaultScene.BasisRemoteBundleEncrypted.BundleURL);
-            }
-            else
-            {
-                await BasisSceneLoadDriver.LoadSceneAssetBundle(BundledContentHolder.Instance.DefaultScene);
-            }
-            Destroy(this.gameObject);
         }
 
         public void ToggleAdvancedSettings()

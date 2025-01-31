@@ -482,17 +482,25 @@ namespace Basis.Scripts.Device_Management
         }
         public void Update()
         {
+            if (!hasPendingActions) return;
+
             while (mainThreadActions.TryDequeue(out var action))
             {
                 action.Invoke();
             }
+
+            // Reset flag once all actions are executed
+            hasPendingActions = !mainThreadActions.IsEmpty;
         }
-        private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
+
         public static void EnqueueOnMainThread(Action action)
         {
-            Debug.Log("Enqueueing Action on Main Thread...");
             if (action == null) return;
+
             mainThreadActions.Enqueue(action);
+            hasPendingActions = true;
         }
+        private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
+        private static volatile bool hasPendingActions = false;
     }
 }
