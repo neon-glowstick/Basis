@@ -124,6 +124,7 @@ public class PickupInteractable : InteractableObject
         // BasisDebug.Log($"CanHover {string.Join(", ", Inputs.ToArray().Select(x => x.GetState()))}");
         // BasisDebug.Log($"CanHover {!DisableInteract}, {!Inputs.AnyInteracting()}, {input.TryGetRole(out BasisBoneTrackedRole r)}, {Inputs.TryGetByRole(r, out BasisInputWrapper f)}, {r}, {f.GetState()}");
         return !DisableInteract &&
+            !IsPuppeted &&
             Inputs.IsInputAdded(input) &&
             input.TryGetRole(out BasisBoneTrackedRole role) &&
             Inputs.TryGetByRole(role, out BasisInputWrapper found) &&
@@ -135,6 +136,7 @@ public class PickupInteractable : InteractableObject
         BasisDebug.Log($"CanInteract {!DisableInteract}, {!Inputs.AnyInteracting()}, {input.TryGetRole(out BasisBoneTrackedRole r)}, {Inputs.TryGetByRole(r, out BasisInputWrapper f)}, {r}, {f.GetState()}");
         // currently hovering can interact only, only one interacting at a time
         return !DisableInteract &&
+            !IsPuppeted &&
             Inputs.IsInputAdded(input) &&
             input.TryGetRole(out BasisBoneTrackedRole role) &&
             Inputs.TryGetByRole(role, out BasisInputWrapper found) &&

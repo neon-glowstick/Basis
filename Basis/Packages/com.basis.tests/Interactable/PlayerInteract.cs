@@ -245,7 +245,7 @@ public class PlayerInteract : MonoBehaviour
             // Holding Logic: 
             if (IsInputTriggered(interactInput.input))
             {
-                // clear hover (unlikely to happen since last frame, but possible)
+                // clear hover
                 if (interactInput.lastTarget.IsHoveredBy(interactInput.input))
                 {
                     interactInput.lastTarget.OnHoverEnd(interactInput.input, false);
