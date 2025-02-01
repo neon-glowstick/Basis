@@ -1,13 +1,15 @@
 using System;
 using Basis.Scripts.Device_Management.Devices;
 using UnityEngine;
+using UnityEngine.Events;
+
 public class ExampleButtonInteractable : InteractableObject
 {
     // public BasisObjectSyncNetworking syncNetworking;
 
     // events other scripts can subscribe to
-    public Action ButtonDown;
-    public Action ButtonUp;
+    public UnityEvent ButtonDown;
+    public UnityEvent ButtonUp;
 
     [Header("Button Settings")]
     public bool isEnabled;
@@ -23,7 +25,7 @@ public class ExampleButtonInteractable : InteractableObject
     public MeshRenderer RendererRef;
 
     private BasisInputWrapper _inputSource;
-    // Ignore provided list localy, but keep it updated for other scripts 
+    // Ignore provided list localy, but keep it updated for other scripts
     private BasisInputWrapper _InputSource {
         get => _inputSource;
         set {
@@ -37,7 +39,7 @@ public class ExampleButtonInteractable : InteractableObject
                 Inputs = new(0);
             }
             _inputSource = value;
-            
+
         }
     }
 
