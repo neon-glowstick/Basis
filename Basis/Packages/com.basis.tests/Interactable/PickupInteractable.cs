@@ -11,7 +11,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class PickupInteractable : InteractableObject
 {
-    [Header("Reparent Settings")]
+    [Header("Pickup Settings")]
     public bool KinematicWhileInteracting = true;
     public float DesktopRotateSpeed = 0.1f;
     [Tooltip("Unity units per scroll step")]
@@ -19,11 +19,20 @@ public class PickupInteractable : InteractableObject
     public float DesktopZoopMinDistance = 0.2f;
     [Tooltip("Generate a mesh on start to approximate the referenced collider")]
     public bool GenerateColliderMesh = true;
+    [Space(10)]
+    public float minLinearVelocity = 0.1f;
+    public float interactEndLinearVelocityMultiplier = 1;
+    [Space(5)]
+    public float minAngularVelocity = 0.1f;
+    public float interactEndAngularVelocityMultiplier = 1;
+
 
     [Header("References")]
     public Collider ColliderRef;
     public Rigidbody RigidRef;
-    public ParentConstraint ConstraintRef;
+
+    [SerializeReference]
+    private BasisParentConstraint InputConstraint;
 
     // internal values
     private GameObject HighlightClone;
@@ -37,6 +46,8 @@ public class PickupInteractable : InteractableObject
     const float k_DesktopZoopSmoothing = 0.2f;
     const float k_DesktopZoopMaxVelocity = 10f;
 
+    private static string headPauseRequestName; 
+
     public void Start()
     {
         if (RigidRef == null)
@@ -47,19 +58,11 @@ public class PickupInteractable : InteractableObject
         {
             TryGetComponent(out ColliderRef);
         }
-        if (ConstraintRef == null)
-        {
-            if (!TryGetComponent(out ConstraintRef))
-            {
-                ConstraintRef = gameObject.AddComponent<ParentConstraint>();
-            }
-            var nullSource = new ConstraintSource()
-            {
-                sourceTransform = null,
-                weight = 1,
-            };
-            ConstraintRef.AddSource(nullSource);
-        }
+        InputConstraint = new BasisParentConstraint();
+        InputConstraint.sources = new BasisParentConstraint.SourceData[]{new() {weight = 1f}};
+        InputConstraint.Enabled = false;
+
+        headPauseRequestName = $"{nameof(PickupInteractable)}: {gameObject.GetInstanceID()}";
 
         AsyncOperationHandle<Material> op = Addressables.LoadAssetAsync<Material>(k_LoadMaterialAddress);
         ColliderHighlightMat = op.WaitForCompletion();
@@ -93,32 +96,6 @@ public class PickupInteractable : InteractableObject
         }
     }
 
-    public void SetParentConstraint(Transform source)
-    {
-        // ignore source count, only modify the 0 index
-        var newSource = new ConstraintSource()
-        {
-            sourceTransform = source,
-            weight = 1,
-        };
-        ConstraintRef.SetSource(0, newSource);
-
-        if (Equippable)
-        {
-            ConstraintRef.SetTranslationOffset(0, StrictPosition);
-            ConstraintRef.SetRotationOffset(0, StrictRotation.eulerAngles);
-        }
-        else if (source != null)
-        {
-            ConstraintRef.SetTranslationOffset(0, source.InverseTransformPoint(transform.position));
-            ConstraintRef.SetRotationOffset(0, (Quaternion.Inverse(source.rotation) * transform.rotation).eulerAngles);
-        }
-
-        // force constraint weight
-        ConstraintRef.weight = 1;
-        ConstraintRef.constraintActive = source != null;
-    }
-
     public override bool CanHover(BasisInput input)
     {
         // BasisDebug.Log($"CanHover {string.Join(", ", Inputs.ToArray().Select(x => x.GetState()))}");
@@ -133,7 +110,7 @@ public class PickupInteractable : InteractableObject
     }
     public override bool CanInteract(BasisInput input)
     {
-        BasisDebug.Log($"CanInteract {!DisableInteract}, {!Inputs.AnyInteracting()}, {input.TryGetRole(out BasisBoneTrackedRole r)}, {Inputs.TryGetByRole(r, out BasisInputWrapper f)}, {r}, {f.GetState()}");
+        // BasisDebug.Log($"CanInteract {!DisableInteract}, {!Inputs.AnyInteracting()}, {input.TryGetRole(out BasisBoneTrackedRole r)}, {Inputs.TryGetByRole(r, out BasisInputWrapper f)}, {r}, {f.GetState()}");
         // currently hovering can interact only, only one interacting at a time
         return !DisableInteract &&
             !IsPuppeted &&
@@ -189,10 +166,16 @@ public class PickupInteractable : InteractableObject
                 // syncNetworking.IsOwner = true;
                 Inputs.ChangeStateByRole(wrapper.Role, InteractInputState.Interacting);
                 RequiresUpdateLoop = true;
+
+                transform.GetPositionAndRotation(out Vector3 restPos, out Quaternion restRot);
+                InputConstraint.SetRestPositionAndRotation(restPos, restRot);
+                var offsetPos = Quaternion.Inverse(input.transform.rotation) * (transform.position - input.transform.position);
+                var offsetRot = Quaternion.Inverse(input.transform.rotation) * transform.rotation;
+                InputConstraint.SetOffsetPositionAndRotation(0, offsetPos, offsetRot);
+                // PC.SetOffsetPositionAndRotation(input.transform.InverseTransformPoint(restPos), );
+                InputConstraint.Enabled = true;
+
                 OnInteractStartEvent?.Invoke(input);
-                // TODO: use calculated position & rotation of the bone we need custom parent constraint for this!
-                // wrapper.BoneControl.OutgoingWorldData
-                SetParentConstraint(input.transform);
             }
             else
             {
@@ -222,28 +205,72 @@ public class PickupInteractable : InteractableObject
                 // cleanup Desktop Manipulation since InputUpdate isnt run again till next pickup
                 if (pauseHead)
                 {
-                    BasisAvatarEyeInput.Instance.UnPauseHead(nameof(PickupInteractable) + ": " + gameObject.name);
+                    BasisAvatarEyeInput.Instance.UnPauseHead(headPauseRequestName);
                     targetOffset = Vector3.zero;
                     currentZoopVelocity = Vector3.zero;
                     pauseHead = false;
                 }
+
+                InputConstraint.Enabled = false;
+
+                OnDropVelocity();
+
                 // syncNetworking.IsOwner = false;
                 OnInteractEndEvent?.Invoke(input);
-                SetParentConstraint(null);
             }
-        }
-
-        
+        }        
     }
+
+    /// <summary>
+    /// set linear/angular velocity to multiplier or 0 if below min velocity
+    /// </summary>
+    private void OnDropVelocity()
+    {
+        var linear = RigidRef.linearVelocity;
+        var angular  = RigidRef.angularVelocity;
+        if (linear.magnitude >= minLinearVelocity)
+        {
+            linear *= interactEndLinearVelocityMultiplier;
+        }
+        else
+            linear = Vector3.zero;
+
+        if (angular.magnitude >= minAngularVelocity)
+        {
+            angular *= interactEndAngularVelocityMultiplier;
+        }
+        else
+            angular = Vector3.zero;
+
+        RigidRef.linearVelocity = linear;
+        RigidRef.angularVelocity = angular;
+    }
+
     public override void InputUpdate()
     {
-        if (Inputs.AnyInteracting())
+        var interactingInput = GetActiveInteracting();
+        if (interactingInput != null)
         {
+            Vector3 inPos = interactingInput.Value.BoneControl.OutgoingWorldData.position;
+            Quaternion inRot = interactingInput.Value.BoneControl.OutgoingWorldData.rotation;
             // Optionally, match the rotation.
             //  transform.rotation = target.rotation;
             if (Basis.Scripts.Device_Management.BasisDeviceManagement.IsUserInDesktop())
             {
+                // override with current camera position in desktop mode
+                // TODO: this is weird??!? fixes jitter but only on forward rendered shaders
+                inPos = BasisLocalCameraDriver.Instance.Camera.transform.position;
+                inRot = BasisLocalCameraDriver.Instance.Camera.transform.rotation;
+
                 PollDesktopManipulation(Inputs.desktopCenterEye.Source);
+            }
+
+            InputConstraint.UpdateSourcePositionAndRotation(0, inPos, inRot);
+            if (InputConstraint.Evaluate(out Vector3 pos, out Quaternion rot))
+            {
+                RigidRef.Move(pos, rot);
+                // TODO: fix jitter while still using rigidbody movement
+                // transform.SetPositionAndRotation(pos, rot);
             }
         }
     }
@@ -275,7 +302,7 @@ public class PickupInteractable : InteractableObject
         {
             if(!pauseHead)
             {
-                BasisAvatarEyeInput.Instance.PauseHead($"{nameof(PickupInteractable)}: {gameObject.GetInstanceID()}");
+                BasisAvatarEyeInput.Instance.PauseHead(headPauseRequestName);
                 pauseHead = true;
             }
 
@@ -284,13 +311,13 @@ public class PickupInteractable : InteractableObject
             Quaternion yRotation = Quaternion.AngleAxis(delta.x * DesktopRotateSpeed, Vector3.up);
             Quaternion xRotation = Quaternion.AngleAxis(-delta.y * DesktopRotateSpeed, Vector3.right);
 
-            var rotation = yRotation * xRotation * Quaternion.Euler(ConstraintRef.rotationOffsets[0]);
-            ConstraintRef.SetRotationOffset(0, rotation.eulerAngles);
+            var rotation = yRotation * xRotation * InputConstraint.sources[0].rotationOffset;
+            InputConstraint.sources[0].rotationOffset = rotation;
 
             // scroll zoop
             float mouseScroll = DesktopEye.InputState.Secondary2DAxis.y; // only ever 1, 0, -1
 
-            Vector3 currentOffset = ConstraintRef.translationOffsets[0];
+            Vector3 currentOffset = InputConstraint.sources[0].positionOffset;
             if (targetOffset == Vector3.zero)
             {
                 // BasisDebug.Log("Setting initial target to current offset:" + targetOffset + " : " + currentOffset);
@@ -299,7 +326,7 @@ public class PickupInteractable : InteractableObject
             
             if (mouseScroll != 0)
             {
-                Transform sourceTransform = ConstraintRef.GetSource(0).sourceTransform;
+                Transform sourceTransform = BasisLocalCameraDriver.Instance.Camera.transform;
 
                 Vector3 movement = DesktopZoopSpeed * mouseScroll * BasisLocalCameraDriver.Forward();
                 Vector3 newTargetOffset = targetOffset + sourceTransform.InverseTransformVector(movement);
@@ -319,7 +346,7 @@ public class PickupInteractable : InteractableObject
             }                
 
             var dampendOffset = Vector3.SmoothDamp(currentOffset, targetOffset, ref currentZoopVelocity, k_DesktopZoopSmoothing, k_DesktopZoopMaxVelocity);
-            ConstraintRef.SetTranslationOffset(0, dampendOffset);
+            InputConstraint.sources[0].positionOffset = dampendOffset;
 
             // BasisDebug.Log("Destop manipulate Pickup zoop: " + dampendOffset + " rotate: " + delta);                
         }
@@ -327,7 +354,7 @@ public class PickupInteractable : InteractableObject
         {
             targetOffset = Vector3.zero;
             pauseHead = false;
-            if(!BasisAvatarEyeInput.Instance.UnPauseHead($"{nameof(PickupInteractable)}: {gameObject.GetInstanceID()}"))
+            if(!BasisAvatarEyeInput.Instance.UnPauseHead(headPauseRequestName))
             {
                 BasisDebug.LogWarning(nameof(PickupInteractable) + " was unable to un-pause head movement, this is a bug!");
             }
@@ -337,6 +364,18 @@ public class PickupInteractable : InteractableObject
             // shouldn't need this here since pauseHead is used as a switch, but just in case...
             targetOffset = Vector3.zero;
         }
+    }
+
+    private BasisInputWrapper? GetActiveInteracting() {
+
+        if (Inputs.desktopCenterEye.GetState() == InteractInputState.Interacting)
+            return Inputs.desktopCenterEye;
+        else if (Inputs.leftHand.GetState() == InteractInputState.Interacting)
+            return Inputs.leftHand;
+        else if (Inputs.rightHand.GetState() == InteractInputState.Interacting)
+            return Inputs.rightHand;
+        else
+            return null;   
     }
 
     public override void OnDestroy()
@@ -361,9 +400,9 @@ public class PickupInteractable : InteractableObject
         {
             Debug.LogWarning(errPrefix + "Collider", gameObject);
         }
-        if (ConstraintRef == null && !TryGetComponent(out ParentConstraint _))
+        if (InputConstraint == null)
         {
-            Debug.LogWarning(errPrefix + "ParentConstraint", gameObject);
+            InputConstraint = new BasisParentConstraint();
         }
     }
 #endif
