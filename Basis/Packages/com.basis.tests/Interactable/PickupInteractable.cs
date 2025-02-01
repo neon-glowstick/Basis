@@ -203,10 +203,10 @@ public class PickupInteractable : InteractableObject
 
                 RequiresUpdateLoop = false;
                 // cleanup Desktop Manipulation since InputUpdate isnt run again till next pickup
+                targetOffset = Vector3.zero;
                 if (pauseHead)
                 {
                     BasisAvatarEyeInput.Instance.UnPauseHead(headPauseRequestName);
-                    targetOffset = Vector3.zero;
                     currentZoopVelocity = Vector3.zero;
                     pauseHead = false;
                 }
@@ -298,6 +298,42 @@ public class PickupInteractable : InteractableObject
     private Vector3 currentZoopVelocity = Vector3.zero;
     private void PollDesktopManipulation(BasisInput DesktopEye)
     {
+        // scroll zoop
+        float mouseScroll = DesktopEye.InputState.Secondary2DAxis.y; // only ever 1, 0, -1
+
+        Vector3 currentOffset = InputConstraint.sources[0].positionOffset;
+        if (targetOffset == Vector3.zero)
+        {
+            // BasisDebug.Log("Setting initial target to current offset:" + targetOffset + " : " + currentOffset);
+            targetOffset = currentOffset;
+        }
+        
+        if (mouseScroll != 0)
+        {
+            Transform sourceTransform = BasisLocalCameraDriver.Instance.Camera.transform;
+
+            Vector3 movement = DesktopZoopSpeed * mouseScroll * BasisLocalCameraDriver.Forward();
+            Vector3 newTargetOffset = targetOffset + sourceTransform.InverseTransformVector(movement);
+
+            // moving towards camera, ignore moving closer if less than min distance
+            // NOTE: this is cheating a bit since its assuming desktop camera is the constraint source, but its a lot faster than doing a bunch of world/local space transforms.
+            //      This also does not set offset to min distance to avoid calculating min offset position, meaning this is effectively (distance > minDistance + ZoopSpeed).
+            if (mouseScroll < 0 && newTargetOffset.z > DesktopZoopMinDistance)
+            {
+                targetOffset = newTargetOffset;
+            }
+            // moving away from camera
+            else if (mouseScroll > 0)
+            {
+                targetOffset = newTargetOffset;
+            }
+        }                
+
+        var dampendOffset = Vector3.SmoothDamp(currentOffset, targetOffset, ref currentZoopVelocity, k_DesktopZoopSmoothing, k_DesktopZoopMaxVelocity);
+        InputConstraint.sources[0].positionOffset = dampendOffset;
+        
+
+
         if (DesktopEye.InputState.Secondary2DAxisClick)
         {
             if(!pauseHead)
@@ -314,55 +350,15 @@ public class PickupInteractable : InteractableObject
             var rotation = yRotation * xRotation * InputConstraint.sources[0].rotationOffset;
             InputConstraint.sources[0].rotationOffset = rotation;
 
-            // scroll zoop
-            float mouseScroll = DesktopEye.InputState.Secondary2DAxis.y; // only ever 1, 0, -1
-
-            Vector3 currentOffset = InputConstraint.sources[0].positionOffset;
-            if (targetOffset == Vector3.zero)
-            {
-                // BasisDebug.Log("Setting initial target to current offset:" + targetOffset + " : " + currentOffset);
-                targetOffset = currentOffset;
-            }
-            
-            if (mouseScroll != 0)
-            {
-                Transform sourceTransform = BasisLocalCameraDriver.Instance.Camera.transform;
-
-                Vector3 movement = DesktopZoopSpeed * mouseScroll * BasisLocalCameraDriver.Forward();
-                Vector3 newTargetOffset = targetOffset + sourceTransform.InverseTransformVector(movement);
-
-                // moving towards camera, ignore moving closer if less than min distance
-                // NOTE: this is cheating a bit since its assuming desktop camera is the constraint source, but its a lot faster than doing a bunch of world/local space transforms.
-                //      This also does not set offset to min distance to avoid calculating min offset position, meaning this is effectively (distance > minDistance + ZoopSpeed).
-                if (mouseScroll < 0 && newTargetOffset.z > DesktopZoopMinDistance)
-                {
-                    targetOffset = newTargetOffset;
-                }
-                // moving away from camera
-                else if (mouseScroll > 0)
-                {
-                    targetOffset = newTargetOffset;
-                }
-            }                
-
-            var dampendOffset = Vector3.SmoothDamp(currentOffset, targetOffset, ref currentZoopVelocity, k_DesktopZoopSmoothing, k_DesktopZoopMaxVelocity);
-            InputConstraint.sources[0].positionOffset = dampendOffset;
-
             // BasisDebug.Log("Destop manipulate Pickup zoop: " + dampendOffset + " rotate: " + delta);                
         }
         else if (pauseHead)
         {
-            targetOffset = Vector3.zero;
             pauseHead = false;
             if(!BasisAvatarEyeInput.Instance.UnPauseHead(headPauseRequestName))
             {
                 BasisDebug.LogWarning(nameof(PickupInteractable) + " was unable to un-pause head movement, this is a bug!");
             }
-        }
-        else
-        {   
-            // shouldn't need this here since pauseHead is used as a switch, but just in case...
-            targetOffset = Vector3.zero;
         }
     }
 
