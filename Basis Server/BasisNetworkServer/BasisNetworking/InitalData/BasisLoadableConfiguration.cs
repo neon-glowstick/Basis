@@ -32,11 +32,6 @@ namespace BasisNetworking.InitialData
 
         public static BasisLoadableConfiguration LoadFromXml(string filePath)
         {
-            if (!File.Exists(filePath))
-            {
-                CreateDefaultXml(filePath);
-            }
-
             XmlDocument doc = new XmlDocument();
             doc.Load(filePath);
 
@@ -82,52 +77,6 @@ namespace BasisNetworking.InitialData
             }
 
             return configurations.ToArray();
-        }
-
-        private static void CreateDefaultXml(string filePath)
-        {
-            // Ensure the folder exists, create if not
-            string folderPath = Path.GetDirectoryName(filePath);
-            if (!Directory.Exists(folderPath))
-            {
-                Directory.CreateDirectory(folderPath);
-            }
-
-            // Create XML document with sample data
-            XmlDocument doc = new XmlDocument();
-            XmlElement root = doc.CreateElement("Resource");
-
-            root.AppendChild(CreateElement(doc, "Mode", "0"));
-            root.AppendChild(CreateElement(doc, "LoadedNetID", ""));
-            root.AppendChild(CreateElement(doc, "UnlockPassword", ""));
-            root.AppendChild(CreateElement(doc, "MetaURL", ""));
-            root.AppendChild(CreateElement(doc, "BundleURL", ""));
-            root.AppendChild(CreateElement(doc, "IsLocalLoad", "false"));
-
-            root.AppendChild(CreateElement(doc, "PositionX", "0"));
-            root.AppendChild(CreateElement(doc, "PositionY", "0"));
-            root.AppendChild(CreateElement(doc, "PositionZ", "0"));
-
-            root.AppendChild(CreateElement(doc, "QuaternionX", "0"));
-            root.AppendChild(CreateElement(doc, "QuaternionY", "0"));
-            root.AppendChild(CreateElement(doc, "QuaternionZ", "0"));
-            root.AppendChild(CreateElement(doc, "QuaternionW", "1"));
-
-            root.AppendChild(CreateElement(doc, "ScaleX", "1"));
-            root.AppendChild(CreateElement(doc, "ScaleY", "1"));
-            root.AppendChild(CreateElement(doc, "ScaleZ", "1"));
-
-            root.AppendChild(CreateElement(doc, "Persist", "false"));
-
-            doc.AppendChild(root);
-            doc.Save(filePath);
-        }
-
-        private static XmlElement CreateElement(XmlDocument doc, string name, string value)
-        {
-            XmlElement element = doc.CreateElement(name);
-            element.InnerText = value;
-            return element;
         }
     }
 }
