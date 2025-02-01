@@ -387,7 +387,7 @@ public class PlayerInteract : MonoBehaviour
         HoverInteractSphere interactSphere = interactOrigin.AddComponent<HoverInteractSphere>();
 
         interactOrigin.transform.SetParent(input.transform);
-        interactOrigin.layer = LayerMask.NameToLayer("Interactable");
+        interactOrigin.layer = LayerMask.NameToLayer("Ignore Raycast");
         // TODO: custom config to use center of palm instead of raycast offset (IK palm? but that breaks input on a bad avi upload, no?)
         interactOrigin.transform.SetLocalPositionAndRotation(input.BasisDeviceMatchSettings.PositionRayCastOffset, Quaternion.Euler(input.BasisDeviceMatchSettings.RotationRaycastOffset));
 

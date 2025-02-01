@@ -5,10 +5,7 @@ using Basis.Scripts.Device_Management;
 using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Burst;
-using Unity.Mathematics;
-
-public class MicrophoneRecorder : MicrophoneRecorderBase
+public partial class MicrophoneRecorder : MicrophoneRecorderBase
 {
     private int head = 0;
     private int bufferLength;
@@ -29,56 +26,45 @@ public class MicrophoneRecorder : MicrophoneRecorderBase
     {
         if (!IsInitialize)
         {
-            Initialize();
+            BasisOpusSettings = BasisDeviceManagement.Instance.BasisOpusSettings;
+            processBufferArray = BasisOpusSettings.CalculateProcessBuffer();
+            PBA = new NativeArray<float>(processBufferArray, Allocator.Persistent);
+            VAJ = new LogarithmicVolumeAdjustmentJob
+            {
+                processBufferArray = PBA,
+                Volume = Volume
+            };
+            ProcessBufferLength = processBufferArray.Length;
+            samplingFrequency = BasisOpusSettings.GetSampleFreq();
+            microphoneBufferArray = new float[BasisOpusSettings.RecordingFullLength * samplingFrequency];
+            rmsValues = new float[rmsWindowSize];
+            bufferLength = microphoneBufferArray.Length;
+            PacketSize = ProcessBufferLength * 4;
+            if (!HasEvents)
+            {
+                SMDMicrophone.OnMicrophoneChanged += ResetMicrophones;
+                SMDMicrophone.OnMicrophoneVolumeChanged += ChangeMicrophoneVolume;
+                SMDMicrophone.OnMicrophoneUseDenoiserChanged += ConfigureDenoiser;
+                BasisDeviceManagement.Instance.OnBootModeChanged += OnBootModeChanged;
+                HasEvents = true;
+            }
+            ChangeMicrophoneVolume(SMDMicrophone.SelectedVolumeMicrophone);
+            ResetMicrophones(SMDMicrophone.SelectedMicrophone);
+            ConfigureDenoiser(SMDMicrophone.SelectedDenoiserMicrophone);
+
+            StartProcessingThread();  // Start the processing thread once
             IsInitialize = true;
             return true;
         }
         return false;
     }
-    public void Initialize()
-    {
-        BasisOpusSettings = BasisDeviceManagement.Instance.BasisOpusSettings;
-        processBufferArray = BasisOpusSettings.CalculateProcessBuffer();
-        PBA = new NativeArray<float>(processBufferArray, Allocator.Persistent);
-        VAJ = new LogarithmicVolumeAdjustmentJob
-        {
-            processBufferArray = PBA,
-            Volume = Volume
-        };
-        ProcessBufferLength = processBufferArray.Length;
-        samplingFrequency = BasisOpusSettings.GetSampleFreq();
-        microphoneBufferArray = new float[BasisOpusSettings.RecordingFullLength * samplingFrequency];
-        rmsValues = new float[rmsWindowSize];
-        bufferLength = microphoneBufferArray.Length;
-        PacketSize = ProcessBufferLength * 4;
-        if (!HasEvents)
-        {
-            SMDMicrophone.OnMicrophoneChanged += ResetMicrophones;
-            SMDMicrophone.OnMicrophoneVolumeChanged += ChangeAudio;
-            SMDMicrophone.OnMicrophoneUseDenoiserChanged += ConfigureDenoiser;
-            BasisDeviceManagement.Instance.OnBootModeChanged += OnBootModeChanged;
-            HasEvents = true;
-        }
-        ChangeAudio(SMDMicrophone.SelectedVolumeMicrophone);
-        ResetMicrophones(SMDMicrophone.SelectedMicrophone);
-        ConfigureDenoiser(SMDMicrophone.SelectedDenoiserMicrophone);
-
-        StartProcessingThread();  // Start the processing thread once
-    }
-
-    private void ConfigureDenoiser(bool useDenoiser)
-    {
-        UseDenoiser = useDenoiser;
-        BasisDebug.Log("Setting Denoiser To " + UseDenoiser);
-    }
-
     public new void OnDestroy()
     {
         StopProcessingThread();  // Stop the processing thread
         if (HasEvents)
         {
             SMDMicrophone.OnMicrophoneChanged -= ResetMicrophones;
-            SMDMicrophone.OnMicrophoneVolumeChanged -= ChangeAudio;
+            SMDMicrophone.OnMicrophoneVolumeChanged -= ChangeMicrophoneVolume;
             SMDMicrophone.OnMicrophoneUseDenoiserChanged -= ConfigureDenoiser;
             BasisDeviceManagement.Instance.OnBootModeChanged -= OnBootModeChanged;
 
@@ -92,6 +78,11 @@ public class MicrophoneRecorder : MicrophoneRecorderBase
         base.OnDestroy();
     }
 
+    private void ConfigureDenoiser(bool useDenoiser)
+    {
+        UseDenoiser = useDenoiser;
+        BasisDebug.Log("Setting Denoiser To " + UseDenoiser);
+    }
     private void OnBootModeChanged(string mode)
     {
         ResetMicrophones(SMDMicrophone.SelectedMicrophone);
@@ -318,22 +309,6 @@ public class MicrophoneRecorder : MicrophoneRecorderBase
 
         VAJ.processBufferArray.CopyTo(processBufferArray);
     }
-    [BurstCompile]
-    public struct LogarithmicVolumeAdjustmentJob : IJobParallelFor
-    {
-        [NativeDisableParallelForRestriction]
-        public NativeArray<float> processBufferArray;
-        public float Volume; // Recommended range: 0.0f to 1.0f
-
-        public void Execute(int index)
-        {
-            float sample = processBufferArray[index];
-            float sign = math.sign(sample);
-            sample = math.abs(sample);
-            sample = math.log(1.0f + Volume * sample) / math.log(1.0f + Volume); // Normalize to keep the scale consistent
-            processBufferArray[index] = sign * sample;
-        }
-    }
     public float GetRMS()
     {
         // Use a double for the sum to avoid overflow and precision issues
@@ -358,7 +333,7 @@ public class MicrophoneRecorder : MicrophoneRecorderBase
             return position - head;
         }
     }
-    public void ChangeAudio(float volume)
+    public void ChangeMicrophoneVolume(float volume)
     {
         Volume = volume;
         // Create the job

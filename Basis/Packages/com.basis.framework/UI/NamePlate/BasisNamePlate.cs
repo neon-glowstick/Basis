@@ -2,7 +2,6 @@ using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management;
 using Basis.Scripts.Networking;
 using Basis.Scripts.TransformBinders.BoneControl;
-using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -32,6 +31,7 @@ namespace Basis.Scripts.UI.NamePlate
         public Quaternion cachedRotation;
         public bool HasRendererCheckWiredUp = false;
         public bool IsVisible = true;
+        public bool HasProgressBarVisible = false;
         public void Initalize(BasisBoneControl hipTarget, BasisRemotePlayer basisRemotePlayer)
         {
             BasisRemotePlayer = basisRemotePlayer;
@@ -166,19 +166,15 @@ namespace Basis.Scripts.UI.NamePlate
                 BasisRemotePlayer.FaceRenderer.DestroyCalled -= AvatarUnloaded;
             }
         }
-        public bool HasProgressBarVisible = false;
         public void ProgressReport(string UniqueID, float progress, string info)
         {
             BasisDeviceManagement.EnqueueOnMainThread(() =>
               {
                   if (progress == 100)
                   {
-                      if (HasProgressBarVisible)
-                      {
-                          Loadingtext.gameObject.SetActive(false);
-                          Loadingbar.gameObject.SetActive(false);
-                          HasProgressBarVisible = false;
-                      }
+                      Loadingtext.gameObject.SetActive(false);
+                      Loadingbar.gameObject.SetActive(false);
+                      HasProgressBarVisible = false;
                   }
                   else
                   {

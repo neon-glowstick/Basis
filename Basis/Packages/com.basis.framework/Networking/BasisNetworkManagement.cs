@@ -158,7 +158,7 @@ namespace Basis.Scripts.Networking
             Players.Clear();
             RemotePlayers.Clear();
             JoiningPlayers.Clear();
-           await BasisNetworkSpawnItem.Reset();
+            await BasisNetworkSpawnItem.Reset();
             ReceiverCount = 0;
             MainThreadContext = null;
             LocalPlayerPeer = null;

@@ -222,18 +222,24 @@ public static class BasisNetworkSpawnItem
 
     public static async Task Reset()
     {
-        foreach (var reference in SpawnedScenes.Values)
+        if (SpawnedScenes != null)
         {
-            if (reference.IsValid())
+            foreach (var reference in SpawnedScenes.Values)
             {
-                await SceneManager.UnloadSceneAsync(reference);
+                if (reference.IsValid())
+                {
+                    await SceneManager.UnloadSceneAsync(reference);
+                }
             }
         }
-        foreach (var reference in SpawnedGameobjects.Values)
+        if (SpawnedGameobjects != null)
         {
-            if (reference != null)
+            foreach (var reference in SpawnedGameobjects.Values)
             {
-                GameObject.Destroy(reference);
+                if (reference != null)
+                {
+                    GameObject.Destroy(reference);
+                }
             }
         }
         SpawnedGameobjects.Clear();

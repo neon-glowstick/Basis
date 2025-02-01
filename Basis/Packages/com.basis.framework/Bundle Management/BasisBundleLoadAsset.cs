@@ -58,6 +58,11 @@ public static class BasisBundleLoadAsset
             BasisDebug.LogError("No scenes found in AssetBundle.");
             return new Scene();
         }
+        if (scenePaths.Length > 1)
+        {
+            BasisDebug.LogError("More then one scene was found in The Asset Bundle, Please Correct!");
+            return new Scene();
+        }
 
         if (!string.IsNullOrEmpty(scenePaths[0]))
         {
