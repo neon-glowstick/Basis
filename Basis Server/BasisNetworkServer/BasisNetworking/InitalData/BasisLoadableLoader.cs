@@ -67,7 +67,7 @@ namespace BasisNetworking.InitalData
                 Persist = config.Persist
             };
         }
-        public const string exampleXml = @"<Resource>
+        public const string exampleXml = @"<BasisLoadableConfiguration>
     <!-- Mode of the configuration -->
     <Mode>0</Mode>
     <!-- Network ID -->
@@ -99,6 +99,6 @@ namespace BasisNetworking.InitalData
 
     <!-- Persist flag -->
     <Persist>false</Persist>
-</Resource>";
+</BasisLoadableConfiguration>";
     }
 }
