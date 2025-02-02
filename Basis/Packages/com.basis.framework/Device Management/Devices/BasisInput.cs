@@ -7,6 +7,7 @@ using Basis.Scripts.TransformBinders.BoneControl;
 using Basis.Scripts.UI;
 using Basis.Scripts.UI.UI_Panels;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -34,14 +35,17 @@ namespace Basis.Scripts.Device_Management.Devices
         public float3 AvatarPositionOffset = Vector3.zero;
         public float3 AvatarRotationOffset = Vector3.zero;
 
-        public bool HasUIInputSupport = false;
+        public bool HasRaycastSupport = false;
+        public bool HasInteractVisual = true;
+
         public string CommonDeviceIdentifier;
         public BasisVisualTracker BasisVisualTracker;
         public BasisPointRaycaster BasisPointRaycaster;//used to raycast against things like UI
+        public BasisUIRaycast BasisUIRaycast;
         public AddressableGenericResource LoadedDeviceRequest;
         public event SimulationHandler AfterControlApply;
         public GameObject BasisPointRaycasterRef;
-        public BasisDeviceMatchSettings BasisDeviceMatchableNames;
+        public BasisDeviceMatchSettings BasisDeviceMatchSettings;
         [SerializeField]
         public BasisInputState InputState = new BasisInputState();
         [SerializeField]
@@ -120,7 +124,7 @@ namespace Basis.Scripts.Device_Management.Devices
                 Control.IncomingData.position = Vector3.zero;
                 Control.IncomingData.rotation = Quaternion.identity;
             }
-            if (BasisDeviceMatchableNames == null || BasisDeviceMatchableNames.HasTrackedRole == false)
+            if (BasisDeviceMatchSettings == null || BasisDeviceMatchSettings.HasTrackedRole == false)
             {
                 //unassign last
                 if (hasRoleAssigned)
@@ -149,7 +153,7 @@ namespace Basis.Scripts.Device_Management.Devices
         /// <param name="subSystems"></param>
         /// <param name="ForceAssignTrackedRole"></param>
         /// <param name="basisBoneTrackedRole"></param>
-        public void InitalizeTracking(string uniqueID, string unUniqueDeviceID, string subSystems, bool ForceAssignTrackedRole, BasisBoneTrackedRole basisBoneTrackedRole)
+        public async void InitalizeTracking(string uniqueID, string unUniqueDeviceID, string subSystems, bool ForceAssignTrackedRole, BasisBoneTrackedRole basisBoneTrackedRole)
         {
             //unassign the old tracker
             UnAssignTracker();
@@ -160,21 +164,22 @@ namespace Basis.Scripts.Device_Management.Devices
             CommonDeviceIdentifier = unUniqueDeviceID;
             UniqueDeviceIdentifier = uniqueID;
             // lets check to see if there is a override from a devices matcher
-            BasisDeviceMatchableNames = BasisDeviceManagement.Instance.BasisDeviceNameMatcher.GetAssociatedDeviceMatchableNames(CommonDeviceIdentifier, basisBoneTrackedRole, ForceAssignTrackedRole);
-            if (BasisDeviceMatchableNames.HasTrackedRole)
+            BasisDeviceMatchSettings = BasisDeviceManagement.Instance.BasisDeviceNameMatcher.GetAssociatedDeviceMatchableNames(CommonDeviceIdentifier, basisBoneTrackedRole, ForceAssignTrackedRole);
+            if (BasisDeviceMatchSettings.HasTrackedRole)
             {
-                BasisDebug.Log("Overriding Tracker " + BasisDeviceMatchableNames.DeviceID, BasisDebug.LogTag.Input);
-                AssignRoleAndTracker(BasisDeviceMatchableNames.TrackedRole);
+                BasisDebug.Log("Overriding Tracker " + BasisDeviceMatchSettings.DeviceID, BasisDebug.LogTag.Input);
+                AssignRoleAndTracker(BasisDeviceMatchSettings.TrackedRole);
             }
 
             if (hasRoleAssigned)
             {
-                AvatarRotationOffset = BasisDeviceMatchableNames.AvatarRotationOffset;
-                AvatarPositionOffset = BasisDeviceMatchableNames.AvatarPositionOffset;
-                HasUIInputSupport = BasisDeviceMatchableNames.HasRayCastSupport;
-                if (HasUIInputSupport)
+                AvatarRotationOffset = BasisDeviceMatchSettings.AvatarRotationOffset;
+                AvatarPositionOffset = BasisDeviceMatchSettings.AvatarPositionOffset;
+                HasRaycastSupport = BasisDeviceMatchSettings.HasRayCastSupport;
+                HasInteractVisual = BasisDeviceMatchSettings.HasInteractVisual;
+                if (HasRaycastSupport)
                 {
-                    CreateRayCaster(this);
+                  await  CreateRayCaster(this);
                 }
             }
             /*            if (ForceAssignTrackedRole)
@@ -386,9 +391,10 @@ namespace Basis.Scripts.Device_Management.Devices
                 case BasisBoneTrackedRole.Mouth:
                     break;
             }
-            if (HasUIInputSupport)
+            if (HasRaycastSupport)
             {
-                BasisPointRaycaster.RayCastUI();
+                BasisPointRaycaster.UpdateRaycast();
+                BasisUIRaycast.HandleUIRaycast();
             }
             AfterControlApply?.Invoke();
         }
@@ -463,14 +469,16 @@ namespace Basis.Scripts.Device_Management.Devices
                 AddressableLoadFactory.ReleaseResource(LoadedDeviceRequest);
             }
         }
-        public async void CreateRayCaster(BasisInput BaseInput)
+        public async Task CreateRayCaster(BasisInput BaseInput)
         {
             BasisDebug.Log("Adding RayCaster");
             BasisPointRaycasterRef = new GameObject(nameof(BasisPointRaycaster));
             BasisPointRaycasterRef.transform.parent = this.transform;
             BasisPointRaycasterRef.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             BasisPointRaycaster = BasisHelpers.GetOrAddComponent<BasisPointRaycaster>(BasisPointRaycasterRef);
-            await BasisPointRaycaster.Initialize(BaseInput);
+            BasisPointRaycaster.Initialize(BaseInput);
+            BasisUIRaycast = new BasisUIRaycast();
+            await BasisUIRaycast.Initialize(BaseInput, BasisPointRaycaster);
         }
     }
 }

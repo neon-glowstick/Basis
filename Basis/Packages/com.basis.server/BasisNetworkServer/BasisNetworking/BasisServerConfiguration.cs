@@ -1,6 +1,9 @@
+using System;
 using System.IO;
-using System.Xml;
-[System.Serializable]
+using System.Reflection;
+using System.Xml.Serialization;
+
+[Serializable]
 public class Configuration
 {
     public int PeerLimit = 1024;
@@ -9,7 +12,7 @@ public class Configuration
     public bool UseNativeSockets = true;
     public bool NatPunchEnabled = true;
     public int PingInterval = 1500;
-    public int DisconnectTimeout = 30000;
+    public int DisconnectTimeout = 5000;
     public bool SimulatePacketLoss = false;
     public bool SimulateLatency = false;
     public int SimulationPacketLossChance = 10;
@@ -18,17 +21,17 @@ public class Configuration
     public bool UnsyncedEvents = false;
     public bool UnsyncedReceiveEvent = false;
     public bool UnsyncedDeliveryEvent = false;
-    public int ReconnectDelay = 2000;
-    public int MaxConnectAttempts = 5;
-    public bool ReuseAddress = false;
+    public int ReconnectDelay = 500;
+    public int MaxConnectAttempts = 10;
+    public bool ReuseAddress = true;
     public bool DontRoute = false;
     public bool EnableStatistics = true;
-    public bool IPv6Enabled = false;
+    public bool IPv6Enabled = true;
     public int MtuOverride = 1500;
     public bool MtuDiscovery = true;
     public bool DisconnectOnUnreachable = true;
     public bool AllowPeerAddressChange = true;
-    public bool UsingLoggingFile = false;
+    public bool UsingLoggingFile = true;
     public string HealthCheckHost = "localhost";
     public ushort HealthCheckPort = 10666;
     public string HealthPath = "/health";
@@ -41,111 +44,115 @@ public class Configuration
     public int PromethusPort = 1234;
     public string PromethusUrl = "/metrics";
     public string Password = "default_password";
+    public int MinThreadPoolThreads = 100;
+    public int MaxThreadPoolThreads = 500;
+
+    /// <summary>
+    /// Read config from file. If no file is found create a default config file at filePath
+    /// </summary>
+    /// <param name="filePath">Path to config file</param>
     public static Configuration LoadFromXml(string filePath)
     {
-        if (!File.Exists(filePath))
+        var serializer = new XmlSerializer(typeof(Configuration));
+        if (File.Exists(filePath))
         {
-            CreateDefaultXml(filePath);
+            using var fileReader = new StreamReader(filePath);
+            var config = (Configuration)serializer.Deserialize(fileReader);
+            fileReader.Close();
+            return config;
         }
 
-        XmlDocument doc = new XmlDocument();
-        doc.Load(filePath);
+        BNL.LogWarning($"{filePath} not found, creating with default values");
 
-        return new Configuration
+        var defaultConfig = new Configuration();
+        using var writer = new StreamWriter(filePath);
+        serializer.Serialize(writer, defaultConfig);
+        writer.Close();
+
+        return defaultConfig;
+    }
+
+    /// <summary>
+    /// This code will override what is written in the config.xml if it finds
+    /// an Environmental Variable with the same name as a public config field.
+    ///
+    /// On windows you can test this in the console:
+    ///    $env:PeerLimit = "256"
+    ///   .\BasisNetworkConsole.exe
+    /// But it is intended to allow Linux admins to override defaults during launch.
+    /// </summary>
+    public void ProcessEnvironmentalOverrides()
+    {
+        Configuration config = this;
+
+        // Override a configuration value only if we find a Environmental Variable that matches the name
+        Type type = config.GetType();
+        FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+        foreach (var field in fields)
         {
-            PeerLimit = int.Parse(doc.SelectSingleNode("/Configuration/PeerLimit")?.InnerText ?? "1024"),
-            SetPort = ushort.Parse(doc.SelectSingleNode("/Configuration/SetPort")?.InnerText ?? "4296"),
-            QueueEvents = int.Parse(doc.SelectSingleNode("/Configuration/QueueEvents")?.InnerText ?? "10"),
-            UseNativeSockets = bool.Parse(doc.SelectSingleNode("/Configuration/UseNativeSockets")?.InnerText ?? "true"),
-            NatPunchEnabled = bool.Parse(doc.SelectSingleNode("/Configuration/NatPunchEnabled")?.InnerText ?? "true"),
-            PingInterval = int.Parse(doc.SelectSingleNode("/Configuration/PingInterval")?.InnerText ?? "1500"),
-            DisconnectTimeout = int.Parse(doc.SelectSingleNode("/Configuration/DisconnectTimeout")?.InnerText ?? "30000"),
-            SimulatePacketLoss = bool.Parse(doc.SelectSingleNode("/Configuration/SimulatePacketLoss")?.InnerText ?? "false"),
-            SimulateLatency = bool.Parse(doc.SelectSingleNode("/Configuration/SimulateLatency")?.InnerText ?? "false"),
-            SimulationPacketLossChance = int.Parse(doc.SelectSingleNode("/Configuration/SimulationPacketLossChance")?.InnerText ?? "10"),
-            SimulationMinLatency = int.Parse(doc.SelectSingleNode("/Configuration/SimulationMinLatency")?.InnerText ?? "50"),
-            SimulationMaxLatency = int.Parse(doc.SelectSingleNode("/Configuration/SimulationMaxLatency")?.InnerText ?? "150"),
-            UnsyncedEvents = bool.Parse(doc.SelectSingleNode("/Configuration/UnsyncedEvents")?.InnerText ?? "false"),
-            UnsyncedReceiveEvent = bool.Parse(doc.SelectSingleNode("/Configuration/UnsyncedReceiveEvent")?.InnerText ?? "false"),
-            UnsyncedDeliveryEvent = bool.Parse(doc.SelectSingleNode("/Configuration/UnsyncedDeliveryEvent")?.InnerText ?? "false"),
-            ReconnectDelay = int.Parse(doc.SelectSingleNode("/Configuration/ReconnectDelay")?.InnerText ?? "2000"),
-            MaxConnectAttempts = int.Parse(doc.SelectSingleNode("/Configuration/MaxConnectAttempts")?.InnerText ?? "5"),
-            ReuseAddress = bool.Parse(doc.SelectSingleNode("/Configuration/ReuseAddress")?.InnerText ?? "false"),
-            DontRoute = bool.Parse(doc.SelectSingleNode("/Configuration/DontRoute")?.InnerText ?? "false"),
-            EnableStatistics = bool.Parse(doc.SelectSingleNode("/Configuration/EnableStatistics")?.InnerText ?? "true"),
-            IPv6Enabled = bool.Parse(doc.SelectSingleNode("/Configuration/IPv6Enabled")?.InnerText ?? "false"),
-            MtuOverride = int.Parse(doc.SelectSingleNode("/Configuration/MtuOverride")?.InnerText ?? "1500"),
-            MtuDiscovery = bool.Parse(doc.SelectSingleNode("/Configuration/MtuDiscovery")?.InnerText ?? "true"),
-            DisconnectOnUnreachable = bool.Parse(doc.SelectSingleNode("/Configuration/DisconnectOnUnreachable")?.InnerText ?? "true"),
-            AllowPeerAddressChange = bool.Parse(doc.SelectSingleNode("/Configuration/AllowPeerAddressChange")?.InnerText ?? "true"),
-            UsingLoggingFile = bool.Parse(doc.SelectSingleNode("/Configuration/UsingLoggingFile")?.InnerText ?? "true"),
-            HealthCheckHost = doc.SelectSingleNode("/Configuration/HealthCheckHost")?.InnerText ?? "localhost",
-            HealthCheckPort = ushort.Parse(doc.SelectSingleNode("/Configuration/HealthCheckPort")?.InnerText ?? "10666"),
-            HealthPath = doc.SelectSingleNode("/Configuration/HealthPath")?.InnerText ?? "/health",
-            BSRSMillisecondDefaultInterval = int.Parse(doc.SelectSingleNode("/Configuration/BSRSMillisecondDefaultInterval")?.InnerText ?? "50"),
-            BSRBaseMultiplier = int.Parse(doc.SelectSingleNode("/Configuration/BSRBaseMultiplier")?.InnerText ?? "1"),
-            BSRSIncreaseRate = float.Parse(doc.SelectSingleNode("/Configuration/BSRSIncreaseRate")?.InnerText ?? "0.005"),
-            OverrideAutoDiscoveryOfIpv = bool.Parse(doc.SelectSingleNode("/Configuration/OverrideAutoDiscoveryOfIpv")?.InnerText ?? "false"),
-            IPv4Address = doc.SelectSingleNode("/Configuration/IPv4Address")?.InnerText ?? "0.0.0.0",
-            IPv6Address = doc.SelectSingleNode("/Configuration/IPv6Address")?.InnerText ?? "::1",
-            PromethusPort = int.Parse(doc.SelectSingleNode("/Configuration/PromethusPort")?.InnerText ?? "1234"),
-            PromethusUrl = doc.SelectSingleNode("/Configuration/PromethusUrl")?.InnerText ?? "/metrics",
-            Password = doc.SelectSingleNode("/Configuration/Password")?.InnerText ?? "default_password", // Parse password
-        };
-    }
+            string value = Environment.GetEnvironmentVariable(field.Name);
+            if ( value != null )
+            {
+                BNL.Log($"Applying Environmental Override with Field:{field.Name} Value:{value}");
 
-    private static void CreateDefaultXml(string filePath)
-    {
-        XmlDocument doc = new XmlDocument();
-        XmlElement root = doc.CreateElement("Configuration");
+                if (field.FieldType == typeof(int))
+                {
+                    if (int.TryParse(value, out int number))
+                    {
+                        field.SetValue(config, number);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Could not cast to int. Failed Override");
+                    }
+                }
+                else if (field.FieldType == typeof(ushort))
+                {
+                    if (ushort.TryParse(value, out ushort number))
+                    {
+                        field.SetValue(config, number);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Could not cast to ushort. Failed Override.");
+                    }
+                }
+                else if (field.FieldType == typeof(float))
+                {
+                    if (float.TryParse(value, out float number))
+                    {
+                        field.SetValue(config, number);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Could not cast to ushort. Failed Override.");
+                    }
+                }
+                else if (field.FieldType == typeof(string))
+                {
+                    field.SetValue(config, value);
+                }
+                else if (field.FieldType == typeof(bool))
+                {
+                    if (value == "true")
+                    {
+                        field.SetValue(config, true);
+                    }
+                    else if (value == "false")
+                    {
+                        field.SetValue(config, false);
+                    }
+                    else
+                    {
+                        BNL.LogWarning("Boolean field was not a true or false string. Failed Override");
+                    }
 
-        root.AppendChild(CreateElement(doc, "PeerLimit", "1024"));
-        root.AppendChild(CreateElement(doc, "SetPort", "4296"));
-        root.AppendChild(CreateElement(doc, "QueueEvents", "10"));
-        root.AppendChild(CreateElement(doc, "UseNativeSockets", "true"));
-        root.AppendChild(CreateElement(doc, "NatPunchEnabled", "true"));
-        root.AppendChild(CreateElement(doc, "PingInterval", "1500"));
-        root.AppendChild(CreateElement(doc, "DisconnectTimeout", "5000"));
-        root.AppendChild(CreateElement(doc, "SimulatePacketLoss", "false"));
-        root.AppendChild(CreateElement(doc, "SimulateLatency", "false"));
-        root.AppendChild(CreateElement(doc, "SimulationPacketLossChance", "10"));
-        root.AppendChild(CreateElement(doc, "SimulationMinLatency", "50"));
-        root.AppendChild(CreateElement(doc, "SimulationMaxLatency", "150"));
-        root.AppendChild(CreateElement(doc, "UnsyncedEvents", "false"));
-        root.AppendChild(CreateElement(doc, "UnsyncedReceiveEvent", "false"));
-        root.AppendChild(CreateElement(doc, "UnsyncedDeliveryEvent", "false"));
-        root.AppendChild(CreateElement(doc, "ReconnectDelay", "500"));
-        root.AppendChild(CreateElement(doc, "MaxConnectAttempts", "10"));
-        root.AppendChild(CreateElement(doc, "ReuseAddress", "true"));
-        root.AppendChild(CreateElement(doc, "DontRoute", "false"));
-        root.AppendChild(CreateElement(doc, "EnableStatistics", "true"));
-        root.AppendChild(CreateElement(doc, "IPv6Enabled", "true"));
-        root.AppendChild(CreateElement(doc, "MtuOverride", "1500"));
-        root.AppendChild(CreateElement(doc, "MtuDiscovery", "true"));
-        root.AppendChild(CreateElement(doc, "DisconnectOnUnreachable", "true"));
-        root.AppendChild(CreateElement(doc, "AllowPeerAddressChange", "true"));
-        root.AppendChild(CreateElement(doc, "UsingLoggingFile", "true"));
-        root.AppendChild(CreateElement(doc, "HealthCheckHost", "localhost"));
-        root.AppendChild(CreateElement(doc, "HealthCheckPort", "10666"));
-        root.AppendChild(CreateElement(doc, "HealthPath", "/health"));
-        root.AppendChild(CreateElement(doc, "BSRSMillisecondDefaultInterval", "50"));
-        root.AppendChild(CreateElement(doc, "BSRBaseMultiplier", "1"));
-        root.AppendChild(CreateElement(doc, "BSRSIncreaseRate", "0.005"));
-        root.AppendChild(CreateElement(doc, "OverrideAutoDiscoveryOfIpv", "false"));
-        root.AppendChild(CreateElement(doc, "IPv4Address", "0.0.0.0"));
-        root.AppendChild(CreateElement(doc, "IPv6Address", "::1"));
-        root.AppendChild(CreateElement(doc, "PromethusPort", "1234"));
-        root.AppendChild(CreateElement(doc, "PromethusUrl", "/metrics"));
-        root.AppendChild(CreateElement(doc, "Password", "default_password")); // Default password
-
-        doc.AppendChild(root);
-        doc.Save(filePath);
-    }
-
-    private static XmlElement CreateElement(XmlDocument doc, string name, string value)
-    {
-        XmlElement element = doc.CreateElement(name);
-        element.InnerText = value;
-        return element;
+                }
+                else
+                {
+                    BNL.LogWarning($"Environmental varible type could not be processed for Config Field:{field.Name} Value:{value}");
+                }
+            }
+        }
     }
 }

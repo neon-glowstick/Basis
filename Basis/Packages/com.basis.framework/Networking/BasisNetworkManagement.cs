@@ -7,7 +7,6 @@ using Basis.Scripts.Networking.Recievers;
 using Basis.Scripts.Networking.Transmitters;
 using Basis.Scripts.Profiler;
 using Basis.Scripts.TransformBinders.BoneControl;
-using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System;
@@ -20,6 +19,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static BasisNetworkGenericMessages;
+using static DarkRift.Basis_Common.Serializable.SerializableBasis;
 using static SerializableBasis;
 namespace Basis.Scripts.Networking
 {
@@ -35,6 +35,7 @@ namespace Basis.Scripts.Networking
         /// fire when ownership is changed for a unique string
         /// </summary>
         public static OnNetworkMessageReceiveOwnershipTransfer OnOwnershipTransfer;
+        public static OnNetworkMessageReceiveOwnershipRemoved OwnershipReleased;
         public static ConcurrentDictionary<ushort, BasisNetworkPlayer> Players = new ConcurrentDictionary<ushort, BasisNetworkPlayer>();
         public static ConcurrentDictionary<ushort, BasisNetworkReceiver> RemotePlayers = new ConcurrentDictionary<ushort, BasisNetworkReceiver>();
         public static HashSet<ushort> JoiningPlayers = new HashSet<ushort>();
@@ -123,7 +124,7 @@ namespace Basis.Scripts.Networking
             {
                 SetupSceneEvents(BasisScene.Instance);
             }
-            BasisScene.Ready.AddListener(SetupSceneEvents);
+            BasisScene.Ready += SetupSceneEvents;
             this.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             OnEnableInstanceCreate?.Invoke();
         }
@@ -146,7 +147,7 @@ namespace Basis.Scripts.Networking
             BasisAvatarBufferPool.Clear();
             BasisNetworkClient.Disconnect();
         }
-        public void Shutdown()
+        public async void Shutdown()
         {
             // Reset static fields
             Ip = "0.0.0.0";
@@ -157,6 +158,7 @@ namespace Basis.Scripts.Networking
             Players.Clear();
             RemotePlayers.Clear();
             JoiningPlayers.Clear();
+            await BasisNetworkSpawnItem.Reset();
             ReceiverCount = 0;
             MainThreadContext = null;
             LocalPlayerPeer = null;
@@ -414,24 +416,24 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
-                case BasisNetworkCommons.CreateRemotePlayers:
-                    BasisNetworkManagement.MainThreadContext.Post(async _ =>
-                    {
-                        await BasisNetworkHandleRemote.HandleCreateAllRemoteClients(Reader, this.transform);
-                        Reader.Recycle();
-                    }, null);
-                    break;
-                case BasisNetworkCommons.OwnershipResponse:
+                case BasisNetworkCommons.GetCurrentOwnerRequest:
                     BasisNetworkManagement.MainThreadContext.Post(_ =>
                     {
                         BasisNetworkGenericMessages.HandleOwnershipResponse(Reader);
                         Reader.Recycle();
                     }, null);
                     break;
-                case BasisNetworkCommons.OwnershipTransfer:
+                case BasisNetworkCommons.ChangeCurrentOwnerRequest:
                     BasisNetworkManagement.MainThreadContext.Post(_ =>
                     {
                         BasisNetworkGenericMessages.HandleOwnershipTransfer(Reader);
+                        Reader.Recycle();
+                    }, null);
+                    break;
+                case BasisNetworkCommons.RemoveCurrentOwnerRequest:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.HandleOwnershipRemove(Reader);
                         Reader.Recycle();
                     }, null);
                     break;
@@ -457,13 +459,56 @@ namespace Basis.Scripts.Networking
                         Reader.Recycle();
                     }, null);
                     break;
+                case BasisNetworkCommons.NetIDAssigns:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.MassNetIDAssign(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
+                case BasisNetworkCommons.netIDAssign:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.NetIDAssign(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
+                case BasisNetworkCommons.LoadResourceMessage:
+                    BasisNetworkManagement.MainThreadContext.Post(async _ =>
+                    {
+                     await   BasisNetworkGenericMessages.LoadResourceMessage(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
+                case BasisNetworkCommons.UnloadResourceMessage:
+                    BasisNetworkManagement.MainThreadContext.Post(_ =>
+                    {
+                        BasisNetworkGenericMessages.UnloadResourceMessage(Reader, deliveryMethod);
+                        Reader.Recycle();
+                    }, null);
+                    break;
                 default:
                     BNL.LogError($"this Channel was not been implemented {channel}");
                     Reader.Recycle();
                     break;
             }
         }
-        public static void RequestOwnership(string UniqueNetworkId, ushort NewOwner)
+        public static void RemoveOwnership(string UniqueNetworkId)
+        {
+            OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage
+            {
+                playerIdMessage = new PlayerIdMessage
+                {
+                    playerID = (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId,
+                },
+                ownershipID = UniqueNetworkId
+            };
+            NetDataWriter netDataWriter = new NetDataWriter();
+            OwnershipTransferMessage.Serialize(netDataWriter);
+            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.RemoveCurrentOwnerRequest, DeliveryMethod.ReliableSequenced);
+            BasisNetworkProfiler.OwnershipTransferMessageCounter.Sample(netDataWriter.Length);
+        }
+        public static void TakeOwnership(string UniqueNetworkId, ushort NewOwner)
         {
             OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage
             {
@@ -475,7 +520,7 @@ namespace Basis.Scripts.Networking
             };
             NetDataWriter netDataWriter = new NetDataWriter();
             OwnershipTransferMessage.Serialize(netDataWriter);
-            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.OwnershipTransfer, DeliveryMethod.ReliableSequenced);
+            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.ChangeCurrentOwnerRequest, DeliveryMethod.ReliableSequenced);
             BasisNetworkProfiler.OwnershipTransferMessageCounter.Sample(netDataWriter.Length);
         }
         public static void RequestCurrentOwnership(string UniqueNetworkId)
@@ -490,7 +535,7 @@ namespace Basis.Scripts.Networking
             };
             NetDataWriter netDataWriter = new NetDataWriter();
             OwnershipTransferMessage.Serialize(netDataWriter);
-            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter,BasisNetworkCommons.OwnershipResponse, DeliveryMethod.ReliableSequenced);
+            BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter,BasisNetworkCommons.GetCurrentOwnerRequest, DeliveryMethod.ReliableSequenced);
             BasisNetworkProfiler.RequestOwnershipTransferMessageCounter.Sample(netDataWriter.Length);
         }
 
@@ -605,22 +650,6 @@ namespace Basis.Scripts.Networking
             }
             NetworkedPlayer = null;
             return false;
-        }
-        // API to get the oldest available ushort starting from 0
-        public ushort GetOldestAvailablePlayerUshort()
-        {
-            ushort smallestValue = ushort.MaxValue; // Initialize with the maximum possible ushort value
-
-            // Iterate over the dictionary's keys
-            foreach (ushort key in Players.Keys)
-            {
-                if (key < smallestValue) // If a smaller key is found, update smallestValue
-                {
-                    smallestValue = key;
-                }
-            }
-
-            return smallestValue;
         }
 
     }

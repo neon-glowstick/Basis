@@ -23,7 +23,7 @@ namespace Basis.Scripts.UI.UI_Panels
         {
             await AddressableLoadFactory.LoadAddressableResourceAsync<GameObject>(resource);
             GameObject Result = (GameObject)resource.Handles[0].Result;
-            Result = GameObject.Instantiate(Result);
+            Result = GameObject.Instantiate(Result, BasisUIManagement.Instance.transform);
             BasisUIBase BasisUIBase = BasisHelpers.GetOrAddComponent<BasisUIBase>(Result);
             BasisUIManagement.Instance.AddUI(BasisUIBase);
             BasisUIBase.InitalizeEvent();
@@ -32,7 +32,7 @@ namespace Basis.Scripts.UI.UI_Panels
         {
             UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<GameObject> op = Addressables.LoadAssetAsync<GameObject>(AddressableGenericResource.Key);
             GameObject RAC = op.WaitForCompletion();
-            GameObject Result = GameObject.Instantiate(RAC);
+            GameObject Result = GameObject.Instantiate(RAC, BasisUIManagement.Instance.transform);
             BasisUIBase BasisUIBase = BasisHelpers.GetOrAddComponent<BasisUIBase>(Result);
             BasisUIManagement.Instance.AddUI(BasisUIBase);
             BasisUIBase.InitalizeEvent();

@@ -6,7 +6,10 @@ using Basis.Scripts.Profiler;
 using DarkRift.Basis_Common.Serializable;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Threading.Tasks;
 using UnityEngine;
+using static BasisNetworkCore.Serializable.SerializableBasis;
+using static DarkRift.Basis_Common.Serializable.SerializableBasis;
 using static SerializableBasis;
 
 
@@ -22,6 +25,7 @@ public static class BasisNetworkGenericMessages
         BasisScene.OnNetworkMessageReceived?.Invoke(playerID, sceneDataMessage.messageIndex, sceneDataMessage.payload,deliveryMethod);
     }
     public delegate void OnNetworkMessageReceiveOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner);
+    public delegate void OnNetworkMessageReceiveOwnershipRemoved(string UniqueEntityID);
     public static void HandleOwnershipTransfer(LiteNetLib.NetPacketReader reader)
     {
         OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage();
@@ -33,6 +37,13 @@ public static class BasisNetworkGenericMessages
         OwnershipTransferMessage ownershipTransferMessage = new OwnershipTransferMessage();
         ownershipTransferMessage.Deserialize(reader);
         HandleOwnership(ownershipTransferMessage);
+    }
+    public static void HandleOwnershipRemove(LiteNetLib.NetPacketReader reader)
+    {
+        OwnershipTransferMessage OwnershipTransferMessage = new OwnershipTransferMessage();
+        OwnershipTransferMessage.Deserialize(reader);
+        BasisNetworkManagement.Instance.OwnershipPairing.Remove(OwnershipTransferMessage.ownershipID);
+        BasisNetworkManagement.OwnershipReleased?.Invoke(OwnershipTransferMessage.ownershipID);
     }
     public static void HandleOwnership(OwnershipTransferMessage OwnershipTransferMessage)
     {
@@ -110,5 +121,54 @@ public static class BasisNetworkGenericMessages
             BasisNetworkManagement.LocalPlayerPeer.Send(netDataWriter, BasisNetworkCommons.SceneChannel, deliveryMethod);
         }
         BasisNetworkProfiler.SceneDataMessageCounter.Sample(netDataWriter.Length);
+    }
+    public static void NetIDAssign(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        ServerNetIDMessage ServerNetIDMessage = new ServerNetIDMessage();
+        ServerNetIDMessage.Deserialize(reader);
+        BasisNetworkNetIDConversion.AddNetworkId(ServerNetIDMessage);
+    }
+    public static void MassNetIDAssign(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        ServerUniqueIDMessages ServerNetIDMessage = new ServerUniqueIDMessages();
+        ServerNetIDMessage.Deserialize(reader);
+        foreach(ServerNetIDMessage message in ServerNetIDMessage.Messages)
+        {
+            BasisNetworkNetIDConversion.AddNetworkId(message);
+        }
+    }
+    public static async Task LoadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        LocalLoadResource LocalLoadResource = new LocalLoadResource();
+        LocalLoadResource.Deserialize(reader);
+        switch (LocalLoadResource.Mode)
+        {
+            case 0:
+                await BasisNetworkSpawnItem.SpawnGameObject(LocalLoadResource);
+                break;
+            case 1:
+                await BasisNetworkSpawnItem.SpawnScene(LocalLoadResource);
+                break;
+            default:
+                BNL.LogError($"tried to Load Mode {LocalLoadResource.Mode}");
+                break;
+        }
+    }
+    public static void UnloadResourceMessage(LiteNetLib.NetPacketReader reader, LiteNetLib.DeliveryMethod Method)
+    {
+        UnLoadResource UnLoadResource = new UnLoadResource();
+        UnLoadResource.Deserialize(reader);
+        switch (UnLoadResource.Mode)
+        {
+            case 0:
+                BasisNetworkSpawnItem.DestroyGameobject(UnLoadResource);
+                break;
+            case 1:
+                BasisNetworkSpawnItem.DestroyScene(UnLoadResource);
+                break;
+            default:
+                BNL.LogError($"tried to removed Mode {UnLoadResource.Mode}");
+                break;
+        }
     }
 }

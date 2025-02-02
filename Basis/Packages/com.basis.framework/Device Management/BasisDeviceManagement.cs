@@ -8,6 +8,7 @@ using Basis.Scripts.TransformBinders;
 using Basis.Scripts.TransformBinders.BoneControl;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace Basis.Scripts.Device_Management
     public partial class BasisDeviceManagement : MonoBehaviour
     {
         public bool FireOffNetwork = true;
-        public bool HasEvents = false;
+        public static bool HasEvents = false;
         public const string InvalidConst = "Invalid";
         public string[] BakedInCommandLineArgs = new string[] { };
         public static string NetworkManagement = "NetworkManagement";
@@ -61,7 +62,7 @@ namespace Basis.Scripts.Device_Management
         public event Action<string> OnBootModeChanged;
         public event Action<string> OnBootModeStopped;
         public delegate Task InitializationCompletedHandler();
-        public event InitializationCompletedHandler OnInitializationCompleted;
+        public static event InitializationCompletedHandler OnInitializationCompleted;
         public BasisDeviceNameMatcher BasisDeviceNameMatcher;
         [SerializeField]
         public BasisObservableList<BasisInput> AllInputDevices = new BasisObservableList<BasisInput>();
@@ -106,6 +107,7 @@ namespace Basis.Scripts.Device_Management
                 BasisXRManagement.CheckForPass -= CheckForPass;
 
                 OnInitializationCompleted -= RunAfterInitialized;
+                HasEvents = false;
             }
         }
         public static void UnassignFBTrackers()
@@ -478,5 +480,27 @@ namespace Basis.Scripts.Device_Management
 
             UseAbleDeviceConfigs = deviceDictionary.Values.ToList();
         }
+        public void Update()
+        {
+            if (!hasPendingActions) return;
+
+            while (mainThreadActions.TryDequeue(out var action))
+            {
+                action.Invoke();
+            }
+
+            // Reset flag once all actions are executed
+            hasPendingActions = !mainThreadActions.IsEmpty;
+        }
+
+        public static void EnqueueOnMainThread(Action action)
+        {
+            if (action == null) return;
+
+            mainThreadActions.Enqueue(action);
+            hasPendingActions = true;
+        }
+        private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
+        private static volatile bool hasPendingActions = false;
     }
 }

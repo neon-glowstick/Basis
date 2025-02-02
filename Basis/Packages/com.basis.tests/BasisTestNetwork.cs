@@ -12,6 +12,7 @@ public class BasisTestNetwork : MonoBehaviour
     public DeliveryMethod Method = DeliveryMethod.ReliableSequenced;
     public bool Send = false;
     public ushort[] Players;
+    public string UniqueID = "test";
     public void OnEnable()
     {
         avatar = BasisLocalPlayer.Instance.BasisAvatar;
@@ -28,6 +29,8 @@ public class BasisTestNetwork : MonoBehaviour
             }
         }
         BasisScene.OnNetworkMessageReceived += OnNetworkMessageReceived;
+        BasisNetworkNetIDConversion.RequestId(UniqueID);
+        BasisNetworkNetIDConversion.OnNetworkIdAdded += OnNetworkIdAdded;
     }
     public void OnDisable()
     {
@@ -53,11 +56,11 @@ public class BasisTestNetwork : MonoBehaviour
         {
             //   ushort[] Players = BasisNetworkManagement.RemotePlayers.Keys.ToArray();
             byte[] Bytes = new byte[16];
-            Debug.Log("sending Avatar");
+           // Debug.Log("sending Avatar");
 
            // avatar.NetworkMessageSend(1, Method);
            // avatar.NetworkMessageSend(2, null, Method);
-            avatar.ServerReductionSystemMessageSend(3, SendingOutBytes);
+           // avatar.ServerReductionSystemMessageSend(3, SendingOutBytes);
 
           //  avatar.NetworkMessageSend(4, null, Method, null);
 
@@ -78,6 +81,10 @@ public class BasisTestNetwork : MonoBehaviour
           //  Debug.Log("sent Scene");
             Send = false;
         }
+    }
+    private void OnNetworkIdAdded(string uniqueId, ushort ushortId)
+    {
+        Debug.Log($"uniqueId: {uniqueId} Mapped to {ushortId} By Server");
     }
     private void OnNetworkMessageReceived(ushort PlayerID, ushort MessageIndex, byte[] buffer, DeliveryMethod Method = DeliveryMethod.ReliableSequenced)
     {

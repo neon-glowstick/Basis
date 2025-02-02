@@ -1,18 +1,16 @@
 {
   "dependencies": {
     "com.basis.addressables": {
-      "version": "https://github.com/BasisVR/BasisAddressables.git",
+      "version": "file:com.basis.addressables",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "bdafadab10017ecde7cc8a08c48df1931e60284e"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.basis.console": {
-      "version": "https://github.com/BasisVR/BasisConsoleDisplay.git",
+      "version": "file:com.basis.console",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "477ad687ad74ce1eba5672f4e3393e001669c53c"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.basis.corenetworking": {
       "version": "file:com.basis.server",
@@ -27,18 +25,16 @@
       "dependencies": {}
     },
     "com.basis.gizmos": {
-      "version": "https://github.com/BasisVR/BasisGizmos.git",
+      "version": "file:com.basis.gizmos",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "6f2492e58e7e542d685e81ff4bef0a8f5010a966"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.basis.odinserializer": {
-      "version": "https://github.com/BasisVR/odin-serializer.git",
+      "version": "file:com.basis.odinserializer",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "04d0e99b85b45c8f5180713910ee5e78ae542031"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.basis.sdk": {
       "version": "file:com.basis.sdk",
@@ -59,21 +55,19 @@
       "dependencies": {}
     },
     "com.basis.visualtrackers": {
-      "version": "https://github.com/BasisVR/BasisVisualTrackers.git",
+      "version": "file:com.basis.visualtrackers",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "97c4def2be4b30fcc1e2b7aa36568ecbaa3e2fb9"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.hecomi.ulipsync": {
-      "version": "https://github.com/BasisVR/uLipSync.git",
+      "version": "file:com.hecomi.ulipsync",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.burst": "1.4.11",
         "com.unity.mathematics": "1.2.5"
-      },
-      "hash": "5416ef78b1cb72699d719b5cb60ef12946d11ee4"
+      }
     },
     "com.keviniglesias.basicmotions": {
       "version": "file:com.keviniglesias.basicmotions",
@@ -82,32 +76,28 @@
       "dependencies": {}
     },
     "com.llealloo.audiolink": {
-      "version": "https://github.com/BasisVR/audiolink.git",
+      "version": "file:com.llealloo.audiolink",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "fa8857ae1a7dca5cadb487ba6f2912c75a3c12cc"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.naelstrof.jigglephysics": {
-      "version": "https://github.com/BasisVR/UnityJigglePhysics.git",
+      "version": "file:com.naelstrof.jigglephysics",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "f32fe14b195808fb9eca5739bd64da74eb6a2c81"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.steam.steamaudio": {
-      "version": "https://github.com/BasisVR/steam-audio.git",
+      "version": "file:com.steam.steamaudio",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "3d9883ae07720e90626b8f6c21b85a9043268d41"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.steam.steamvr": {
-      "version": "https://github.com/BasisVR/steamvr_unity_plugin.git",
+      "version": "file:com.steam.steamvr",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "c33a831826e64c817176fc41ffcf8f4f773c3c40"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
@@ -201,7 +191,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.inputsystem": {
-      "version": "1.11.2",
+      "version": "1.12.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -357,7 +347,7 @@
       }
     },
     "com.unity.xr.core-utils": {
-      "version": "2.5.0",
+      "version": "2.5.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {

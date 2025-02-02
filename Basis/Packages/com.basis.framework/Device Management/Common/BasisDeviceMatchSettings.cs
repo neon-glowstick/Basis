@@ -1,4 +1,4 @@
-﻿using Basis.Scripts.TransformBinders.BoneControl;
+using Basis.Scripts.TransformBinders.BoneControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,6 +48,9 @@ namespace Basis.Scripts.Device_Management
         public bool HasTrackedRole = false;
         public BasisBoneTrackedRole TrackedRole;
 
+        [Header("Interact Settings")]
+        public bool HasInteractVisual = true;
+
         // Clone method for deep copy
         public BasisDeviceMatchSettings Clone()
         {
@@ -65,7 +68,8 @@ namespace Basis.Scripts.Device_Management
                 AvatarPositionOffset = this.AvatarPositionOffset,
                 AvatarRotationOffset = this.AvatarRotationOffset,
                 HasTrackedRole = this.HasTrackedRole,
-                TrackedRole = this.TrackedRole
+                TrackedRole = this.TrackedRole,
+                HasInteractVisual = this.HasInteractVisual,
             };
         }
     }

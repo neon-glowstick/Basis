@@ -1,7 +1,7 @@
 using Basis.Scripts.BasisSdk.Players;
+using Basis.Scripts.Device_Management;
 using Basis.Scripts.Networking;
 using Basis.Scripts.TransformBinders.BoneControl;
-using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -31,15 +31,14 @@ namespace Basis.Scripts.UI.NamePlate
         public Quaternion cachedRotation;
         public bool HasRendererCheckWiredUp = false;
         public bool IsVisible = true;
+        public bool HasProgressBarVisible = false;
         public void Initalize(BasisBoneControl hipTarget, BasisRemotePlayer basisRemotePlayer)
         {
             BasisRemotePlayer = basisRemotePlayer;
             HipTarget = hipTarget;
             MouthTarget = BasisRemotePlayer.MouthControl;
             Text.text = BasisRemotePlayer.DisplayName;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport += ProgresReport;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressComplete += OnProgressComplete;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressStart += OnProgressStart;
+            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport += ProgressReport;
             BasisRemotePlayer.AudioReceived += OnAudioReceived;
             BasisRemotePlayer.OnAvatarSwitched += RebuildRenderCheck;
             BasisRemotePlayer.OnAvatarSwitchedFallBack += RebuildRenderCheck;
@@ -154,9 +153,7 @@ namespace Basis.Scripts.UI.NamePlate
         }
         public void OnDestroy()
         {
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport -= ProgresReport;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressComplete -= OnProgressComplete;
-            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressStart -= OnProgressStart;
+            BasisRemotePlayer.ProgressReportAvatarLoad.OnProgressReport -= ProgressReport;
             BasisRemotePlayer.AudioReceived -= OnAudioReceived;
             DeInitalizeCallToRender();
             RemoteNamePlateDriver.Instance.RemoveNamePlate(this);
@@ -169,38 +166,31 @@ namespace Basis.Scripts.UI.NamePlate
                 BasisRemotePlayer.FaceRenderer.DestroyCalled -= AvatarUnloaded;
             }
         }
-        private void OnProgressStart()
+        public void ProgressReport(string UniqueID, float progress, string info)
         {
-            EnqueueOnMainThread(() =>
-            {
-                Loadingbar.gameObject.SetActive(true);
-                Loadingtext.gameObject.SetActive(true);
-            });
+            BasisDeviceManagement.EnqueueOnMainThread(() =>
+              {
+                  if (progress == 100)
+                  {
+                      Loadingtext.gameObject.SetActive(false);
+                      Loadingbar.gameObject.SetActive(false);
+                      HasProgressBarVisible = false;
+                  }
+                  else
+                  {
+                      if (HasProgressBarVisible == false)
+                      {
+                          Loadingbar.gameObject.SetActive(true);
+                          Loadingtext.gameObject.SetActive(true);
+                          HasProgressBarVisible = true;
+                      }
+
+                      Loadingtext.text = info;
+                      UpdateProgressBar(UniqueID, progress);
+                  }
+              });
         }
-        private void OnProgressComplete()
-        {
-            EnqueueOnMainThread(() =>
-            {
-                Loadingtext.gameObject.SetActive(false);
-                Loadingbar.gameObject.SetActive(false);
-            });
-        }
-        public void ProgresReport(float progress, string info)
-        {
-            EnqueueOnMainThread(() =>
-            {
-                Loadingtext.text = info;
-                UpdateProgressBar(progress);
-            });
-        }
-        private static void EnqueueOnMainThread(Action action)
-        {
-            lock (RemoteNamePlateDriver.actions)
-            {
-                RemoteNamePlateDriver.actions.Enqueue(action);
-            } 
-        }
-        public void UpdateProgressBar(float progress)
+        public void UpdateProgressBar(string UniqueID,float progress)
         {
             Vector2 scale = Loadingbar.size;
             scale.x = progress/2;

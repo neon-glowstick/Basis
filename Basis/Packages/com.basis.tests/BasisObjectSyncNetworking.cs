@@ -1,150 +1,206 @@
 using Basis.Scripts.BasisSdk;
-using Basis.Scripts.BasisSdk.Players;
+using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.Networking;
-using Basis.Scripts.Networking.NetworkedAvatar;
 using BasisSerializer.OdinSerializer;
 using LiteNetLib;
 using UnityEngine;
 public class BasisObjectSyncNetworking : MonoBehaviour
 {
-    public ushort MessageIndex = 3321;
-    public byte[] byteArray = new byte[28];
-    public bool IsOwner = false;
-    public float LerpMultiplier = 3;
-    private float sendInterval = 0.2f; // Send data every 0.2 seconds
-    private float timeSinceLastSend = 0.0f;
-    public BasisNetworkPlayer LocalNetworkPlayer;
-    public DeliveryMethod DeliveryMethod = DeliveryMethod.Unreliable;
-    public Vector3 previousPosition;
-    public Quaternion previousRotation;
-    public Vector3 previousScale;
-    public bool NeedsAUpdate = false;
+    public ushort MessageIndex = 0;
+    public bool HasMessageIndexAssigned;
+    public string NetworkId;
+    public int TargetFrequency = 10; // Target update frequency in Hz (10 times per second)
+    public float NetworkLerpSpeed = 7;
+    private double _updateInterval; // Time interval between updates
+    private double _lastUpdateTime; // Last update timestamp
+    public ushort CurrentOwner;
+    public bool IsLocalOwner = false;
+    public bool HasActiveOwnership = false;
+
+    public BasisPositionRotationScale Current = new BasisPositionRotationScale();
+    public BasisPositionRotationScale Next = new BasisPositionRotationScale();
+
+    public float LerpMultiplier = 3f;
     public Rigidbody Rigidbody;
-    public BasisPositionRotationScale Storeddata = new BasisPositionRotationScale();
+    public BasisContentBase ContentConnector;
+    public InteractableObject InteractableObjects;
+    public DeliveryMethod DeliveryMethod = DeliveryMethod.Sequenced;
+    public DataFormat DataFormat = DataFormat.Binary;
     public void Awake()
     {
-        BasisScene.OnNetworkMessageReceived += OnNetworkMessageReceived;
-        BasisNetworkManagement.OnLocalPlayerJoined += OnLocalPlayerJoined;
-        BasisNetworkManagement.OnRemotePlayerJoined += OnRemotePlayerJoined;
-        BasisNetworkManagement.OnLocalPlayerLeft += OnLocalPlayerLeft;
-        BasisNetworkManagement.OnRemotePlayerLeft += OnRemotePlayerLeft;
+        if (ContentConnector == null && TryGetComponent<BasisContentBase>(out ContentConnector))
+        {
+        }
+        if (Rigidbody == null && TryGetComponent<Rigidbody>(out Rigidbody))
+        {
+        }
+        if (ContentConnector != null)
+        {
+            ContentConnector.OnNetworkIDSet += OnNetworkIDSet;
+        }
+        InteractableObjects = this.transform.GetComponentInChildren<InteractableObject>();
+        if (InteractableObjects != null)
+        {
+            InteractableObjects.OnInteractStartEvent += OnInteractStartEvent;
+            InteractableObjects.OnInteractEndEvent += OnInteractEndEvent;
+        }
+        this.transform.GetLocalPositionAndRotation(out Current.Position, out Current.Rotation);
+        Current.Scale = this.transform.localScale;
+
+        Next.Scale = Current.Scale;
+        Next.Position = Current.Position;
+        Next.Rotation = Current.Rotation;
     }
     public void OnDestroy()
     {
+   //     BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
+   //     BasisObjectSyncSystem.StopApplyRemoteData(this);
+    }
+    private void OnInteractEndEvent(BasisInput input)
+    {
+    //    BasisNetworkManagement.RemoveOwnership(NetworkId);
+    //    BasisObjectSyncSystem.StartApplyRemoteData(this);
+
+    }
+    private void OnInteractStartEvent(BasisInput input)
+    {
+        BasisNetworkManagement.TakeOwnership(NetworkId, (ushort)BasisNetworkManagement.LocalPlayerPeer.RemoteId);
+    //    BasisObjectSyncSystem.StopApplyRemoteData(this);
+    }
+
+    private void OnNetworkIDSet(string NetworkID)
+    {
+        NetworkId = NetworkID;
+        BasisNetworkNetIDConversion.RequestId(NetworkId);
+    }
+
+    public void OnEnable()
+    {
+        HasMessageIndexAssigned = false;
+        BasisScene.OnNetworkMessageReceived += OnNetworkMessageReceived;
+        BasisNetworkManagement.OnOwnershipTransfer += OnOwnershipTransfer;
+        BasisNetworkManagement.OwnershipReleased += OwnershipReleased;
+        BasisNetworkNetIDConversion.OnNetworkIdAdded += OnNetworkIdAdded;
+        _updateInterval = 1f / TargetFrequency; // Calculate interval (1/33 seconds)
+        _lastUpdateTime = Time.timeAsDouble;
+
+        StartRemoteControl();
+     //   BasisObjectSyncSystem.StartApplyRemoteData(this);
+    }
+    public void OnDisable()
+    {
+        HasMessageIndexAssigned = false;
         BasisScene.OnNetworkMessageReceived -= OnNetworkMessageReceived;
-        BasisNetworkManagement.OnLocalPlayerJoined -= OnLocalPlayerJoined;
-        BasisNetworkManagement.OnRemotePlayerJoined -= OnRemotePlayerJoined;
-        BasisNetworkManagement.OnLocalPlayerLeft -= OnLocalPlayerLeft;
-        BasisNetworkManagement.OnRemotePlayerLeft -= OnRemotePlayerLeft;
-    }
-    public void OnRemotePlayerLeft(BasisNetworkPlayer player1, BasisRemotePlayer player2)
-    {
-        // Handle the remote player leaving
-        ComputeCurrentOwner();
+        BasisNetworkManagement.OnOwnershipTransfer -= OnOwnershipTransfer;
+        BasisNetworkManagement.OwnershipReleased -= OwnershipReleased;
+        BasisNetworkNetIDConversion.OnNetworkIdAdded -= OnNetworkIdAdded;
     }
 
-    public void OnLocalPlayerLeft(BasisNetworkPlayer player1, BasisLocalPlayer player2)
+    private void OwnershipReleased(string UniqueEntityID)
     {
-        // Handle the local player leaving
-        ComputeCurrentOwner();
-    }
-
-    public void OnRemotePlayerJoined(BasisNetworkPlayer player1, BasisRemotePlayer player2)
-    {
-        // Handle a remote player joining
-        ComputeCurrentOwner();
-        NeedsAUpdate = true;
-    }
-
-    public void OnLocalPlayerJoined(BasisNetworkPlayer player1, BasisLocalPlayer player2)
-    {
-        LocalNetworkPlayer = player1;
-        // Handle the local player joining
-        ComputeCurrentOwner();
-    }
-
-    public void ComputeCurrentOwner()
-    {
-        ushort OldestPlayerInInstance = BasisNetworkManagement.Instance.GetOldestAvailablePlayerUshort();
-        IsOwner = OldestPlayerInInstance == LocalNetworkPlayer.NetId;
-        Rigidbody.isKinematic = !IsOwner;
-    }
-
-    public void Update()
-    {
-        if (IsOwner)
+        if (NetworkId == UniqueEntityID)
         {
-            // Accumulate time since last send
-            timeSinceLastSend += Time.deltaTime;
-
-            // Only send data if the time since last send exceeds the interval
-            if (timeSinceLastSend >= sendInterval)
+            IsLocalOwner = false;
+            CurrentOwner = 0;
+            HasActiveOwnership = false;
+            //drop any interactable objects on this transform.
+            StartRemoteControl();
+        //    BasisObjectSyncSystem.StartApplyRemoteData(this);
+        }
+    }
+    private void OnOwnershipTransfer(string UniqueEntityID, ushort NetIdNewOwner, bool IsOwner)
+    {
+        if (NetworkId == UniqueEntityID)
+        {
+            IsLocalOwner = IsOwner;
+            CurrentOwner = NetIdNewOwner;
+            HasActiveOwnership = true;
+            if (Rigidbody != null)
             {
-                // Get current position, rotation, and scale
-                transform.GetPositionAndRotation(out Storeddata.Position, out Storeddata.Rotation);
-                Storeddata.Scale = transform.localScale;
-
-                // Check if position, rotation, or scale has changed since last sync
-                if (NeedsAUpdate || HasPositionRotationOrScaleChanged())
-                {
-                    // Reset the timer
-                    timeSinceLastSend = 0.0f;
-
-                    // Convert to byte array
-                    byte[] byteArray = SerializationUtility.SerializeValue(Storeddata, DataFormat.Binary);
-                    // Send network message with position, rotation, and scale data
-                    BasisScene.NetworkMessageSend(MessageIndex, byteArray, DeliveryMethod);
-
-                    // Reset previous values to the current ones
-                    previousPosition = Storeddata.Position;
-                    previousRotation = Storeddata.Rotation;
-                    previousScale = Storeddata.Scale;
-                    NeedsAUpdate = false;
-                }
-
-                // Check if the object is below the respawn height and reset position if necessary
-                if (Storeddata.Position.y < BasisSceneFactory.Instance.BasisScene.RespawnHeight)
-                {
-                    this.transform.position = BasisSceneFactory.Instance.BasisScene.SpawnPoint.position;
-                }
+                Rigidbody.isKinematic = !IsLocalOwner;
             }
+            if (IsLocalOwner == false)
+            {
+                //   StartRemoteControl();
+                //      BasisObjectSyncSystem.StartApplyRemoteData(this);
+            }
+            else
+            {
+             StopRemoteControl();
+                //   BasisObjectSyncSystem.StopApplyRemoteData(this);
+            }
+            OwnedPickupSet();
+        }
+    }
+    public void OwnedPickupSet()
+    {
+        if (IsLocalOwner && HasMessageIndexAssigned)
+        {
+         //   BasisObjectSyncSystem.AddLocallyOwnedPickup(this);
         }
         else
         {
-            // Get the current position, rotation, and scale
-            transform.GetPositionAndRotation(out Vector3 CurrentPosition, out Quaternion CurrentRotation);
-            Vector3 CurrentScale = transform.localScale;
-            float DeltaTime = Time.deltaTime;
-            float CurrentLerp = LerpMultiplier * DeltaTime;
-
-            // Interpolate position, rotation, and scale for smooth transitions
-            Vector3 DesiredCurrentPosition = Vector3.Lerp(CurrentPosition, Storeddata.Position, CurrentLerp);
-            Quaternion DesiredCurrentRotation = Quaternion.Slerp(CurrentRotation, Storeddata.Rotation, CurrentLerp);
-            Vector3 DesiredCurrentScale = Vector3.Lerp(CurrentScale, Storeddata.Scale, CurrentLerp);
-
-            transform.SetPositionAndRotation(DesiredCurrentPosition, DesiredCurrentRotation);
-            transform.localScale = DesiredCurrentScale;
+         //   BasisObjectSyncSystem.RemoveLocallyOwnedPickup(this);
         }
     }
-
-    private bool HasPositionRotationOrScaleChanged()
+    public void OnNetworkIdAdded(string uniqueId, ushort ushortId)
     {
-        // Check if the position, rotation, or scale has changed
-        bool positionChanged = previousPosition != Storeddata.Position;
-        bool rotationChanged = previousRotation != Storeddata.Rotation;
-        bool scaleChanged = previousScale != Storeddata.Scale;
-
-        // Return true if any have changed
-        return positionChanged || rotationChanged || scaleChanged;
-    }
-
-    public void OnNetworkMessageReceived(ushort PlayerID, ushort MessageIndex, byte[] buffer, DeliveryMethod DeliveryMethod = DeliveryMethod.ReliableSequenced)
-    {
-        // Check if this is the correct message
-        if (MessageIndex == this.MessageIndex)
+        if (NetworkId == uniqueId)
         {
-            byteArray = buffer;
-            Storeddata = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(byteArray, DataFormat.Binary);
+            MessageIndex = ushortId;
+            HasMessageIndexAssigned = true;
+            if (HasActiveOwnership == false)
+            {
+                BasisNetworkManagement.RequestCurrentOwnership(NetworkId);
+            }
+            OwnedPickupSet();
         }
+    }
+    public void LateUpdate()
+    {
+        if (IsLocalOwner)
+        {
+            double timeAsDouble = Time.timeAsDouble;
+            LateUpdateTime(timeAsDouble);
+        }
+        else
+        {
+            float Output = NetworkLerpSpeed * Time.deltaTime;
+            Current.Rotation = Quaternion.Slerp(Current.Rotation, Next.Rotation, Output);
+            Current.Position = Vector3.Lerp(Current.Position, Next.Position, Output);
+            Current.Scale = Vector3.Lerp(Current.Scale, Next.Scale, Output);
+
+            transform.SetLocalPositionAndRotation(Current.Position, Current.Rotation);
+            transform.localScale = Current.Scale;
+        }
+    }
+    public void LateUpdateTime(double DoubleTime)
+    {
+        if (DoubleTime - _lastUpdateTime >= _updateInterval)
+        {
+            _lastUpdateTime = DoubleTime;
+            SendNetworkMessage();
+        }
+    }
+    public void SendNetworkMessage()
+    {
+        transform.GetLocalPositionAndRotation(out Current.Position, out Current.Rotation);
+        Current.Scale = transform.localScale;
+        BasisScene.OnNetworkMessageSend?.Invoke(MessageIndex, SerializationUtility.SerializeValue(Current, DataFormat),DeliveryMethod);
+    }
+    public void OnNetworkMessageReceived(ushort PlayerID, ushort messageIndex, byte[] buffer, DeliveryMethod DeliveryMethod)
+    {
+        if (HasMessageIndexAssigned && messageIndex == MessageIndex)
+        {
+            Next = SerializationUtility.DeserializeValue<BasisPositionRotationScale>(buffer, DataFormat);
+        }
+    }
+    public void StartRemoteControl()
+    {
+        InteractableObjects?.StartRemoteControl();
+    }
+    public void StopRemoteControl()
+    {
+        InteractableObjects?.StopRemoteControl();
     }
 }

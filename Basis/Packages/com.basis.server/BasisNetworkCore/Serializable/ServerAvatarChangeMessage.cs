@@ -30,7 +30,11 @@ public static partial class SerializableBasis
             // Read the load mode
             loadMode = Writer.GetByte();
             // Initialize the byte array with the specified length
-            byteArray = new byte[Writer.GetUShort()];
+            ushort Length = Writer.GetUShort();
+            if (byteArray == null || byteArray.Length != Length)
+            {
+                byteArray = new byte[Length];
+            }
 
             // Read each byte manually into the array
             Writer.GetBytes(byteArray, 0, byteArray.Length);
@@ -44,11 +48,6 @@ public static partial class SerializableBasis
             }
             */
         }
-
-        public void Dispose()
-        {
-        }
-
         public void Serialize(NetDataWriter Writer)
         {
             // Write the load mode

@@ -125,6 +125,7 @@ namespace Basis.Scripts.Networking.Recievers
             }
         }
         public JobHandle EuroFilterHandle;
+        public Vector3 PositionOffset;
         public void Apply(double TimeAsDouble, float DeltaTime)
         {
             if (PoseHandler != null)
@@ -138,12 +139,12 @@ namespace Basis.Scripts.Networking.Recievers
                         // Complete the jobs and apply the results
                         EuroFilterHandle.Complete();
 
+
                         ApplyPoseData(Player.BasisAvatar.Animator, OuputVectors[1], OuputVectors[0], OutputRotation, enableEuroFilter ? EuroValuesOutput : musclesPreEuro);
                         PoseHandler.SetHumanPose(ref HumanPose);
 
                         RemotePlayer.RemoteBoneDriver.SimulateAndApply(DeltaTime);
-
-                        //come back to this later!  RemotePlayer.Avatar.FaceVisemeMesh.transform.position = RemotePlayer.MouthControl.OutgoingWorldData.position;
+                     //   RemotePlayer.BasisAvatar.FaceVisemeMesh.transform.position = RemotePlayer.RemoteBoneDriver.Hips.OutgoingWorldData.position;
                     }
                     if (interpolationTime >= 1 && PayloadQueue.TryDequeue(out AvatarBuffer result))
                     {

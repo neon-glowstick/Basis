@@ -11,7 +11,7 @@ public static class ContentPoliceControl
     /// <param name="Rotation">The rotation to instantiate the cleaned copy.</param>
     /// <param name="Parent">The parent transform for the instantiated copy. Defaults to null.</param>
     /// <returns>A copy of the GameObject with unapproved scripts removed.</returns>
-    public static GameObject ContentControl(GameObject SearchAndDestroy, ChecksRequired ChecksRequired, Vector3 Position, Quaternion Rotation, Transform Parent = null)
+    public static GameObject ContentControl(GameObject SearchAndDestroy, ChecksRequired ChecksRequired, Vector3 Position, Quaternion Rotation,bool ModifyScale,Vector3 Scale, Transform Parent = null)
     {
         if (ChecksRequired.UseContentRemoval)
         {
@@ -19,6 +19,10 @@ public static class ContentPoliceControl
             newGameObject.SetActive(false);
 
             SearchAndDestroy = GameObject.Instantiate(SearchAndDestroy, Position, Rotation, newGameObject.transform);
+            if(ModifyScale)
+            {
+                SearchAndDestroy.transform.localScale = Scale;
+            }
             // Create a list to hold all components in the original GameObject
             UnityEngine.Component[] components = SearchAndDestroy.GetComponentsInChildren<UnityEngine.Component>(true);
             int count = components.Length;

@@ -217,6 +217,8 @@ MonoBehaviour:
   XRSwitch: {fileID: 3096343990557684458, guid: 5e4c3601c6a155f43af19da3bdd35a64, type: 3}
   LeftMousePressed: {fileID: 8998537766406633762, guid: 5e4c3601c6a155f43af19da3bdd35a64, type: 3}
   RightMousePressed: {fileID: -240064975923332847, guid: 5e4c3601c6a155f43af19da3bdd35a64, type: 3}
+  MiddleMouseScroll: {fileID: 3017921969231114889, guid: 5e4c3601c6a155f43af19da3bdd35a64, type: 3}
+  MiddleMouseScrollClick: {fileID: -4813832520851000306, guid: 5e4c3601c6a155f43af19da3bdd35a64, type: 3}
   CharacterEyeInput: {fileID: 0}
   basisLocalPlayer: {fileID: 0}
   Input: {fileID: 4506459589283058818}
@@ -230,6 +232,7 @@ MonoBehaviour:
     secondary2DAxisClick: 0
     primary2DAxisClick: 0
     trigger: 0
+    secondaryTrigger: 0
     primary2DAxis: {x: 0, y: 0}
     secondary2DAxis: {x: 0, y: 0}
 --- !u!114 &2682791463296768347

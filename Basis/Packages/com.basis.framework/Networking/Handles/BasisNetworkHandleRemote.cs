@@ -20,24 +20,6 @@ namespace Basis.Scripts.Networking
             ServerReadyMessage.Deserialize(reader, true);
             await CreateRemotePlayer(ServerReadyMessage, Parent);
         }
-        public static async Task HandleCreateAllRemoteClients(LiteNetLib.NetPacketReader reader, Transform Parent)
-        {
-            CreateAllRemoteMessage createAllRemoteMessage = new CreateAllRemoteMessage();
-            createAllRemoteMessage.Deserialize(reader,false);
-            int RemoteLength = createAllRemoteMessage.serverSidePlayer.Length;
-            BasisDebug.Log("Handling Create All Remote Players! Total Connections To Create " + RemoteLength);
-            // Create a list to hold the tasks
-            List<Task> tasks = new List<Task>();
-
-            // Start all tasks without awaiting them
-            for (int PlayerIndex = 0; PlayerIndex < RemoteLength; PlayerIndex++)
-            {
-                tasks.Add(CreateRemotePlayer(createAllRemoteMessage.serverSidePlayer[PlayerIndex], Parent));
-            }
-
-            // Await all tasks at once
-            await Task.WhenAll(tasks);
-        }
         public static async Task<BasisNetworkPlayer> CreateRemotePlayer(ServerReadyMessage ServerReadyMessage, InstantiationParameters instantiationParameters)
         {
 

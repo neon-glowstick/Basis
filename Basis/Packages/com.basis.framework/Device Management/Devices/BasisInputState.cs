@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace Basis.Scripts.Device_Management.Devices
@@ -13,17 +13,21 @@ namespace Basis.Scripts.Device_Management.Devices
         public event Action OnSecondary2DAxisClickChanged;
         public event Action OnPrimary2DAxisClickChanged;
         public event Action OnTriggerChanged;
+        public event Action OnSecondaryTriggerChanged;
         public event Action OnPrimary2DAxisChanged;
         public event Action OnSecondary2DAxisChanged;
+
         [SerializeField] private bool gripButton;
         [SerializeField] private bool menuButton;
         [SerializeField] private bool primaryButtonGetState;
         [SerializeField] private bool secondaryButtonGetState;
-        [SerializeField] private bool secondary2DAxisClick;
+        [SerializeField] private bool secondary2DAxisClick;//for example scrollwheel click on desktop
         [SerializeField] private bool primary2DAxisClick;
         [SerializeField] private float trigger;
+        [SerializeField] private float secondaryTrigger;
         [SerializeField] private Vector2 primary2DAxis;
-        [SerializeField] private Vector2 secondary2DAxis;
+        [SerializeField] private Vector2 secondary2DAxis;//for example scrollwheel on desktop
+
         public bool GripButton
         {
             get => gripButton;
@@ -37,7 +41,7 @@ namespace Basis.Scripts.Device_Management.Devices
             }
         }
 
-        public bool MenuButton
+        public bool SystemOrMenuButton
         {
             get => menuButton;
             set
@@ -114,15 +118,29 @@ namespace Basis.Scripts.Device_Management.Devices
                 }
             }
         }
+
+        public float SecondaryTrigger
+        {
+            get => secondaryTrigger;
+            set
+            {
+                if (Math.Abs(secondaryTrigger - value) > 0.0001f)
+                {
+                    secondaryTrigger = value;
+                    OnSecondaryTriggerChanged?.Invoke();
+                }
+            }
+        }
+
         public Vector2 Primary2DAxis
         {
             get => primary2DAxis;
             set
             {
-                Vector2 Convert = ApplyDeadzone(value, SMModuleControllerSettings.JoyStickDeadZone);
-                if (primary2DAxis != Convert)
+                Vector2 converted = ApplyDeadzone(value, SMModuleControllerSettings.JoyStickDeadZone);
+                if (primary2DAxis != converted)
                 {
-                    primary2DAxis = Convert;
+                    primary2DAxis = converted;
                     OnPrimary2DAxisChanged?.Invoke();
                 }
             }
@@ -133,14 +151,15 @@ namespace Basis.Scripts.Device_Management.Devices
             get => secondary2DAxis;
             set
             {
-                Vector2 Convert = ApplyDeadzone(value, SMModuleControllerSettings.JoyStickDeadZone);
-                if (secondary2DAxis != Convert)
+                Vector2 converted = ApplyDeadzone(value, SMModuleControllerSettings.JoyStickDeadZone);
+                if (secondary2DAxis != converted)
                 {
-                    secondary2DAxis = Convert;
+                    secondary2DAxis = converted;
                     OnSecondary2DAxisChanged?.Invoke();
                 }
             }
         }
+
         public Vector2 ApplyDeadzone(Vector2 input, float deadzoneThreshold)
         {
             if (input.magnitude < deadzoneThreshold)
@@ -149,15 +168,17 @@ namespace Basis.Scripts.Device_Management.Devices
             }
             return input;
         }
+
         public void CopyTo(BasisInputState target)
         {
-            target.GripButton = this.GripButton;
-            target.MenuButton = this.MenuButton;
+            target.GripButton = this.GripButton;//
+            target.SystemOrMenuButton = this.SystemOrMenuButton;
             target.PrimaryButtonGetState = this.PrimaryButtonGetState;
             target.SecondaryButtonGetState = this.SecondaryButtonGetState;
             target.Secondary2DAxisClick = this.Secondary2DAxisClick;
             target.Primary2DAxisClick = this.Primary2DAxisClick;
             target.Trigger = this.Trigger;
+            target.SecondaryTrigger = this.SecondaryTrigger;
             target.Primary2DAxis = this.Primary2DAxis;
             target.Secondary2DAxis = this.Secondary2DAxis;
         }

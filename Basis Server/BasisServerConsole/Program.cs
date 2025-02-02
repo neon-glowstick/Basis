@@ -1,5 +1,6 @@
 using Basis.Network;
 using Basis.Network.Server;
+using BasisNetworking.InitalData;
 
 namespace Basis
 {
@@ -18,7 +19,10 @@ namespace Basis
 
             // Load configuration from the XML file
             Configuration config = Configuration.LoadFromXml(configFilePath);
+            config.ProcessEnvironmentalOverrides();
 
+            ThreadPool.SetMinThreads(config.MinThreadPoolThreads, config.MinThreadPoolThreads);
+            ThreadPool.SetMaxThreads(config.MaxThreadPoolThreads, config.MaxThreadPoolThreads);
             // Initialize server-side logging
             string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
             BasisServerSideLogging.Initialize(config, folderPath);
@@ -38,6 +42,7 @@ namespace Basis
                 try
                 {
                     BasisNetworkServer.StartServer(config);
+                    BasisLoadableLoader.LoadXML("initalresources");
                 }
                 catch (Exception ex)
                 {
@@ -45,7 +50,6 @@ namespace Basis
                     // Optionally, handle server restart or log critical errors
                 }
             }, cancellationToken);
-
             // Register a shutdown hook to clean up resources when the application is terminated
             AppDomain.CurrentDomain.ProcessExit += async (sender, eventArgs) =>
             {

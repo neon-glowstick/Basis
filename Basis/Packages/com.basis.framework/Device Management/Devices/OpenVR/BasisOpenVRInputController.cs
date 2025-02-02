@@ -4,6 +4,7 @@ using Basis.Scripts.TransformBinders.BoneControl;
 using Unity.Mathematics;
 using UnityEngine;
 using Valve.VR;
+using static UnityEngine.GraphicsBuffer;
 
 namespace Basis.Scripts.Device_Management.Devices.OpenVR
 {
@@ -58,10 +59,16 @@ namespace Basis.Scripts.Device_Management.Devices.OpenVR
         {
             if (SteamVR.active)
             {
-                InputState.Primary2DAxis = SteamVR_Actions._default.Joystick.GetAxis(inputSource);
+                InputState.GripButton = SteamVR_Actions._default.Grip.GetState(inputSource);
+                InputState.SystemOrMenuButton = SteamVR_Actions._default.System.GetState(inputSource);
                 InputState.PrimaryButtonGetState = SteamVR_Actions._default.A_Button.GetState(inputSource);
                 InputState.SecondaryButtonGetState = SteamVR_Actions._default.B_Button.GetState(inputSource);
+                InputState.Primary2DAxisClick = SteamVR_Actions._default.JoyStickClick.GetState(inputSource);
+                InputState.Primary2DAxis = SteamVR_Actions._default.Joystick.GetAxis(inputSource);
                 InputState.Trigger = SteamVR_Actions._default.Trigger.GetAxis(inputSource);
+                InputState.SecondaryTrigger = SteamVR_Actions._default.HandTrigger.GetAxis(inputSource);
+                InputState.Secondary2DAxis = SteamVR_Actions._default.TrackPad.GetAxis(inputSource);
+                InputState.Secondary2DAxisClick = SteamVR_Actions._default.TrackPadTouched.GetState(inputSource);
                 UpdatePlayerControl();
             }
         }

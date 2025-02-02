@@ -14,7 +14,10 @@ public static partial class SerializableBasis
                 messageIndex = Writer.GetByte();
 
                 byte PayloadSize = Writer.GetByte();
-                array = new byte[PayloadSize];
+                if (array == null || array.Length != PayloadSize)
+                {
+                    array = new byte[PayloadSize];
+                }
                 Writer.GetBytes(array, PayloadSize);
                 //89 * 2 = 178 + 12 + 14 = 204
                 //now 178 for muscles, 3*4 for position 12, 4*4 for rotation 16-2 (W is half) = 204

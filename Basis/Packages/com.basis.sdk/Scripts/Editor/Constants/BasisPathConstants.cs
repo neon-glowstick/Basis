@@ -1,0 +1,40 @@
+public class BasisPathConstants
+{
+    // Common base paths
+    private const string BasePath = "Packages/com.basis.sdk/Scripts/Editor/StyleSheets/";
+    private const string AvatarFile = "AvatarSDK.uxml";
+    private const string PropFile = "PropSDK.uxml";
+    private const string SceneFile = "SceneSDK.uxml";
+    #region Avatar
+    public static readonly string AvataruxmlPath = $"{BasePath}{AvatarFile}";
+
+    public static readonly string avatarEyePositionButton = "AvatarEyePositionButton";
+    public static readonly string avatarMouthPositionButton = "AvatarMouthPositionButton";
+    public static readonly string AvatarBundleButton = "AvatarBundleButton";
+    public static readonly string AvatarAutomaticVisemeDetection = "AvatarAutomaticVisemeDetection";
+    public static readonly string AvatarAutomaticBlinkDetection = "AvatarAutomaticBlinkDetection";
+    public static readonly string avatarEyePositionField = "AvatarEyePositionField";
+    public static readonly string avatarMouthPositionField = "AvatarMouthPositionField";
+    public static readonly string AvatarBuildBundle = "AvatarBuildBundle";
+
+    public static readonly string animatorField = "AnimatorField";
+    public static readonly string FaceBlinkMeshField = "FaceBlinkMeshField";
+    public static readonly string FaceVisemeMeshField = "FaceVisemeMeshField";
+
+    public static readonly string AvatarName = "avatarnameinput";
+    public static readonly string AvatarDescription = "avatardescriptioninput";
+    public static readonly string AvatarIcon = "AvatarIcon";
+    public static readonly string Avatarpassword = "avatarpassword";
+    #endregion
+    #region Prop
+    public static readonly string PropuxmlPath = $"{BasePath}{PropFile}";
+    #endregion
+
+    #region Scene
+    public static readonly string SceneuxmlPath = $"{BasePath}{SceneFile}";
+    #endregion
+    #region Shared
+    public static readonly string ErrorMessage = "ErrorMessage";
+    public static readonly string BuildButton = "BuildButton";
+    #endregion
+}

@@ -14,8 +14,16 @@ public static partial class SerializableBasis
             }
             else
             {
-                buffer = Writer.GetRemainingBytes();
-                LengthUsed = buffer.Length;
+                if (buffer != null && buffer.Length == Writer.AvailableBytes)
+                {
+                    Writer.GetBytes(buffer, Writer.AvailableBytes);
+                    LengthUsed = buffer.Length;
+                }
+                else
+                {
+                    buffer = Writer.GetRemainingBytes();
+                    LengthUsed = buffer.Length;
+                }
                // BNL.Log("Get Length was " + LengthUsed);
             }
         }

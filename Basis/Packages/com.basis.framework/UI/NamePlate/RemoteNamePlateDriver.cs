@@ -10,7 +10,6 @@ namespace Basis.Scripts.UI.NamePlate
         // Use an array for better performance
         private BasisNamePlate[] basisRemotePlayers = new BasisNamePlate[0];
         private int count = 0; // Track the number of active elements
-        public static readonly Queue<Action> actions = new Queue<Action>();
         public static RemoteNamePlateDriver Instance;
 
         public void Awake()
@@ -107,17 +106,6 @@ namespace Basis.Scripts.UI.NamePlate
               //  Vector3 Euler = NamePlate.transform.rotation.eulerAngles;
                 NamePlate.cachedRotation = Quaternion.Euler(x, Mathf.Atan2(NamePlate.dirToCamera.x, NamePlate.dirToCamera.z) * Mathf.Rad2Deg, z);
                 NamePlate.transform.SetPositionAndRotation(NamePlate.cachedDirection, NamePlate.cachedRotation);
-            }
-
-            if (actions.Count > 0)
-            {
-                lock (actions)
-                {
-                    while (actions.Count > 0)
-                    {
-                        actions.Dequeue()?.Invoke();
-                    }
-                }
             }
         }
     }
