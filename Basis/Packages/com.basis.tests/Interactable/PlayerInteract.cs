@@ -8,9 +8,11 @@ using UnityEngine.AddressableAssets;
 using Unity.Burst;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Basis.Scripts.TransformBinders.BoneControl;
+using UnityEngine.Profiling;
 
 public class PlayerInteract : MonoBehaviour
 {
+
 
     [Tooltip("How far the player can interact with objects. Must > hoverDistance")]
     public float raycastDistance = 1.0f;
@@ -48,17 +50,18 @@ public class PlayerInteract : MonoBehaviour
 
     public static string LoadMaterialAddress = "Interactable/InteractLineMat.mat";
 
+    const string k_DefaultLayer = "Default";
     const string k_InteractableLayer = "Interactable";
+    const int k_UpdatePriority = 201;
     public LayerMask InteractableLayerMask;
     private void Start()
     {
-        BasisLocalPlayer.Instance.LocalBoneDriver.OnSimulate += Simulate;
-        var Device = BasisDeviceManagement.Instance.AllInputDevices;
-        Device.OnListAdded += OnInputChanged;
-        Device.OnListItemRemoved += OnInputRemoved;
+        BasisLocalPlayer.Instance.LocalBoneDriver.ReadyToRead.AddAction(k_UpdatePriority, PollSystem);
+        var Devices = BasisDeviceManagement.Instance.AllInputDevices;
+        Devices.OnListAdded += OnInputChanged;
+        Devices.OnListItemRemoved += OnInputRemoved;
 
-        // TODO add default layer ect to mask
-        InteractableLayerMask = LayerMask.NameToLayer(k_InteractableLayer);
+        InteractableLayerMask = (1 << LayerMask.NameToLayer(k_InteractableLayer)) | (1 << LayerMask.NameToLayer(k_DefaultLayer));
 
         AsyncOperationHandle<Material> op = Addressables.LoadAssetAsync<Material>(LoadMaterialAddress);
         LineMaterial = op.WaitForCompletion();
@@ -70,7 +73,7 @@ public class PlayerInteract : MonoBehaviour
         {
             asyncOperationLineMaterial.Release();
         }
-        BasisLocalPlayer.Instance.LocalBoneDriver.OnSimulate -= Simulate;
+        BasisLocalPlayer.Instance.LocalBoneDriver.ReadyToRead.RemoveAction(k_UpdatePriority, PollSystem);
         var Device = BasisDeviceManagement.Instance.AllInputDevices;
         Device.OnListAdded -= OnInputChanged;
         Device.OnListItemRemoved -= OnInputRemoved;
@@ -104,8 +107,9 @@ public class PlayerInteract : MonoBehaviour
 
     // simulate after IK update
     [BurstCompile]
-    private void Simulate()
+    private void PollSystem()
     {
+        Profiler.BeginSample("Interactable System");
         if (InteractInputs == null)
         {
             return;
@@ -129,9 +133,8 @@ public class PlayerInteract : MonoBehaviour
             RaycastHit rayHit;
             InteractableObject hitInteractable = null;
             bool isValidRayHit = interactInput.input.BasisPointRaycaster.FirstHit(out rayHit, raycastDistance) &&
-                (rayHit.collider.gameObject.layer & InteractableLayerMask) != 0 &&
+                ((1 << rayHit.collider.gameObject.layer) & InteractableLayerMask) != 0 &&
                 rayHit.collider.TryGetComponent(out hitInteractable);
-
 
             if (isValidRayHit || hoverSphere.HoverTarget != null)
             {
@@ -230,6 +233,7 @@ public class PlayerInteract : MonoBehaviour
                 input.lineRenderer.enabled = false;
             }
         }
+        Profiler.EndSample();
     }
 
     private InteractInput UpdatePickupState(InteractableObject hitInteractable, InteractInput interactInput)
@@ -241,7 +245,7 @@ public class PlayerInteract : MonoBehaviour
             // Holding Logic: 
             if (IsInputTriggered(interactInput.input))
             {
-                // clear hover (unlikely to happen since last frame, but possible)
+                // clear hover
                 if (interactInput.lastTarget.IsHoveredBy(interactInput.input))
                 {
                     interactInput.lastTarget.OnHoverEnd(interactInput.input, false);

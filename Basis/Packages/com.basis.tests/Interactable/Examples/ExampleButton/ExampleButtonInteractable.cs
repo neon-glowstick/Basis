@@ -30,7 +30,7 @@ public class ExampleButtonInteractable : InteractableObject
             if (value.Source != null)
             {
                 Inputs = new(0);
-                Inputs.AddInputByRole(value.Source, value.IsInteracting);
+                Inputs.SetInputByRole(value.Source, value.GetState());
             }
             else if (value.Source == null)
             {
@@ -43,7 +43,7 @@ public class ExampleButtonInteractable : InteractableObject
 
     void Start()
     {
-        _InputSource = new BasisInputWrapper(null, false);
+        _InputSource = default;
         if (ColliderRef == null)
         {
             TryGetComponent(out ColliderRef);
@@ -58,76 +58,95 @@ public class ExampleButtonInteractable : InteractableObject
 
     public override bool CanHover(BasisInput input)
     {
-        return _InputSource.Source == null && IsWithinRange(input.transform.position) && isEnabled;
+        return _InputSource.GetState() == InteractInputState.NotAdded && IsWithinRange(input.transform.position) && isEnabled;
     }
     public override bool CanInteract(BasisInput input)
     {
         // must be the same input hovering
-        if (!IsCurrentInput(input.UniqueDeviceIdentifier)) return false;
+        if (!_InputSource.IsInput(input)) return false;
         // dont interact again till after interacting stopped
-        if (_InputSource.IsInteracting) return false;
+        if (_InputSource.GetState() == InteractInputState.Interacting) return false;
 
         return IsWithinRange(input.transform.position) && isEnabled;
     }
 
     public override void OnHoverStart(BasisInput input)
     {
-        _InputSource = new BasisInputWrapper(input, false);
+        if (!BasisInputWrapper.TryNewTracking(input, InteractInputState.Hovering, out BasisInputWrapper wrapper))
+        {
+            BasisDebug.LogWarning($"{nameof(ExampleButtonInteractable)}: Failed to setup input on hover");
+            return;
+        }
+        _InputSource = wrapper;
         SetColor(HoverColor);
+        // call base method (invokes event)
+        base.OnHoverStart(input); 
     }
 
     public override void OnHoverEnd(BasisInput input, bool willInteract)
     {
-        if (IsCurrentInput(input.UniqueDeviceIdentifier))
+        if (_InputSource.IsInput(input))
         {
-            // leaving hover and wont interact this frame
+            // leaving hover and wont interact this frame, 
             if (!willInteract)
             {
-                _InputSource = new BasisInputWrapper(null, false);
+                bool added = BasisInputWrapper.TryNewTracking(null, InteractInputState.NotAdded, out BasisInputWrapper wrapper);
+                // setting to null should not add the tracker
+                Debug.Assert(!added);
+                _InputSource = wrapper;
                 SetColor(Color);
             }
             // Oninteract will update color
+
+            // call base method (invokes event)
+            base.OnHoverEnd(input, willInteract);
         }
     }
 
     public override void OnInteractStart(BasisInput input)
     {
-        if (IsCurrentInput(input.UniqueDeviceIdentifier) && !_InputSource.IsInteracting)
+        if (_InputSource.IsInput(input) && _InputSource.GetState() == InteractInputState.Hovering )
         {
             // Set ownership to the local player
             // syncNetworking.IsOwner = true;
             SetColor(InteractColor);
-            _InputSource = new BasisInputWrapper(input, true);
+
+            var newSource = _InputSource;
+            var didSetState = newSource.TrySetState(InteractInputState.Interacting);
+            Debug.Assert(didSetState);
+            _InputSource = newSource;
+
             ButtonDown?.Invoke();
+            // call base method (invokes event)
+            base.OnInteractStart(input); 
         }
     }
 
     public override void OnInteractEnd(BasisInput input)
     {
-        if (IsCurrentInput(input.UniqueDeviceIdentifier) && _InputSource.IsInteracting)
+        if (_InputSource.IsInput(input))
         {
             SetColor(Color);
-            _InputSource = new BasisInputWrapper(null, false);
+            bool added = BasisInputWrapper.TryNewTracking(null, InteractInputState.NotAdded, out BasisInputWrapper wrapper);
+            // setting to null should not add the tracker
+            Debug.Assert(!added);
+            _InputSource = wrapper;
+
             ButtonUp?.Invoke();
+            // call base method (invokes event)
+            base.OnInteractEnd(input); 
         }
     }
     public override bool IsInteractingWith(BasisInput input)
     {
-        return _InputSource.Source != null &&
-            _InputSource.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier &&
-            _InputSource.IsInteracting;
+        return _InputSource.IsInput(input) &&
+            _InputSource.GetState() == InteractInputState.Interacting;
     }
 
     public override bool IsHoveredBy(BasisInput input)
     {
-        return _InputSource.Source != null &&
-            _InputSource.Source.UniqueDeviceIdentifier == input.UniqueDeviceIdentifier &&
-            !_InputSource.IsInteracting;
-    }
-
-    private bool IsCurrentInput(string uid)
-    {
-        return _InputSource.Source != null && _InputSource.Source.UniqueDeviceIdentifier == uid;
+        return _InputSource.IsInput(input) &&
+            _InputSource.GetState() == InteractInputState.Hovering;
     }
 
     // set material property to a color
@@ -140,25 +159,34 @@ public class ExampleButtonInteractable : InteractableObject
     }
 
 
+    private bool _triggerCleanup;
     // per-frame update, after IK transform
     public override void InputUpdate()
     {
         if (!isEnabled)
         {
-            // clean up currently hovering/interacting
-            if (_InputSource.Source != null)
+            if (_triggerCleanup)
             {
-                if (IsHoveredBy(_InputSource.Source))
+                _triggerCleanup = false;
+                // clean up currently hovering/interacting
+                if (_InputSource.GetState() != InteractInputState.NotAdded)
                 {
-                    OnHoverEnd(_InputSource.Source, false);
+                    if (IsHoveredBy(_InputSource.Source))
+                    {
+                        OnHoverEnd(_InputSource.Source, false);
+                    }
+                    if (IsInteractingWith(_InputSource.Source))
+                    {
+                        OnInteractEnd(_InputSource.Source);
+                    }
                 }
-                if (IsInteractingWith(_InputSource.Source))
-                {
-                    OnInteractEnd(_InputSource.Source);
-                }
+                // setting same color every frame isnt optimal but fine for example
+                SetColor(DisabledColor);
             }
-            // setting same color every frame isnt optimal but fine for example
-            SetColor(DisabledColor);
+        }
+        else
+        {
+            _triggerCleanup = true;
         }
     }
 }

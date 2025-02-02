@@ -7,6 +7,8 @@ public abstract partial class InteractableObject
 {
     public struct InputSources {
         public BasisInputWrapper desktopCenterEye, leftHand, rightHand;
+
+        private BasisInputWrapper[] primary; // scratch array to avoid alloc on ToArray
         public BasisInputWrapper[] extras;
         
         public InputSources(uint extrasCount)
@@ -14,80 +16,98 @@ public abstract partial class InteractableObject
             desktopCenterEye = default;
             leftHand = default;
             rightHand = default;
-            extras = new BasisInputWrapper[(int)extrasCount];
+            extras = new BasisInputWrapper[extrasCount];
+            primary = new BasisInputWrapper[3];
+        }
+
+        private static bool IsInfluencing(InteractInputState state)
+        {
+            return state == InteractInputState.Hovering || state == InteractInputState.Interacting;
         }
 
         public readonly bool AnyInteracting(bool skipExtras = true)
         {
-            bool interacting = leftHand.Source != null && leftHand.IsInteracting || 
-                            rightHand.Source != null && rightHand.IsInteracting || 
-                            desktopCenterEye.Source != null && desktopCenterEye.IsInteracting;
+            bool influencing = IsInfluencing(desktopCenterEye.GetState()) ||
+                            IsInfluencing(leftHand.GetState()) ||
+                            IsInfluencing(rightHand.GetState());
             if (!skipExtras)
             {
-                interacting |= extras.Any(x => x.Source != null && x.IsInteracting);
+                influencing |= extras.Any(x => IsInfluencing(x.GetState()));
             }
-            return interacting;
+            return influencing;
         }
 
-        public readonly BasisInputWrapper? Find(BasisInput input)
+        public readonly BasisInputWrapper? FindExcludeExtras(BasisInput input)
         {
             if (input == null)
                 return null;
-            string inUDI = input.UniqueDeviceIdentifier;
-            var found = Array.Find(ToArray(), x => x.Source != null && x.Source.UniqueDeviceIdentifier == inUDI);
-            // not found
-            if (found.Source == null)
-                return null;
-            return found;
-        }
-        public readonly bool Contains(BasisInput input, bool skipExtras = true)
-        {
-            string inUDI = input != null ? input.UniqueDeviceIdentifier : "";
+            // done this way to avoid the array GC alloc
+            var inUDI = input.UniqueDeviceIdentifier;
+            if (desktopCenterEye.GetState() != InteractInputState.NotAdded && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI)
+            {
+                return desktopCenterEye;
+            }
+            else if (leftHand.GetState() != InteractInputState.NotAdded && leftHand.Source.UniqueDeviceIdentifier == inUDI)
+            {
+                return leftHand;
+            }
+            else if (rightHand.GetState() != InteractInputState.NotAdded && rightHand.Source.UniqueDeviceIdentifier == inUDI)
+            {
+                return rightHand;
+            }
 
-            bool contains = leftHand.Source != null && leftHand.Source.UniqueDeviceIdentifier == inUDI || 
-                            rightHand.Source != null && rightHand.Source.UniqueDeviceIdentifier == inUDI || 
-                            desktopCenterEye.Source != null && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI;
+            return null;
+        }
+
+
+        public readonly bool IsInputAdded(BasisInput input, bool skipExtras = true)
+        {
+            if (input == null)
+                return false;
+            string inUDI = input.UniqueDeviceIdentifier;
+
+            bool contains = leftHand.GetState() != InteractInputState.NotAdded && leftHand.Source.UniqueDeviceIdentifier == inUDI || 
+                            rightHand.GetState() != InteractInputState.NotAdded && rightHand.Source.UniqueDeviceIdentifier == inUDI || 
+                            desktopCenterEye.GetState() != InteractInputState.NotAdded && desktopCenterEye.Source.UniqueDeviceIdentifier == inUDI;
 
             if (!skipExtras)
             {
-                contains |= extras.Any(x => x.Source != null && x.Source.UniqueDeviceIdentifier == inUDI);
+                contains |= extras.Any(x => x.GetState() != InteractInputState.NotAdded && x.Source.UniqueDeviceIdentifier == inUDI);
             }
             return contains;
         }
 
         public readonly BasisInputWrapper[] ToArray()
         {
-            BasisInputWrapper[] primary = new BasisInputWrapper[] {
-                desktopCenterEye,
-                leftHand,
-                rightHand,
-            };
+            primary[0] = desktopCenterEye;
+            primary[1] = leftHand;
+            primary[2] = rightHand;
+
             if (extras.Length != 0)
                 return primary.Concat(extras).ToArray();
             return primary;
         }
 
-        public bool AddInputByRole(BasisInput input, bool isInteracting)
+        public bool SetInputByRole(BasisInput input, InteractInputState state)
         {
-            if (input.TryGetRole(out BasisBoneTrackedRole role))
-            {
-                switch (role)
-                {
-                    case BasisBoneTrackedRole.CenterEye:
-                        desktopCenterEye = new BasisInputWrapper(input, isInteracting);
-                        return true;
-                    case BasisBoneTrackedRole.LeftHand:
-                        leftHand = new BasisInputWrapper(input, isInteracting);
-                        return true;
-                    case BasisBoneTrackedRole.RightHand:
-                        rightHand = new BasisInputWrapper(input, isInteracting);
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-            return false;
+            var created = BasisInputWrapper.TryNewTracking(input, state, out BasisInputWrapper wrapper);
+            if (!created)
+                return false;
 
+            switch (wrapper.Role)
+            {    
+                case BasisBoneTrackedRole.CenterEye:
+                    desktopCenterEye = wrapper;
+                    return true;
+                case BasisBoneTrackedRole.LeftHand:
+                    leftHand = wrapper;
+                    return true;
+                case BasisBoneTrackedRole.RightHand:
+                    rightHand = wrapper;
+                    return true;
+                default:
+                    return false;
+            }
         }
         public readonly bool TryGetByRole(BasisBoneTrackedRole role, out BasisInputWrapper input)
         {
@@ -103,6 +123,21 @@ public abstract partial class InteractableObject
                 case BasisBoneTrackedRole.RightHand:
                     input = rightHand;
                     return true;
+                default:
+                    return false;
+            }
+        }
+
+        public bool ChangeStateByRole(BasisBoneTrackedRole role, InteractInputState newState)
+        {
+            switch (role)
+            {
+                case BasisBoneTrackedRole.CenterEye:
+                    return desktopCenterEye.TrySetState(newState);
+                case BasisBoneTrackedRole.LeftHand:
+                    return leftHand.TrySetState(newState);
+                case BasisBoneTrackedRole.RightHand:
+                    return rightHand.TrySetState(newState);
                 default:
                     return false;
             }

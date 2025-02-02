@@ -92,9 +92,9 @@ namespace Basis.Scripts.UI
         }
 
         // get a span of valid hits sorted by distance
-        public ReadOnlySpan<RaycastHit> GetHits()
+        public RaycastHit[] GetHits()
         {
-            return PhysicHits.AsSpan()[..PhysicHitCount];
+            return PhysicHits[..PhysicHitCount];
         }
 
         /// <summary>
@@ -107,8 +107,10 @@ namespace Basis.Scripts.UI
         public bool FirstHitInMask(out RaycastHit hitInfo, float maxDistance = float.PositiveInfinity, int layerMask = Physics.AllLayers)
         {
             hitInfo = default;
-            foreach (var hit in GetHits())
+
+            for (int Index = 0; Index < PhysicHitCount; Index++)
             {
+                var hit = PhysicHits[Index];
                 if (hit.distance > maxDistance)
                     return false;
                 if (hit.collider == null)
@@ -133,8 +135,9 @@ namespace Basis.Scripts.UI
         public bool FirstHit(out RaycastHit hitInfo, float maxDistance = float.PositiveInfinity)
         {
             hitInfo = default;
-            foreach (var hit in GetHits())
+            for (int Index = 0; Index < PhysicHitCount; Index++)
             {
+                var hit = PhysicHits[Index];
                 if (hit.distance > maxDistance)
                     return false;
                 if (hit.collider == null)
