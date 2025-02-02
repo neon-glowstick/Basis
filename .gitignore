@@ -24,3 +24,4 @@
 
 # MacOS
 .DS_Store
+/Basis/.utmp

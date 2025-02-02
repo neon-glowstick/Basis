@@ -45,13 +45,13 @@ namespace Basis.Network.Server.Ownership
                 {
                     if (PlayerId == ownershipTransferMessage.playerIdMessage.playerID)
                     {
-                       if(RemoveObject(ownershipTransferMessage.ownershipID))
+                        if (RemoveObject(ownershipTransferMessage.ownershipID))
                         {
                             NetDataWriter Writer = new NetDataWriter(true);
                             ownershipTransferMessage.Serialize(Writer);
                             BasisNetworkServer.BroadcastMessageToClients(Writer, BasisNetworkCommons.RemoveCurrentOwnerRequest, BasisPlayerArray.GetSnapshot(), DeliveryMethod.ReliableSequenced);
                         }
-                       else
+                        else
                         {
                             BNL.LogError(ownershipTransferMessage.ownershipID + " failure to remove!");
                         }
