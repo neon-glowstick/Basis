@@ -2,6 +2,7 @@ using Basis.Network.Core;
 using Basis.Scripts.BasisSdk;
 using Basis.Scripts.Drivers;
 using Basis.Scripts.Networking;
+using Basis.Scripts.UI.UI_Panels;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -176,8 +177,9 @@ public static class BasisNetworkSpawnItem
             },
             UnlockPassword = localLoadResource.UnlockPassword,
         };
-
-        GameObject reference = await BasisLoadHandler.LoadGameObjectBundle(loadBundle, true, new BasisProgressReport(), new CancellationToken(),
+        BasisProgressReport BasisProgressReport = new BasisProgressReport();
+        BasisProgressReport.OnProgressReport += BasisUILoadingBar.ProgressReport;
+        GameObject reference = await BasisLoadHandler.LoadGameObjectBundle(loadBundle, true, BasisProgressReport, new CancellationToken(),
             new Vector3(localLoadResource.PositionX, localLoadResource.PositionY, localLoadResource.PositionZ),
             new Quaternion(localLoadResource.QuaternionX, localLoadResource.QuaternionY, localLoadResource.QuaternionZ, localLoadResource.QuaternionW),
             new Vector3(localLoadResource.ScaleX, localLoadResource.ScaleY, localLoadResource.ScaleZ),
@@ -188,9 +190,9 @@ public static class BasisNetworkSpawnItem
             BasisContentBase.NetworkID = localLoadResource.LoadedNetID;
         }
         SpawnedGameobjects.TryAdd(localLoadResource.LoadedNetID, reference);
+        BasisProgressReport.OnProgressReport -= BasisUILoadingBar.ProgressReport;
         return reference;
     }
-
     public static void DestroyScene(UnLoadResource resource)
     {
         if (string.IsNullOrEmpty(resource.LoadedNetID))

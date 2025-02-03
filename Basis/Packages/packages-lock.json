@@ -42,6 +42,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "com.basis.settings": {
+      "version": "file:com.basis.settings",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.basis.settingsmanager": {
       "version": "file:com.basis.settingsmanager",
       "depth": 0,

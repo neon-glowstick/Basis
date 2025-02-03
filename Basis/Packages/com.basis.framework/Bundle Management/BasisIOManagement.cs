@@ -82,6 +82,7 @@ public static class BasisIOManagement
             }
 
             BasisDebug.Log($"Successfully downloaded file from {url} to {localFilePath}");
+            progressCallback.ReportProgress(UniqueID.ToString(), 100, "Successfully Loaded data");
         }
     }
     public static async Task<byte[]> LoadLocalFile(string filePath, BasisProgressReport progressCallback, CancellationToken cancellationToken = default)
