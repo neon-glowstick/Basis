@@ -62,18 +62,20 @@ public class BasisSceneFactory : MonoBehaviour
         }
         List<GameObject> MainCameras = new List<GameObject>();
         GameObject.FindGameObjectsWithTag("MainCamera", MainCameras);
-        foreach (GameObject PotentialCamera in MainCameras)
+        int Count = MainCameras.Count;
+        for (int Index = 0; Index < Count; Index++)
         {
-            if (PotentialCamera.TryGetComponent(out Camera camera))
+            GameObject PC = MainCameras[Index];
+            if (PC.TryGetComponent(out Camera camera))
             {
                 if (camera != BasisLocalCameraDriver.Instance.Camera)
                 {
-                    LoadCameraPropertys(camera);
+                //    LoadCameraPropertys(camera);
                     GameObject.DestroyImmediate(camera.gameObject);
                 }
                 else
                 {
-                    BasisDebug.Log("No New main Camera Found");
+                  //  BasisDebug.Log("No New main Camera Found");
                 }
             }
         }
@@ -88,6 +90,7 @@ public class BasisSceneFactory : MonoBehaviour
     }
     public void LoadCameraPropertys(Camera Camera)
     {
+        BNL.Log("Loading Camera Propertys From Camera "+ Camera.gameObject.name);  
         Camera RealCamera = BasisLocalCameraDriver.Instance.Camera;
         RealCamera.useOcclusionCulling = Camera.useOcclusionCulling;
         RealCamera.backgroundColor = Camera.backgroundColor;

@@ -2,10 +2,9 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
 public static class BasisBundleManagement
 {
-    public static string MetaLinkBasisSuffix =  ".MetaLinkBasis";
+    public static string MetaLinkBasisSuffix = ".MetaLinkBasis";
     public static string EncryptedMetaBasisSuffix = ".EncryptedMetaBasis";
     public static string EncryptedBundleBasisSuffix = ".EncryptedBundleBasis";
     public static string AssetBundlesFolder = "AssetBundles";
@@ -17,13 +16,13 @@ public static class BasisBundleManagement
     {
         if (BasisTrackedBundleWrapper == null)
         {
-            BasisDebug.LogError("BasisTrackedBundleWrapper is null.");
+            BasisDebug.LogError("Basis Tracked Bundle Wrapper is null.");
             return;
         }
 
         if (BasisTrackedBundleWrapper.LoadableBundle == null || BasisTrackedBundleWrapper.LoadableBundle.BasisRemoteBundleEncrypted == null)
         {
-            BasisDebug.LogError("LoadableBundle or BasisRemoteBundleEncypted is null.");
+            BasisDebug.LogError("Loadable Bundle or Basis Remote Bundle Encrypted is null.");
             return;
         }
 
@@ -81,7 +80,7 @@ public static class BasisBundleManagement
 
             if (BasisTrackedBundleWrapper.LoadableBundle == null)
             {
-                BasisDebug.LogError("Failed to decrypt meta file, LoadableBundle is null.");
+                BasisDebug.LogError("Failed to decrypt meta file, Loadable Bundle is null.");
                 return;
             }
 
@@ -95,14 +94,14 @@ public static class BasisBundleManagement
             }
 
             BasisDebug.Log($"Downloading bundle file from {bundleUrl}");
-            if(BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation == null)
+            if (BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation == null)
             {
-                BasisDebug.LogError("Missing BasisBundleInformation for Loaded Bundle ", BasisDebug.LogTag.System);
+                BasisDebug.LogError("Missing Basis Bundle Information for Loaded Bundle ", BasisDebug.LogTag.System);
                 return;
             }
             if (BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation.BasisBundleGenerated == null)
             {
-                BasisDebug.LogError("Missing BasisBundleGenerated for Loaded Bundle ", BasisDebug.LogTag.System);
+                BasisDebug.LogError("Missing Basis Bundle Generated for Loaded Bundle ", BasisDebug.LogTag.System);
                 return;
             }
             string FilePathMeta = BasisIOManagement.GenerateFilePath($"{BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation.BasisBundleGenerated.AssetToLoadName}{EncryptedMetaBasisSuffix}", AssetBundlesFolder);
@@ -249,7 +248,7 @@ public static class BasisBundleManagement
             BasisTrackedBundleWrapper.LoadableBundle.BasisBundleInformation.HasError = true;
         }
     }
-    public static async Task ProcessOnDiscMetaDataAsync(BasisTrackedBundleWrapper basisTrackedBundleWrapper, BasisStoredEncyptedBundle BasisStoredEncyptedBundle,BasisProgressReport progressCallback,CancellationToken cancellationToken)
+    public static async Task ProcessOnDiscMetaDataAsync(BasisTrackedBundleWrapper basisTrackedBundleWrapper, BasisStoredEncyptedBundle BasisStoredEncyptedBundle, BasisProgressReport progressCallback, CancellationToken cancellationToken)
     {
         // Log entry point
         BasisDebug.Log("Starting DataOnDiscProcessMeta method...");
