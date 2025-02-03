@@ -27,7 +27,7 @@ public static class BasisNetworkSpawnItem
 
         localLoadResource = new LocalLoadResource
         {
-            LoadedNetID = Guid.NewGuid().ToString(),
+            LoadedNetID = BasisGenerateUniqueID.GenerateUniqueID(),
             Mode = 1,
             BundleURL = BundleURL,
             UnlockPassword = UnlockPassword,
@@ -58,7 +58,7 @@ public static class BasisNetworkSpawnItem
 
         LocalLoadResource = new LocalLoadResource
         {
-            LoadedNetID = Guid.NewGuid().ToString(),
+            LoadedNetID = BasisGenerateUniqueID.GenerateUniqueID(),
             Mode = 0,
             BundleURL = BundleURL,
             UnlockPassword = UnlockPassword,

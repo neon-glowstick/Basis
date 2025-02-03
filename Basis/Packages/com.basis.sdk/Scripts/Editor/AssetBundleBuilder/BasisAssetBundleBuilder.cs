@@ -168,8 +168,8 @@ public static class AssetBundleBuilder
         {
             VP = password
         };
-        Guid UniqueID = Guid.NewGuid();
-        await BasisEncryptionWrapper.EncryptFileAsync(UniqueID.ToString(), BasisPassword, actualFilePath, EncryptedPath, Report);
+        string UniqueID = BasisGenerateUniqueID.GenerateUniqueID();
+        await BasisEncryptionWrapper.EncryptFileAsync(UniqueID, BasisPassword, actualFilePath, EncryptedPath, Report);
         encryptionTimer.Stop();
         Debug.Log("Encryption took " + encryptionTimer.ElapsedMilliseconds + " ms for " + EncryptedPath);
         return EncryptedPath;

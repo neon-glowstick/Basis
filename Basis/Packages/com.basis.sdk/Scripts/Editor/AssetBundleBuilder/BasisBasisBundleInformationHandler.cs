@@ -85,8 +85,8 @@ public static class BasisBasisBundleInformationHandler
             {
                 VP = password
             };
-            Guid UniqueID = Guid.NewGuid();
-            await BasisEncryptionWrapper.EncryptFileAsync(UniqueID.ToString(),BasisPassword, filePath, EncryptedPath, Report);
+            string UniqueID = BasisGenerateUniqueID.GenerateUniqueID();
+            await BasisEncryptionWrapper.EncryptFileAsync(UniqueID,BasisPassword, filePath, EncryptedPath, Report);
 
             // Delete the bundle file if it exists
             if (File.Exists(filePath))
