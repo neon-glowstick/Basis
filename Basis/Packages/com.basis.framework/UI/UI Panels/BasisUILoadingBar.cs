@@ -1,5 +1,6 @@
 using Basis.Scripts.Addressable_Driver;
 using Basis.Scripts.Addressable_Driver.Enums;
+using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management;
 using Basis.Scripts.Drivers;
 using System;
@@ -44,11 +45,13 @@ namespace Basis.Scripts.UI.UI_Panels
         public static void Initalize()
         {
             BasisSceneLoadDriver.progressCallback.OnProgressReport += ProgressReport;
+            BasisLocalPlayer.Instance.ProgressReportAvatarLoad.OnProgressReport += ProgressReport;
         }
 
         public static void DeInitalize()
         {
             BasisSceneLoadDriver.progressCallback.OnProgressReport -= ProgressReport;
+            BasisLocalPlayer.Instance.ProgressReportAvatarLoad.OnProgressReport -= ProgressReport;
         }
 
         public static void ProgressReport(string UniqueID, float progress, string info)

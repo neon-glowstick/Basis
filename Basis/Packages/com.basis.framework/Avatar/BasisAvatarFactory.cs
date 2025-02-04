@@ -55,7 +55,6 @@ namespace Basis.Scripts.Avatar
 
             DeleteLastAvatar(Player, false);
             LoadLoadingAvatar(Player, LoadingAvatar.BasisLocalEncryptedBundle.LocalBundleFile);
-
             try
             {
                 GameObject Output = null;
@@ -115,7 +114,6 @@ namespace Basis.Scripts.Avatar
 
             DeleteLastAvatar(Player,false);
             LoadLoadingAvatar(Player, LoadingAvatar.BasisLocalEncryptedBundle.LocalBundleFile);
-
             try
             {
                 GameObject Output = null;
