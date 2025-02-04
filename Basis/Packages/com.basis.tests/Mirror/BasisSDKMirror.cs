@@ -224,6 +224,8 @@ public class BasisSDKMirror : MonoBehaviour
         CreateNewCamera(camera, out portalCamera);
         portalCamera.targetTexture = PortalTexture;
     }
+    [SerializeField]
+    private LayerMask ReflectingLayers;
     private void CreateNewCamera(Camera currentCamera, out Camera newCamera)
     {
         GameObject go = new GameObject("Mirror Reflection Camera id" + GetInstanceID() + " for " + currentCamera.GetInstanceID(), typeof(Camera));
@@ -240,6 +242,7 @@ public class BasisSDKMirror : MonoBehaviour
         newCamera.aspect = currentCamera.aspect;
         newCamera.orthographicSize = currentCamera.orthographicSize;
         newCamera.depth = 2;
+        newCamera.cullingMask = ReflectingLayers.value;
         if (newCamera.TryGetComponent(out UniversalAdditionalCameraData CameraData))
         {
             CameraData.allowXRRendering = allowXRRendering;

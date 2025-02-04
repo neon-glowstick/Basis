@@ -187,3 +187,6 @@ MonoBehaviour:
   depth: 24
   allowXRRendering: 1
   RenderPostProcessing: 0
+  ReflectingLayers:
+    serializedVersion: 2
+    m_Bits: 477
