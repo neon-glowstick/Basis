@@ -278,6 +278,9 @@ MonoBehaviour:
   depth: 24
   allowXRRendering: 1
   RenderPostProcessing: 0
+  ReflectingLayers:
+    serializedVersion: 2
+    m_Bits: 477
 --- !u!65 &3189968721083455833
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -311,15 +314,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 690ab0b52a9b06b4498ad303592416aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  disableInteract: 0
   InteractRange: 1
-  CanEquip: 0
-  equipPos: {x: 0, y: 0, z: 0}
-  equipRot: {x: 0, y: 0, z: 0, w: 0}
+  Equippable: 0
+  StrictPosition: {x: 0, y: 0, z: 0}
+  StrictRotation: {x: 0, y: 0, z: 0, w: 0}
+  IsPuppeted: 0
   KinematicWhileInteracting: 0
-  LocalOnly: 1
+  DesktopRotateSpeed: 0.1
+  DesktopZoopSpeed: 0.2
+  DesktopZoopMinDistance: 0.2
+  GenerateColliderMesh: 1
+  minLinearVelocity: 0.1
+  interactEndLinearVelocityMultiplier: 1
+  minAngularVelocity: 0.1
+  interactEndAngularVelocityMultiplier: 1
   ColliderRef: {fileID: 0}
   RigidRef: {fileID: 0}
-  ConstraintRef: {fileID: 0}
+  InputConstraint:
+    rid: 1000
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: BasisParentConstraint, ns: , asm: BasisExamples}
+      data:
+        Enabled: 1
+        GlobalWeight: 1
+        _restPosition: {x: 0, y: 0, z: 0}
+        _restRotation: {x: 0, y: 0, z: 0, w: 0}
+        sources: []
 --- !u!1773428102 &2919849334597809319
 ParentConstraint:
   m_ObjectHideFlags: 0
