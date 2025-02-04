@@ -4,6 +4,8 @@ using TMPro;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Common;
 using Basis.Scripts.Networking;
+using System.Threading.Tasks;
+using Basis.Scripts.Drivers;
 namespace Basis.Scripts.UI.UI_Panels
 {
     public class BasisSetUserName : MonoBehaviour
@@ -63,6 +65,7 @@ namespace Basis.Scripts.UI.UI_Panels
                 BasisDataStore.SaveString(BasisLocalPlayer.Instance.DisplayName, LoadFileName);
                 if (BasisNetworkManagement.Instance != null)
                 {
+                    await CreateAssetBundle();
                     BasisNetworkManagement.Instance.Ip = IPaddress.text;
                     BasisNetworkManagement.Instance.Password = Password.text;
                     BasisNetworkManagement.Instance.IsHostMode = HostMode.isOn;
@@ -80,12 +83,26 @@ namespace Basis.Scripts.UI.UI_Panels
                 Ready.interactable = true;
             }
         }
-
         public void ToggleAdvancedSettings()
         {
             if (AdvancedSettingsPanel != null)
             {
                 AdvancedSettingsPanel.SetActive(!AdvancedSettingsPanel.activeSelf);
+            }
+        }
+        public async Task CreateAssetBundle()
+        {
+            if (BundledContentHolder.Instance.UseSceneProvidedHere)
+            {
+                BasisDebug.Log("using Local Asset Bundle or Addressable", BasisDebug.LogTag.Networking);
+                if (BundledContentHolder.Instance.UseAddressablesToLoadScene)
+                {
+                    await BasisSceneLoadDriver.LoadSceneAddressables(BundledContentHolder.Instance.DefaultScene.BasisRemoteBundleEncrypted.BundleURL);
+                }
+                else
+                {
+                    await BasisSceneLoadDriver.LoadSceneAssetBundle(BundledContentHolder.Instance.DefaultScene);
+                }
             }
         }
     }
