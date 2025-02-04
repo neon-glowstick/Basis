@@ -57,8 +57,13 @@ namespace Basis.Scripts.TransformBinders.BoneControl
             }
             if (HasTracked == BasisHasTracked.HasTracker)
             {
+
+                ///this needs to be refactored to understand each part of the body and a generic mode.
+                ///start off with a distance limiter for the hips.
+                ///could also be a step at the end for every targeted type
                 if (InverseOffsetFromBone.Use)
                 {
+                    
                     if (IsHintRoleIgnoreRotation == false)
                     {                    // Update the position of the secondary transform to maintain the initial offset
                         OutGoingData.position = Vector3.Lerp(OutGoingData.position, IncomingData.position + math.mul(IncomingData.rotation, InverseOffsetFromBone.position), trackersmooth);

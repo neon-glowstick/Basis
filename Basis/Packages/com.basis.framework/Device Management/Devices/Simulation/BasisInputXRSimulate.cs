@@ -1,4 +1,4 @@
-﻿using Basis.Scripts.BasisSdk.Players;
+using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.TransformBinders.BoneControl;
 using Unity.Mathematics;
 using UnityEngine;
