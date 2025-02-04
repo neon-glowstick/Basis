@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public interface BasisISettingHandler<T>
 {
     // Provides the default value of the setting
@@ -10,4 +8,5 @@ public interface BasisISettingHandler<T>
 
     // Sets the new value for the setting
     void SetValue(T value);
+    void ApplySetting();
 }
