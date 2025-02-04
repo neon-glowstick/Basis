@@ -390,8 +390,23 @@ namespace Basis.Scripts.Drivers
         private void SetupHeadRig(BasisLocalBoneDriver driver)
         {
             GameObject HeadRig = CreateRig("Chest, Neck, Head", true, out RigHeadRig, out RigHeadLayer);
-            CreateTwoBone(driver, HeadRig, References.chest, References.neck, References.head, BasisBoneTrackedRole.Head, BasisBoneTrackedRole.Chest, true, out HeadTwoBoneIK, true, true);
+            if (References.HasUpperchest)
+            {
+                CreateTwoBone(driver, HeadRig, References.Upperchest, References.neck, References.head, BasisBoneTrackedRole.Head, BasisBoneTrackedRole.Chest, true, out HeadTwoBoneIK, true, true);
+            }
+            else
+            {
+                if (References.Haschest)
+                {
+                    CreateTwoBone(driver, HeadRig, References.chest, References.neck, References.head, BasisBoneTrackedRole.Head, BasisBoneTrackedRole.Chest, true, out HeadTwoBoneIK, true, true);
 
+                }
+                else
+                {
+                    CreateTwoBone(driver, HeadRig, References.neck, References.neck, References.head, BasisBoneTrackedRole.Head, BasisBoneTrackedRole.Chest, true, out HeadTwoBoneIK, true, true);
+
+                }
+            }
             List<BasisBoneControl> controls = new List<BasisBoneControl>();
             if (driver.FindBone(out BasisBoneControl Head, BasisBoneTrackedRole.Head))
             {
