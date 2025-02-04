@@ -1,10 +1,10 @@
-public abstract class BaseSetting<T> : BasisISettingHandler<T>
+public abstract class BasisBaseSetting<T> : BasisISettingHandler<T>
 {
     public string Identifier { get; private set; }
     protected T defaultValue;
     protected T currentValue;
 
-    public BaseSetting(string identifier, T defaultValue)
+    public BasisBaseSetting(string identifier, T defaultValue)
     {
         Identifier = identifier;
         this.defaultValue = defaultValue;

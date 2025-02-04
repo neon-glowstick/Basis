@@ -1,11 +1,12 @@
 using System;
 using UnityEngine.UI;
 using UnityEngine;
+using TMPro;
 
 public class SettingUIHandler<T> : MonoBehaviour
 {
     public BasisISettingHandler<T> setting;
-    public InputField inputField;
+    public TMP_InputField inputField;
     public Dropdown dropdown;
 
     // For generic settings, this will update the value based on the input field or dropdown selection

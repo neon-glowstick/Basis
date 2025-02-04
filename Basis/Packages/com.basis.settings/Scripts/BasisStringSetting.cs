@@ -1,8 +1,6 @@
-using UnityEngine;
-
-public class StringSetting : BaseSetting<string>
+public class BasisStringSetting : BasisBaseSetting<string>
 {
-    public StringSetting(string identifier, string defaultValue) : base(identifier, defaultValue) { }
+    public BasisStringSetting(string identifier, string defaultValue) : base(identifier, defaultValue) { }
 
     // Custom logic to apply the setting, such as saving to a file
     public override async void ApplySetting()
