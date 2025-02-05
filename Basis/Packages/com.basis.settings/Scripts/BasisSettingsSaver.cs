@@ -10,11 +10,11 @@ public static class BasisSettingsSaver
     private const string FileName = "BasisSettings.json";
     private static readonly string FilePath = Path.Combine(Application.persistentDataPath, FileName);
 
-    public static SettingsData SettingsData = new SettingsData();
+    public static BasisSettingsData SettingsData = new BasisSettingsData();
     // Events
     public static event Action OnDataSaved;
     public static event Action OnDataLoaded;
-    public static event Action<DataItem> OnOptionLoaded;
+    public static event Action<BasisDataItem> OnOptionLoaded;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static async void Initialize()
@@ -42,7 +42,7 @@ public static class BasisSettingsSaver
         try
         {
             // Convert dictionary back to list for serialization
-            var itemsList = new List<DataItem>(SettingsData.itemsDictionary.Values);
+            var itemsList = new List<BasisDataItem>(SettingsData.itemsDictionary.Values);
             SettingsData.itemsDictionary.Clear();
             foreach (var item in itemsList)
             {
@@ -71,7 +71,7 @@ public static class BasisSettingsSaver
             if (File.Exists(FilePath))
             {
                 string json = await File.ReadAllTextAsync(FilePath);
-                SettingsData = JsonUtility.FromJson<SettingsData>(json);
+                SettingsData = JsonUtility.FromJson<BasisSettingsData>(json);
                 BasisDebug.Log($"Data successfully loaded from {FilePath}");
 
                 OnDataLoaded?.Invoke();
@@ -94,7 +94,7 @@ public static class BasisSettingsSaver
     public static void ApplyChanges()
     {
         // Invoke loading events concurrently
-        foreach (DataItem item in SettingsData.itemsDictionary.Values)
+        foreach (BasisDataItem item in SettingsData.itemsDictionary.Values)
         {
             OnOptionLoaded?.Invoke(item);
         }

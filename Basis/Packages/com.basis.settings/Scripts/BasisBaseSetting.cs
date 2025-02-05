@@ -1,10 +1,10 @@
-public abstract class BasisBaseSetting<T> : BasisISettingHandler<T>
+public abstract class BasisBaseSetting<T> : BasisISettingHandler<string>
 {
     public string Identifier { get; private set; }
-    protected T defaultValue;
-    protected T currentValue;
+    protected string defaultValue;
+    protected string currentValue;
 
-    public BasisBaseSetting(string identifier, T defaultValue)
+    public BasisBaseSetting(string identifier, string defaultValue)
     {
         Identifier = identifier;
         this.defaultValue = defaultValue;
@@ -12,13 +12,13 @@ public abstract class BasisBaseSetting<T> : BasisISettingHandler<T>
     }
 
     // Retrieve the default value
-    public T GetDefaultValue() => defaultValue;
+    public string GetDefaultValue() => defaultValue;
 
     // Retrieve the current value
-    public T GetCurrentValue() => currentValue;
+    public string GetCurrentValue() => currentValue;
 
     // Set a new value
-    public void SetValue(T value)
+    public void SetValue(string value)
     {
         currentValue = value;
         // Optionally, trigger an event to notify other systems about the change

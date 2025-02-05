@@ -9,7 +9,7 @@ public class BasisStringSetting : BasisBaseSetting<string>
         var existingItem = BasisSettingsSaver.SettingsData.FindItemByIdentifier(Identifier);
         if (existingItem == null)
         {
-            BasisSettingsSaver.SettingsData.itemsDictionary.Add(Identifier, new DataItem { identifier = Identifier, value = currentValue });
+            BasisSettingsSaver.SettingsData.itemsDictionary.Add(Identifier, new BasisDataItem { identifier = Identifier, value = currentValue });
         }
         else
         {
