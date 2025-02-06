@@ -1,6 +1,6 @@
 name: Feature Request
 description: Please submit your desired enhancement for the framework.
-labels: ["New Feature"]
+labels: [enhancement]
 assignees: dooly123
 body:
   - type: textarea
@@ -31,8 +31,3 @@ body:
       description: Any other detail about the feature request goes here.
     validations:
       required: false
-  - type: textarea
-    id: requesters
-    attributes:
-      label: Requesters
-      description: Usernames of all individuals that have been involved in building this feature request.
