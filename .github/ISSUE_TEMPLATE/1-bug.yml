@@ -13,14 +13,14 @@ body:
   - type: textarea
     id: reproduction
     attributes:
-      label: To Reproduce
+      label: Steps to Reproduce
       description: Describe the steps needed in order to reproduce the behavior.
     validations:
       required: true
   - type: textarea
     id: expected-behavior
     attributes:
-      label: Expected behavior
+      label: The expected behavior
       description: What you expected to happen instead.
     validations:
       required: true
