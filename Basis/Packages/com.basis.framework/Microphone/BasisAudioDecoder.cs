@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using UnityOpus;
 using Basis.Scripts.Device_Management;
@@ -7,7 +7,6 @@ public class BasisAudioDecoder
 {
     public event Action OnDecoded;
     AudioDecoder decoder;
-    public BasisOpusSettings Settings;
     public float[] pcmBuffer;
     public int pcmLength;
     public int FakepcmLength;
@@ -15,9 +14,8 @@ public class BasisAudioDecoder
     {
         FakepcmLength = 2048;
         pcmLength = 2048;
-        Settings = BasisDeviceManagement.Instance.BasisOpusSettings;
-        pcmBuffer = new float[FakepcmLength * (int)Settings.NumChannels];//AudioDecoder.maximumPacketDuration now its 2048
-        decoder = new AudioDecoder(Settings.SamplingFrequency, Settings.NumChannels);
+        pcmBuffer = new float[FakepcmLength * (int)BasisOpusSettings.NumChannels];//AudioDecoder.maximumPacketDuration now its 2048
+        decoder = new AudioDecoder(BasisOpusSettings.SamplingFrequency, BasisOpusSettings.NumChannels);
     }
     public void Deinitalize()
     {

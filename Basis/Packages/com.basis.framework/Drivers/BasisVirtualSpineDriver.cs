@@ -121,11 +121,23 @@ public class BasisVirtualSpineDriver
     }
     public void DeInitialize()
     {
-        Neck.VirtualRun -= OnSimulateNeck;
-        Neck.HasVirtualOverride = false;
-        Chest.HasVirtualOverride = false;
-        Hips.HasVirtualOverride = false;
-        Spine.HasVirtualOverride = false;
+        if (Neck != null)
+        {
+            Neck.VirtualRun -= OnSimulateNeck;
+            Neck.HasVirtualOverride = false;
+        }
+        if (Chest != null)
+        {
+            Chest.HasVirtualOverride = false;
+        }
+        if (Hips != null)
+        {
+            Hips.HasVirtualOverride = false;
+        }
+        if (Spine != null)
+        {
+            Spine.HasVirtualOverride = false;
+        }
      //   Hips.HasInverseOffsetOverride = false;
      //   Hips.VirtualInverseOffsetRun -= OnSimulateHipsWithTracker;
     }

@@ -26,7 +26,6 @@ public partial class MicrophoneRecorder : MicrophoneRecorderBase
     {
         if (!IsInitialize)
         {
-            BasisOpusSettings = BasisDeviceManagement.Instance.BasisOpusSettings;
             processBufferArray = BasisOpusSettings.CalculateProcessBuffer();
             PBA = new NativeArray<float>(processBufferArray, Allocator.Persistent);
             VAJ = new LogarithmicVolumeAdjustmentJob
@@ -342,7 +341,9 @@ public partial class MicrophoneRecorder : MicrophoneRecorderBase
     }
     public void ApplyDeNoise()
     {
+#if !UNITY_ANDROID
         Denoiser.Denoise(processBufferArray);
+#endif
     }
     public void RollingRMS()
     {

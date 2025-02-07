@@ -16,8 +16,6 @@ namespace Basis.Scripts.Networking.Recievers
         [SerializeField]
         public BasisAudioAndVisemeDriver visemeDriver;
         [SerializeField]
-        public BasisOpusSettings settings;
-        [SerializeField]
         public RingBuffer RingBuffer;
         public int samplingFrequency;
         public int numChannels;

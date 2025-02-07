@@ -1,34 +1,33 @@
 using UnityEngine;
 using UnityOpus;
-[CreateAssetMenu(fileName = "newBasisOpusSettings", menuName = "Opus Data")]
-public class BasisOpusSettings : ScriptableObject
+public static class BasisOpusSettings
 {
-    public int RecordingFullLength = 1;
-    public int BitrateKPS = 128000; // 128 kbps
+    public static int RecordingFullLength = 1;
+    public static int BitrateKPS = 64000; // 128 kbps
     /// <summary>
     /// where 0 is the fastest on the cpu
     /// and 10 is the most performance hoggy
     /// recommend 10 as network performance is better.
     /// </summary>
-    public int Complexity = 10;
-    public SamplingFrequency SamplingFrequency = SamplingFrequency.Frequency_48000;
-    public NumChannels NumChannels = NumChannels.Mono;
-    public OpusApplication OpusApplication = OpusApplication.Audio;
-    public OpusSignal OpusSignal = OpusSignal.Auto;
-    public float DesiredDurationInSeconds = 0.02f;
-    public int GetSampleFreq()
+    public static int Complexity = 10;
+    public static SamplingFrequency SamplingFrequency = SamplingFrequency.Frequency_48000;
+    public static NumChannels NumChannels = NumChannels.Mono;
+    public static OpusApplication OpusApplication = OpusApplication.Audio;
+    public static OpusSignal OpusSignal = OpusSignal.Auto;
+    public static float DesiredDurationInSeconds = 0.02f;
+    public static int GetSampleFreq()
     {
         return SampleFreqToInt(SamplingFrequency);
     }
-    public int CalculateDesiredTime()
+    public static int CalculateDesiredTime()
     {
         return Mathf.CeilToInt(DesiredDurationInSeconds * GetSampleFreq());
     }
-    public float[] CalculateProcessBuffer()
+    public static float[] CalculateProcessBuffer()
     {
         return new float[CalculateDesiredTime()];
     }
-    public int GetChannelAsInt()
+    public static int GetChannelAsInt()
     {
         return GetChannelAsInt(NumChannels);
     }

@@ -87,6 +87,13 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "com.meta.xr.sdk.core": {
+      "version": "72.0.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.naelstrof.jigglephysics": {
       "version": "file:com.naelstrof.jigglephysics",
       "depth": 0,
@@ -412,11 +419,10 @@
       "dependencies": {}
     },
     "com.xiph.rnnoise": {
-      "version": "https://github.com/BasisVR/RNNoise.Net.git",
+      "version": "file:com.xiph.rnnoise",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "c70e762e2cdbad29afd7bccd0cf1a46dbcddd484"
+      "source": "embedded",
+      "dependencies": {}
     },
     "dev.hai-vr.basis.comms": {
       "version": "file:HVRBasisAvatarComms",

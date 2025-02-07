@@ -15,7 +15,6 @@ namespace Basis.Scripts.Networking.Recievers
         public void OnEnable(BasisNetworkPlayer networkedPlayer)
         {
             // Initialize settings and audio source
-            settings = BasisDeviceManagement.Instance.BasisOpusSettings;
             if (audioSource == null)
             {
                 BasisRemotePlayer remotePlayer = (BasisRemotePlayer)networkedPlayer.Player;
@@ -28,7 +27,7 @@ namespace Basis.Scripts.Networking.Recievers
             audioSource.volume = 1.0f;
             audioSource.loop = true;
             // Initialize sampling parameters
-            samplingFrequency = settings.GetSampleFreq();
+            samplingFrequency = BasisOpusSettings.GetSampleFreq();
             numChannels = 1;
             SampleLength = samplingFrequency * numChannels;
             RingBuffer = new RingBuffer(4096*2);

@@ -16,7 +16,6 @@ namespace Basis.Scripts.Networking.Transmitters
     {
         public Encoder encoder;
         public BasisNetworkPlayer NetworkedPlayer;
-        public BasisOpusSettings settings;
         public BasisLocalPlayer Local;
         public MicrophoneRecorder Recorder;
 
@@ -31,15 +30,13 @@ namespace Basis.Scripts.Networking.Transmitters
                 // Assign the networked player and base network send functionality
                 NetworkedPlayer = networkedPlayer;
 
-                // Retrieve the Opus settings from the singleton instance
-                settings = BasisDeviceManagement.Instance.BasisOpusSettings;
 
                 // Initialize the Opus encoder with the retrieved settings
-                encoder = new Encoder(settings.SamplingFrequency, settings.NumChannels, settings.OpusApplication)
+                encoder = new Encoder(BasisOpusSettings.SamplingFrequency, BasisOpusSettings.NumChannels, BasisOpusSettings.OpusApplication)
                 {
-                    Bitrate = settings.BitrateKPS,
-                    Complexity = settings.Complexity,
-                    Signal = settings.OpusSignal
+                    Bitrate = BasisOpusSettings.BitrateKPS,
+                    Complexity = BasisOpusSettings.Complexity,
+                    Signal = BasisOpusSettings.OpusSignal
                 };
 
                 // Cast the networked player to a local player to access the microphone recorder

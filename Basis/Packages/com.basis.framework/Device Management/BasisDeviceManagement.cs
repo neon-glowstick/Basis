@@ -58,7 +58,6 @@ namespace Basis.Scripts.Device_Management
             return false;
         }
         public static BasisDeviceManagement Instance;
-        public BasisOpusSettings BasisOpusSettings;
         public event Action<string> OnBootModeChanged;
         public event Action<string> OnBootModeStopped;
         public delegate Task InitializationCompletedHandler();
@@ -117,20 +116,42 @@ namespace Basis.Scripts.Device_Management
                 Input.UnAssignFBTracker();
             }
         }
-        public bool TryFindBasisBaseTypeManagement(string Name, out List<BasisBaseTypeManagement> Match)
+        public bool TryFindBasisBaseTypeManagement(string name, out List<BasisBaseTypeManagement> match)
         {
-            Match = new List<BasisBaseTypeManagement>();
-            foreach (BasisBaseTypeManagement Type in BaseTypes)
+            match = new List<BasisBaseTypeManagement>();
+
+            if (string.IsNullOrEmpty(name))
             {
-                if (Type.Type() == Name)
-                {
-                    Match.Add(Type);
-                }
-            }
-            if (Match.Count == 0)
-            {
+                BasisDebug.LogError("Name parameter is null or empty.", BasisDebug.LogTag.Device);
                 return false;
             }
+
+            if (BaseTypes == null)
+            {
+                BasisDebug.LogError("BaseTypes list is null.", BasisDebug.LogTag.Device);
+                return false;
+            }
+
+            foreach (BasisBaseTypeManagement type in BaseTypes)
+            {
+                if (type == null)
+                {
+                    BasisDebug.LogWarning("Null entry found in BaseTypes list.", BasisDebug.LogTag.Device);
+                    continue;
+                }
+
+                if (type.Type() == name)
+                {
+                    match.Add(type);
+                }
+            }
+
+            if (match.Count == 0)
+            {
+                BasisDebug.LogWarning($"No matches found for name '{name}'.", BasisDebug.LogTag.Device);
+                return false;
+            }
+
             return true;
         }
         public async Task Initialize()
@@ -325,18 +346,52 @@ namespace Basis.Scripts.Device_Management
         }
         private void CheckForPass(string type)
         {
-            BasisDebug.Log("Loading " + type, BasisDebug.LogTag.Device);
-            if (TryFindBasisBaseTypeManagement("SimulateXR", out List<BasisBaseTypeManagement> Matched))
+            if (string.IsNullOrEmpty(type))
             {
-                foreach (var m in Matched)
+                BasisDebug.LogError("Type parameter is null or empty.", BasisDebug.LogTag.Device);
+                return;
+            }
+
+            BasisDebug.Log("Loading " + type, BasisDebug.LogTag.Device);
+
+            if (!TryFindBasisBaseTypeManagement("SimulateXR", out List<BasisBaseTypeManagement> matchedSimulateXR))
+            {
+                BasisDebug.LogWarning("No BasisBaseTypeManagement found for 'SimulateXR'.", BasisDebug.LogTag.Device);
+            }
+            else if (matchedSimulateXR == null || matchedSimulateXR.Count == 0)
+            {
+                BasisDebug.LogWarning("'SimulateXR' list is null or empty.", BasisDebug.LogTag.Device);
+            }
+            else
+            {
+                foreach (var m in matchedSimulateXR)
                 {
+                    if (m == null)
+                    {
+                        BasisDebug.LogWarning("Null entry found in 'SimulateXR' list.", BasisDebug.LogTag.Device);
+                        continue;
+                    }
                     m.StartSDK();
                 }
             }
-            if (TryFindBasisBaseTypeManagement(type, out Matched))
+
+            if (!TryFindBasisBaseTypeManagement(type, out List<BasisBaseTypeManagement> matchedType))
             {
-                foreach (var m in Matched)
+                BasisDebug.LogWarning($"No BasisBaseTypeManagement found for type '{type}'.", BasisDebug.LogTag.Device);
+            }
+            else if (matchedType == null || matchedType.Count == 0)
+            {
+                BasisDebug.LogWarning($"List for type '{type}' is null or empty.", BasisDebug.LogTag.Device);
+            }
+            else
+            {
+                foreach (var m in matchedType)
                 {
+                    if (m == null)
+                    {
+                        BasisDebug.LogWarning($"Null entry found in list for type '{type}'.", BasisDebug.LogTag.Device);
+                        continue;
+                    }
                     m.StartSDK();
                 }
             }
