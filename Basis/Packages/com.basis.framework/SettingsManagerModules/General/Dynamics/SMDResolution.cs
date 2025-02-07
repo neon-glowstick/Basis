@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 namespace BattlePhaze.SettingsManager.Intergrations
 {
@@ -11,6 +11,7 @@ namespace BattlePhaze.SettingsManager.Intergrations
         public string LastResolution;
         public override void ReceiveOption(SettingsMenuInput option, SettingsManager manager)
         {
+#if !UNITY_ANDROID
             if (!NameReturn(0, option))
             {
                 return;
@@ -73,7 +74,9 @@ namespace BattlePhaze.SettingsManager.Intergrations
                 option.SelectedValue = option.SelectableValueList[selectedIndex].RealValue;
                 SetResolution(SortedResolution[SortedResolution.Count - 1].width, SortedResolution[SortedResolution.Count - 1].height,option.OptionIndex, selectedIndex, manager);
             }
+#endif
         }
+#if !UNITY_ANDROID
         public void SetResolution(int Width, int Height, int OptionIndex, int SelectableValue, SettingsManager Manager)
         {
             SettingsManagerDropDown.SetOptionsValue(Manager, OptionIndex, SelectableValue, true);
@@ -84,5 +87,6 @@ namespace BattlePhaze.SettingsManager.Intergrations
                 Screen.SetResolution(Width, Height, Screen.fullScreenMode);
             }
         }
+#endif
     }
 }
