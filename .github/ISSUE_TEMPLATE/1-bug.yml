@@ -1,5 +1,5 @@
 name: Bug Report
-description: When stuff is broken
+description: When stuff is broken.
 labels: [bug]
 assignees: doolyl123
 body:
@@ -57,8 +57,3 @@ body:
       description: Any other detail about the issue goes here.
     validations:
       required: false
-  - type: textarea
-    id: reporters
-    attributes:
-      label: Reporters
-      description: Usernames of all individuals that have been involved in reporting or replicating this bug.
