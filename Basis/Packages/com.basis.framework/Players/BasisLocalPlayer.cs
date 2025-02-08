@@ -11,6 +11,7 @@ using Basis.Scripts.Avatar;
 using Basis.Scripts.Common;
 using System.Collections.Generic;
 using Basis.Scripts.UI.UI_Panels;
+using UnityEngine.SocialPlatforms;
 namespace Basis.Scripts.BasisSdk.Players
 {
     public class BasisLocalPlayer : BasisPlayer
@@ -45,9 +46,9 @@ namespace Basis.Scripts.BasisSdk.Players
         public static string LoadFileNameAndExtension = "LastUsedAvatar.BAS";
         public bool HasEvents = false;
         public MicrophoneRecorder MicrophoneRecorder;
-        public static string MainCamera = "Assets/Prefabs/Loadins/Main Camera.prefab";
         public bool SpawnPlayerOnSceneLoad = true;
         public const string DefaultAvatar = "LoadingAvatar";
+        public BasisLocalCameraDriver Driver;
         public async Task LocalInitialize()
         {
             if (BasisHelpers.CheckInstance(Instance))
@@ -59,8 +60,8 @@ namespace Basis.Scripts.BasisSdk.Players
             OnLocalPlayerCreated?.Invoke();
             IsLocal = true;
             LocalBoneDriver.CreateInitialArrays(LocalBoneDriver.transform, true);
-            await BasisLocalInputActions.CreateInputAction(this);
-            await BasisDeviceManagement.LoadGameobject(MainCamera, new InstantiationParameters());
+            BasisDeviceManagement.Instance.InputActions.Initialize(this);
+            Driver.gameObject.SetActive(true);  
             //  FootPlacementDriver = BasisHelpers.GetOrAddComponent<BasisFootPlacementDriver>(this.gameObject);
             //  FootPlacementDriver.Initialize();
             Move.Initialize();

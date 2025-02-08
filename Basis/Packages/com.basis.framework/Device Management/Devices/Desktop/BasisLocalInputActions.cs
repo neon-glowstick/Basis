@@ -1,11 +1,8 @@
-using Basis.Scripts.Addressable_Driver.Resource;
 using Basis.Scripts.BasisSdk.Helpers;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Drivers;
 using Basis.Scripts.UI.UI_Panels;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -76,26 +73,6 @@ namespace Basis.Scripts.Device_Management.Devices.Desktop
         {
             InputSystem.Update();
         }
-        public static async Task CreateInputAction(BasisLocalPlayer Local)
-        {
-            ChecksRequired Required = new ChecksRequired
-            {
-                UseContentRemoval = false,
-                DisableAnimatorEvents = false
-            };
-            var data = await AddressableResourceProcess.LoadAsGameObjectsAsync(InputActions, new UnityEngine.ResourceManagement.ResourceProviders.InstantiationParameters(), Required);
-            List<GameObject> Gameobjects = data.Item1;
-            if (Gameobjects.Count != 0)
-            {
-                foreach (GameObject gameObject in Gameobjects)
-                {
-                    if (gameObject.TryGetComponent(out BasisLocalInputActions CharacterInputActions))
-                    {
-                        CharacterInputActions.Initialize(Local);
-                    }
-                }
-            }
-        }
         public void SetupCamera()
         {
             Input.camera = BasisLocalCameraDriver.Instance.Camera;
@@ -119,6 +96,7 @@ namespace Basis.Scripts.Device_Management.Devices.Desktop
         public void Initialize(BasisLocalPlayer localPlayer)
         {
             basisLocalPlayer = localPlayer;
+            this.gameObject.SetActive(true);
         }
         public void AddCallback()
         {

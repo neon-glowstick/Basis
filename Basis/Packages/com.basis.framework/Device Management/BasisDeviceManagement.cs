@@ -2,6 +2,7 @@ using Basis.Scripts.Addressable_Driver.Resource;
 using Basis.Scripts.BasisSdk.Helpers;
 using Basis.Scripts.Command_Line_Args;
 using Basis.Scripts.Device_Management.Devices;
+using Basis.Scripts.Device_Management.Devices.Desktop;
 using Basis.Scripts.Drivers;
 using Basis.Scripts.Player;
 using Basis.Scripts.TransformBinders;
@@ -75,6 +76,8 @@ namespace Basis.Scripts.Device_Management
         public List<StoredPreviousDevice> PreviouslyConnectedDevices = new List<StoredPreviousDevice>();
         [SerializeField]
         public List<BasisDeviceMatchSettings> UseAbleDeviceConfigs = new List<BasisDeviceMatchSettings>();
+        [SerializeField]
+        public BasisLocalInputActions InputActions;
         async void Start()
         {
             if (BasisHelpers.CheckInstance<BasisDeviceManagement>(Instance))
