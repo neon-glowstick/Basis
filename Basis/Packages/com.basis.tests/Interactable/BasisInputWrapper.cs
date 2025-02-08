@@ -1,10 +1,13 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management.Devices;
 using Basis.Scripts.TransformBinders.BoneControl;
+using UnityEngine;
 
 public abstract partial class InteractableObject
 {
+    [Serializable]
     public enum InteractInputState
     {
         /// <summary>
@@ -25,6 +28,7 @@ public abstract partial class InteractableObject
         Interacting,
     }
     
+    [Serializable]
     public struct BasisInputWrapper
     {
         /// <summary>
@@ -53,12 +57,14 @@ public abstract partial class InteractableObject
             return false;
         }
 
-        public BasisInput Source { get; set; }
+        public BasisInput Source;
 
         public BasisBoneControl BoneControl { get; set; }
         public BasisBoneTrackedRole Role { get; set; }
 
-        private InteractInputState State { get; set; }
+        [SerializeField]
+        // TODO: this should not be editable in editor, useful for debugging for now tho
+        private InteractInputState State;
 
         public InteractInputState GetState()
         {

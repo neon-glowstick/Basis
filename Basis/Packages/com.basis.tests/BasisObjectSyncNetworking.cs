@@ -21,7 +21,6 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public BasisPositionRotationScale Next = new BasisPositionRotationScale();
 
     public float LerpMultiplier = 3f;
-    public Rigidbody Rigidbody;
     public BasisContentBase ContentConnector;
     public InteractableObject InteractableObjects;
     public DeliveryMethod DeliveryMethod = DeliveryMethod.Sequenced;
@@ -29,9 +28,6 @@ public class BasisObjectSyncNetworking : MonoBehaviour
     public void Awake()
     {
         if (ContentConnector == null && TryGetComponent<BasisContentBase>(out ContentConnector))
-        {
-        }
-        if (Rigidbody == null && TryGetComponent<Rigidbody>(out Rigidbody))
         {
         }
         if (ContentConnector != null)
@@ -115,18 +111,20 @@ public class BasisObjectSyncNetworking : MonoBehaviour
             IsLocalOwner = IsOwner;
             CurrentOwner = NetIdNewOwner;
             HasActiveOwnership = true;
-            if (Rigidbody != null)
+            // if (Rigidbody != null && !IsLocalOwner)
+            // {
+            //     // TODO: have an initial state for this to reference since we cant always handle
+            //     //       ownership changes properly if state is lost somewhere
+            //     Rigidbody.isKinematic = true;
+            // }
+            if (!IsLocalOwner)
             {
-                Rigidbody.isKinematic = !IsLocalOwner;
-            }
-            if (IsLocalOwner == false)
-            {
-                //   StartRemoteControl();
+                StartRemoteControl();
                 //      BasisObjectSyncSystem.StartApplyRemoteData(this);
             }
             else
             {
-             StopRemoteControl();
+                StopRemoteControl();
                 //   BasisObjectSyncSystem.StopApplyRemoteData(this);
             }
             OwnedPickupSet();

@@ -1,8 +1,6 @@
 using System;
-using System.Threading.Tasks;
 using Basis.Scripts.BasisSdk.Players;
 using Basis.Scripts.Device_Management.Devices;
-using Basis.Scripts.Drivers;
 using UnityEngine;
 
 // Needs Rigidbody for hover sphere `OnTriggerStay`
@@ -46,7 +44,7 @@ public abstract partial class InteractableObject: MonoBehaviour
     /// 2. (example) iskinematic set
     /// depending on puppeted state.
     /// </summary>
-    [HideInInspector]
+    // [HideInInspector]
     public bool IsPuppeted = false;
     // Delegates for interaction events
     public Action<BasisInput> OnInteractStartEvent;
@@ -60,12 +58,21 @@ public abstract partial class InteractableObject: MonoBehaviour
     // We already recommend calling the base method for Interact/Hover Start/End, so hopefully it wont be too big an issue.
     public virtual void Awake()
     {
-        BasisLocalPlayer.OnLocalPlayerCreatedAndReady += () => 
+        if (BasisLocalPlayer.PlayerReady)
+            SetupInputs();
+        else
+            BasisLocalPlayer.OnLocalPlayerCreatedAndReady += SetupInputs;
+    }
+
+    private void SetupInputs()
+    {
+        var Devices = Basis.Scripts.Device_Management.BasisDeviceManagement.Instance.AllInputDevices;
+        Devices.OnListAdded += OnInputAdded;
+        Devices.OnListItemRemoved += OnInputRemoved;        
+        foreach (BasisInput device in Devices)
         {
-            var Devices = Basis.Scripts.Device_Management.BasisDeviceManagement.Instance.AllInputDevices;
-            Devices.OnListAdded += OnInputAdded;
-            Devices.OnListItemRemoved += OnInputRemoved;
-        };
+            OnInputAdded(device);
+        }
     }
 
     public virtual void OnDestroy()
@@ -86,7 +93,9 @@ public abstract partial class InteractableObject: MonoBehaviour
         if(!Inputs.SetInputByRole(input, InteractInputState.Ignored))
             BasisDebug.LogError("New input added not setup as expected by InteractableObject");
         else
-            Debug.Log($"Input added: {Inputs.TryGetByRole(r, out BasisInputWrapper w)}, {w.Source.gameObject.name}, {w.GetState()}", input.gameObject);
+        {
+            // BasisDebug.Log($"{gameObject.name}: Input added. {Inputs.TryGetByRole(r, out BasisInputWrapper w)}, {w.Source.gameObject.name}, {w.GetState()}", input.gameObject);
+        }
     }
 
     private void OnInputRemoved(BasisInput input)
