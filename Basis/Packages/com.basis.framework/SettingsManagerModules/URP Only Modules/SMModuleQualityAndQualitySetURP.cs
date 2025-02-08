@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using static UnityEngine.Analytics.IAnalytic;
 namespace BattlePhaze.SettingsManager.Intergrations
@@ -30,10 +30,10 @@ namespace BattlePhaze.SettingsManager.Intergrations
             {
                 case "very low":
                     QualitySettings.anisotropicFiltering = VeryLow;
-                    QualitySettings.SetQualityLevel(2);
                     QualitySettings.realtimeReflectionProbes = false;
                     QualitySettings.softParticles = false;
                     QualitySettings.particleRaycastBudget = 256;
+                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
                     if (Data != null)
                     {
                         Data.renderPostProcessing = false;
@@ -45,10 +45,10 @@ namespace BattlePhaze.SettingsManager.Intergrations
                     break;
                 case "low":
                     QualitySettings.anisotropicFiltering = low;
-                    QualitySettings.SetQualityLevel(2);
                     QualitySettings.realtimeReflectionProbes = true;
                     QualitySettings.softParticles = true;
                     QualitySettings.particleRaycastBudget = 512;
+                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
                     if (Data != null)
                     {
                         Data.renderPostProcessing = true;
@@ -60,10 +60,10 @@ namespace BattlePhaze.SettingsManager.Intergrations
                     break;
                 case "medium":
                     QualitySettings.anisotropicFiltering = medium;
-                    QualitySettings.SetQualityLevel(1);
                     QualitySettings.realtimeReflectionProbes = true;
                     QualitySettings.softParticles = true;
                     QualitySettings.particleRaycastBudget = 1024;
+                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
                     if (Data != null)
                     {
                         Data.renderPostProcessing = true;
@@ -75,10 +75,10 @@ namespace BattlePhaze.SettingsManager.Intergrations
                     break;
                 case "high":
                     QualitySettings.anisotropicFiltering = high;
-                    QualitySettings.SetQualityLevel(0);
                     QualitySettings.realtimeReflectionProbes = true;
                     QualitySettings.softParticles = true;
                     QualitySettings.particleRaycastBudget = 2048;
+                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
                     if (Data != null)
                     {
                         Data.renderPostProcessing = true;
@@ -90,10 +90,10 @@ namespace BattlePhaze.SettingsManager.Intergrations
                     break;
                 case "ultra":
                     QualitySettings.anisotropicFiltering = ultra;
-                    QualitySettings.SetQualityLevel(0);
                     QualitySettings.realtimeReflectionProbes = true;
                     QualitySettings.softParticles = true;
                     QualitySettings.particleRaycastBudget = 4096;
+                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
                     if (Data != null)
                     {
                         Data.renderPostProcessing = true;
