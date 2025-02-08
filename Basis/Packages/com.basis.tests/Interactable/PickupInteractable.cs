@@ -374,6 +374,19 @@ public class PickupInteractable : InteractableObject
             return null;   
     }
 
+    public override void StartRemoteControl()
+    {
+        IsPuppeted = true;
+        // _previousKinematicValue = RigidRef.isKinematic;
+        // RigidRef.isKinematic = true;
+        // TODO: _previousKinematic state should be synced so late joiners have pickups behave properly
+    }
+    public override void StopRemoteControl()
+    {
+        IsPuppeted = false;
+        // RigidRef.isKinematic = _previousKinematicValue;
+    }
+
     public override void OnDestroy()
     {
         Destroy(HighlightClone);

@@ -17,6 +17,7 @@ namespace Basis.Scripts.BasisSdk.Players
     public class BasisLocalPlayer : BasisPlayer
     {
         public static BasisLocalPlayer Instance;
+        public static bool PlayerReady = false;
         public static Action OnLocalPlayerCreatedAndReady;
         public static Action OnLocalPlayerCreated;
         public BasisCharacterController.BasisCharacterController Move;
@@ -85,6 +86,7 @@ namespace Basis.Scripts.BasisSdk.Players
                 MicrophoneRecorder = BasisHelpers.GetOrAddComponent<MicrophoneRecorder>(this.gameObject);
             }
             MicrophoneRecorder.TryInitialize();
+            PlayerReady = true;
             OnLocalPlayerCreatedAndReady?.Invoke();
             BasisSceneFactory BasisSceneFactory = FindFirstObjectByType<BasisSceneFactory>(FindObjectsInactive.Exclude);
             if (BasisSceneFactory != null)

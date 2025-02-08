@@ -24,11 +24,17 @@ namespace Basis.Scripts.UI
         public Ray ray { get; private set; }
         public RaycastHit[] PhysicHits { get; private set; }
         public int PhysicHitCount { get; private set; }
-        const int k_MaxPhysicHitCount = 8;
+        // NOTE: this needs to be >= max number of colliders it can potentiall hit a scene, otherwise it will behave oddly
+        public static int k_MaxPhysicHitCount = 128;
 
 
         public BasisDeviceMatchSettings BasisDeviceMatchableNames;
         public BasisInput BasisInput;
+
+        [Header("Debug")]
+        public bool EnableDebug = false;
+        public List<GameObject> _DebugHitObjects;
+
 
         public override Camera eventCamera => BasisLocalCameraDriver.Instance.Camera;
         const string k_PlayerLayer = "Player";
@@ -89,6 +95,8 @@ namespace Basis.Scripts.UI
             PhysicHitCount = Physics.RaycastNonAlloc(ray, PhysicHits, MaxDistance, Mask, TriggerInteraction);
             // order from raycast is undefined, sort by distance
             Array.Sort(PhysicHits, (a, b) => a.distance.CompareTo(b.distance));
+            if (EnableDebug)
+                UpdateDebug();
         }
 
         // get a span of valid hits sorted by distance
@@ -149,7 +157,10 @@ namespace Basis.Scripts.UI
             
             return false;
         }
-
+        private void UpdateDebug()
+        {
+            _DebugHitObjects = PhysicHits[..PhysicHitCount].Select(x => x.collider != null ? x.collider.gameObject : null).ToList();
+        }
 
 
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
