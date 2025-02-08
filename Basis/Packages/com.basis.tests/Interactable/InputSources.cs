@@ -5,6 +5,7 @@ using Basis.Scripts.TransformBinders.BoneControl;
 
 public abstract partial class InteractableObject
 {
+    [Serializable]
     public struct InputSources {
         public BasisInputWrapper desktopCenterEye, leftHand, rightHand;
 
