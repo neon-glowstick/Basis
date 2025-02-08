@@ -124,7 +124,7 @@ public class PlayerInteract : MonoBehaviour
             InteractInput interactInput = InteractInputs[Index];
             if (interactInput.input == null)
             {
-                Debug.LogWarning("Pickup input device unexpectedly null, input devices likely changed");
+                BasisDebug.LogWarning("Pickup input device unexpectedly null, input devices likely changed");
                 continue;
             }
 
@@ -132,6 +132,13 @@ public class PlayerInteract : MonoBehaviour
             
             RaycastHit rayHit;
             InteractableObject hitInteractable = null;
+
+            if(interactInput.input.BasisPointRaycaster == null)
+            {
+                BasisDebug.LogWarning("Missing Point Raycaster!");
+                continue;
+            }
+
             bool isValidRayHit = interactInput.input.BasisPointRaycaster.FirstHit(out rayHit, raycastDistance) &&
                 ((1 << rayHit.collider.gameObject.layer) & InteractableLayerMask) != 0 &&
                 rayHit.collider.TryGetComponent(out hitInteractable);
