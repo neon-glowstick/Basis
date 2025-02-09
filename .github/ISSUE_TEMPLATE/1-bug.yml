@@ -1,0 +1,59 @@
+name: Bug Report
+description: When stuff is broken.
+labels: [bug]
+assignees: doolyl123
+body:
+  - type: textarea
+    id: Describe
+    attributes:
+      label: Describe the bug?
+      description: Plainly detail what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Describe the steps needed in order to reproduce the behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: The expected behavior
+      description: What you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Add media content here to assist with the troubleshooting.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: BasisVR Release Version
+      placeholder: 0.037A (example)
+    validations:
+      required: true
+  - type: input
+    id: headset
+    attributes:
+      label: What VR headsets are being used during this issue?
+      placeholder: None/Desktop Only, Index, Quest Pro?
+  - type: textarea
+    id: log-files
+    attributes:
+      label: Log Files
+      description: Snippet of the problem occurring in the BasisVR log files.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other detail about the issue goes here.
+    validations:
+      required: false

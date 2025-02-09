@@ -44,14 +44,14 @@ Please help shape the future of Basis and leave your mark on its foundation.
 
  ## Installation
  
-This project is currently using Unity 6 (6000.0.32f1)
+This project is currently using Unity 6 (6000.0.33f1)
 Other Unity versions may work but will require changes and adaptations.
 Currently, only OPENXR and SteamVR are supported.
 
 1. Make sure you have the correct Unity version installed.
 2. Clone the repository
    ```sh
-   git clone https://github.com/dooly123/Basis.git
+   git clone https://github.com/BasisVR/Basis.git
    ```
 3. Open the project and make sure to load the scene Initialization
 4. Enter play!
