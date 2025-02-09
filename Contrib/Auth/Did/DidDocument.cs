@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using DidUrlFragment = Basis.Contrib.Auth.DecentralizedIds.Newtypes.DidUrlFragment;
-using JsonWebKey = Microsoft.IdentityModel.Tokens.JsonWebKey;
 
 namespace Basis.Contrib.Auth.DecentralizedIds
 {
