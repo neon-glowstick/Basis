@@ -1,3 +1,5 @@
+#nullable enable
+
 // This file contains various wrapper types, to more safely differentiate them
 // and help code document itself.
 

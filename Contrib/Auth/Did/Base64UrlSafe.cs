@@ -1,3 +1,5 @@
+#nullable enable
+
 // Yes, this whole approach is cursed and inefficient. YOLOSWAG.
 
 namespace Basis.Contrib.Auth.DecentralizedIds
