@@ -344,23 +344,24 @@ namespace Basis.Scripts.Networking.Recievers
         }
         public override void DeInitialize()
         {
-            if (OuputVectors.IsCreated) OuputVectors.Dispose();
-            if (TargetVectors.IsCreated) TargetVectors.Dispose();
-            if (musclesPreEuro.IsCreated) musclesPreEuro.Dispose();
-            if (targetMuscles.IsCreated) targetMuscles.Dispose();
-            if(EuroValuesOutput.IsCreated) EuroValuesOutput.Dispose();
-            if (positionFilters.IsCreated) positionFilters.Dispose();
-            if (derivativeFilters.IsCreated) derivativeFilters.Dispose();
+            // Dispose vector data if initialized
+            if (OuputVectors != null && OuputVectors.IsCreated) OuputVectors.Dispose();
+            if (TargetVectors != null && TargetVectors.IsCreated) TargetVectors.Dispose();
+            if (musclesPreEuro != null && musclesPreEuro.IsCreated) musclesPreEuro.Dispose();
+            if (targetMuscles != null && targetMuscles.IsCreated) targetMuscles.Dispose();
+            if (EuroValuesOutput != null && EuroValuesOutput.IsCreated) EuroValuesOutput.Dispose();
+            if (positionFilters != null && positionFilters.IsCreated) positionFilters.Dispose();
+            if (derivativeFilters != null && derivativeFilters.IsCreated) derivativeFilters.Dispose();
 
-            if (HasEvents && RemotePlayer != null && RemotePlayer.RemoteAvatarDriver != null)
+            // Unsubscribe from events if required
+            if (HasEvents && RemotePlayer?.RemoteAvatarDriver != null)
             {
                 RemotePlayer.RemoteAvatarDriver.CalibrationComplete -= OnCalibration;
                 HasEvents = false;
             }
-            if (AudioReceiverModule != null)
-            {
-                AudioReceiverModule.OnDestroy();
-            }
+
+            // Handle audio receiver module cleanup
+            AudioReceiverModule?.OnDestroy();
         }
     }
 }
