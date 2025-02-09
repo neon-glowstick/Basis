@@ -1,58 +1,52 @@
-using System; // ReadOnlySpan
-using System.Text.Json;
-using System.Text.Json.Serialization;
+#nullable enable
+
+using Newtonsoft.Json;
 
 namespace Basis.Contrib.Auth.DecentralizedIds
 {
 	public class JsonWebKey
 	{
-		[JsonPropertyName("kty")]
+		[JsonProperty("kty")]
 		public string? Kty { get; set; }
 
-		[JsonPropertyName("kid")]
+		[JsonProperty("kid")]
 		public string? Kid { get; set; }
 
-		[JsonPropertyName("alg")]
+		[JsonProperty("alg")]
 		public string? Alg { get; set; }
 
-		[JsonPropertyName("use")]
+		[JsonProperty("use")]
 		public string? Use { get; set; }
 
 		// Ed25519 parameters
-		[JsonPropertyName("x")]
+		[JsonProperty("x")]
 		public string? X { get; set; }
 
-		[JsonPropertyName("d")]
+		[JsonProperty("d")]
 		public string? D { get; set; }
 
-		[JsonPropertyName("crv")]
+		[JsonProperty("crv")]
 		public string? Crv { get; set; }
 
 		// Symmetric key parameter
-		[JsonPropertyName("k")]
+		[JsonProperty("k")]
 		public string? K { get; set; }
 
-		// Helper method to exclude null values during serialization
-		public static JsonSerializerOptions SerializerOptions =>
+		public static JsonSerializerSettings SerializerSettings =>
 			new()
 			{
-				DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-				WriteIndented = true,
+				NullValueHandling = NullValueHandling.Ignore,
+				Formatting = Formatting.None,
 			};
 
 		public string Serialize()
 		{
-			return JsonSerializer.Serialize(this, SerializerOptions);
+			return JsonConvert.SerializeObject(this, SerializerSettings);
 		}
 
 		public static JsonWebKey? Deserialize(string json)
 		{
-			return JsonSerializer.Deserialize<JsonWebKey>(json, SerializerOptions);
-		}
-
-		public static JsonWebKey? Deserialize(ReadOnlySpan<byte> json)
-		{
-			return JsonSerializer.Deserialize<JsonWebKey>(json, SerializerOptions);
+			return JsonConvert.DeserializeObject<JsonWebKey>(json, SerializerSettings);
 		}
 	}
 }

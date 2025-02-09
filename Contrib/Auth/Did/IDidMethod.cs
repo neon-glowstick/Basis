@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Threading.Tasks;
 using Did = Basis.Contrib.Auth.DecentralizedIds.Newtypes.Did;
 using DidDocument = Basis.Contrib.Auth.DecentralizedIds.DidDocument;
