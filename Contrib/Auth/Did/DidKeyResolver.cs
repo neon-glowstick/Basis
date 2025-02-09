@@ -1,16 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
 using Base128 = WojciechMikołajewicz.Base128;
 using Base58 = SimpleBase.Base58;
 using Debug = System.Diagnostics.Debug;
 using Did = Basis.Contrib.Auth.DecentralizedIds.Newtypes.Did;
 using DidUrlFragment = Basis.Contrib.Auth.DecentralizedIds.Newtypes.DidUrlFragment;
 using Ed25519 = Org.BouncyCastle.Math.EC.Rfc8032.Ed25519;
-using JsonWebKey = Microsoft.IdentityModel.Tokens.JsonWebKey;
 using StringSplitOptions = System.StringSplitOptions;
 
 namespace Basis.Contrib.Auth.DecentralizedIds
@@ -91,7 +87,7 @@ namespace Basis.Contrib.Auth.DecentralizedIds
 			{
 				Kty = "OKP",
 				Crv = "Ed25519",
-				X = Base64UrlEncoder.Encode(pubkeyBytes),
+				X = Base64UrlSafe.Encode(pubkeyBytes),
 			};
 			return key;
 		}
