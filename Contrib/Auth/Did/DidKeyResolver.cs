@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Base128 = WojciechMikołajewicz.Base128;
 using Base58 = SimpleBase.Base58;
@@ -89,7 +87,7 @@ namespace Basis.Contrib.Auth.DecentralizedIds
 			{
 				Kty = "OKP",
 				Crv = "Ed25519",
-				X = System.Convert.ToBase64String(pubkeyBytes),
+				X = Base64UrlSafe.Encode(pubkeyBytes),
 			};
 			return key;
 		}
