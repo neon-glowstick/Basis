@@ -1,0 +1,21 @@
+{
+    "name": "Contrib.Upload.S3",
+    "rootNamespace": "org.BasisVr.Contrib.Upload.S3",
+    "references": [
+        "GUID:dde09067b7f7a054ca208a3c17c8f7c5"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "AWSSDK.S3.dll",
+        "AWSSDK.Core.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
