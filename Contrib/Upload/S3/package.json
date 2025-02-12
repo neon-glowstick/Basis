@@ -1,0 +1,10 @@
+{
+  "name": "org.basisvr.contrib.upload.s3",
+  "version": "0.0.0",
+  "displayName": "Contrib.Upload.S3",
+  "description": "Upload avatars to AWS S3 or Cloudflare R2",
+  "documentationUrl": "https://github.com/BasisVR/Basis",
+  "publishConfig": { "registry": "https://npm.pkg.github.com/@BasisVR" },
+  "repository":"https://github.com/BasisVR/Basis",
+  "dependencies": {}
+}
