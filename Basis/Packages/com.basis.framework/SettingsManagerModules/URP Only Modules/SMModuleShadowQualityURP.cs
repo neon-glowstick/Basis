@@ -25,10 +25,10 @@ public class SMModuleShadowQualityURP : SettingsManagerOption
         switch (Quality)
         {
             case "very low":
-                Asset.mainLightShadowmapResolution = 32;
-                Asset.additionalLightsShadowmapResolution = 32;
+                Asset.mainLightShadowmapResolution = 256;
+                Asset.additionalLightsShadowmapResolution = 256;
                 Asset.maxAdditionalLightsCount = 0;
-                Asset.shadowDistance = 0;
+                Asset.shadowDistance = 5;
                 break;
             case "low":
                 Asset.mainLightShadowmapResolution = 512;

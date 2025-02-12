@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 856542775716218512}
   - component: {fileID: 7905809387574739344}
-  - component: {fileID: 4886165225616498957}
   - component: {fileID: 3440983803499203360}
   - component: {fileID: 9200716433913716904}
   - component: {fileID: 5461552350079237887}
@@ -89,23 +88,6 @@ MonoBehaviour:
     Parse: 0
     Type: 3
   Mixer: {fileID: 24100000, guid: 471a0209081144d4da2426822e8a0b47, type: 2}
---- !u!114 &4886165225616498957
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3197856584617865972}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef39a73909e538d4787b1b98af083a51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ManagerModuleOptions:
-  - OptionName: Close Point Shadows
-    Explanation: Close Point Shadows
-    Parse: 1
-    Type: 1
 --- !u!114 &3440983803499203360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,16 +185,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ManagerModuleOptions:
+  - OptionName: Opaque Support
+    Explanation: 
+    Parse: 1
+    Type: 1
+  - OptionName: Depth Support
+    Explanation: 
+    Parse: 1
+    Type: 1
   - OptionName: Quality Level
     Explanation: Quality Level
     Parse: 1
     Type: 1
   Data: {fileID: 0}
-  VeryLow: 0
-  low: 0
-  medium: 1
-  high: 1
-  ultra: 1
   Camera: {fileID: 0}
 --- !u!114 &1569955236900806052
 MonoBehaviour:
@@ -294,9 +279,9 @@ MonoBehaviour:
     Type: 1
   Manager: {fileID: 2948345398921965871}
   MicrophoneDevice:
-  - Microphone (Antlion Wireless Microphone)
-  - Microphone (NVIDIA Broadcast)
   - Microphone (Virtual Desktop Audio)
+  - Microphone (NVIDIA Broadcast)
+  - Microphone (Antlion Wireless Microphone)
   - Microphone (Steam Streaming Microphone)
   - Microphone (RODE NT-USB)
 --- !u!114 &2900259308473471863
@@ -432,7 +417,7 @@ MonoBehaviour:
     Explanation: UpScaler
     Parse: 1
     Type: 1
-  RenderScale: 0.9680337
+  RenderScale: 0.9523397
 --- !u!114 &1359221182720975491
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -780,7 +765,6 @@ MonoBehaviour:
   - {fileID: 5461552350079237887}
   - {fileID: 9200716433913716904}
   - {fileID: 3440983803499203360}
-  - {fileID: 4886165225616498957}
   - {fileID: 7905809387574739344}
   Options:
   - EditorBasedUIToggles:
@@ -1250,10 +1234,10 @@ MonoBehaviour:
       UserValue: Ultra
   - EditorBasedUIToggles:
       SupportedRenderPipelines: 0
-      DefaultPlatform: 0
-      ExcludePlatform: 0
+      DefaultPlatform: 1
+      ExcludePlatform: 1
       ValueToggle: 1
-      EditorVisable: 0
+      EditorVisable: 1
     SupportedRenderPipeline: 030000000400000000000000
     Round: 0
     RoundTo: 2
@@ -1264,24 +1248,29 @@ MonoBehaviour:
     Name: HDR Support
     ValueDescriptor: HDR Support
     SelectedValueDefault: true
-    ValueDefault: true
+    ValueDefault: normal
     Explanation: HDR Support
-    selectedValue: false
+    selectedValue: normal
     Type: 1
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
     ApplyInput: {fileID: 0}
     ResetToDefault: {fileID: 0}
-    PlatFormDefaultState: []
+    PlatFormDefaultState:
+    - Platform: 11
+      GraphicsVendor: 3
+      SetString: off
     ExcludeFromThesePlatforms: []
     MasterQualityState: 0
     ParseController: 1
     ReturnedValueTextType: 0
     SelectableValueList:
-    - realValue: true
-      UserValue: true
-    - realValue: false
-      UserValue: false
+    - realValue: ultra
+      UserValue: Ultra
+    - realValue: normal
+      UserValue: Normal
+    - realValue: off
+      UserValue: Off
   - EditorBasedUIToggles:
       SupportedRenderPipelines: 0
       DefaultPlatform: 0
@@ -1300,7 +1289,7 @@ MonoBehaviour:
     SelectedValueDefault: ultra
     ValueDefault: ultra
     Explanation: Terrain Quality
-    selectedValue: ultra
+    selectedValue: medium
     Type: 1
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1380,7 +1369,7 @@ MonoBehaviour:
     SelectedValueDefault: 
     ValueDefault: false
     Explanation: 
-    selectedValue: false
+    selectedValue: true
     Type: 1
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1528,7 +1517,7 @@ MonoBehaviour:
     SelectedValueDefault: 
     ValueDefault: windowed
     Explanation: 
-    selectedValue: fullscreen
+    selectedValue: windowed
     Type: 2
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1596,7 +1585,7 @@ MonoBehaviour:
     SelectedValueDefault: 
     ValueDefault: False
     Explanation: 
-    selectedValue: microphone (rode nt-usb)
+    selectedValue: microphone (virtual desktop audio)
     Type: 2
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1608,12 +1597,12 @@ MonoBehaviour:
     ParseController: 1
     ReturnedValueTextType: 0
     SelectableValueList:
-    - realValue: microphone (antlion wireless microphone)
-      UserValue: Microphone (Antlion Wireless Microphone)
-    - realValue: microphone (nvidia broadcast)
-      UserValue: Microphone (NVIDIA Broadcast)
     - realValue: microphone (virtual desktop audio)
       UserValue: Microphone (Virtual Desktop Audio)
+    - realValue: microphone (nvidia broadcast)
+      UserValue: Microphone (NVIDIA Broadcast)
+    - realValue: microphone (antlion wireless microphone)
+      UserValue: Microphone (Antlion Wireless Microphone)
     - realValue: microphone (steam streaming microphone)
       UserValue: Microphone (Steam Streaming Microphone)
     - realValue: microphone (rode nt-usb)
@@ -1636,7 +1625,7 @@ MonoBehaviour:
     SelectedValueDefault: 100
     ValueDefault: 100
     Explanation: Main Audio
-    selectedValue: 100
+    selectedValue: 12
     Type: 3
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1696,7 +1685,7 @@ MonoBehaviour:
     SelectedValueDefault: 50
     ValueDefault: 80
     Explanation: Player Volume
-    selectedValue: 80
+    selectedValue: 55
     Type: 3
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1786,7 +1775,7 @@ MonoBehaviour:
     SelectedValueDefault: 1
     ValueDefault: 1
     Explanation: 
-    selectedValue: 1.051715
+    selectedValue: 1.126944
     Type: 3
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1816,7 +1805,7 @@ MonoBehaviour:
     SelectedValueDefault: 1
     ValueDefault: 1
     Explanation: 
-    selectedValue: 0.9648492
+    selectedValue: 0.9523397
     Type: 3
     TextDescription: {fileID: 0}
     ObjectInput: {fileID: 0}
@@ -1978,6 +1967,80 @@ MonoBehaviour:
     ParseController: 1
     ReturnedValueTextType: 1
     SelectableValueList: []
+  - EditorBasedUIToggles:
+      SupportedRenderPipelines: 0
+      DefaultPlatform: 1
+      ExcludePlatform: 1
+      ValueToggle: 1
+      EditorVisable: 0
+    SupportedRenderPipeline: 030000000400000000000000
+    Round: 0
+    RoundTo: 2
+    MaxPercentage: 100
+    MinPercentage: 0
+    SliderMaxValue: 100
+    SliderMinValue: 0
+    Name: Depth Support
+    ValueDescriptor: Depth Support
+    SelectedValueDefault: 
+    ValueDefault: True
+    Explanation: 
+    selectedValue: off
+    Type: 1
+    TextDescription: {fileID: 0}
+    ObjectInput: {fileID: 0}
+    ApplyInput: {fileID: 0}
+    ResetToDefault: {fileID: 0}
+    PlatFormDefaultState:
+    - Platform: 11
+      GraphicsVendor: 3
+      SetString: False
+    ExcludeFromThesePlatforms: []
+    MasterQualityState: 0
+    ParseController: 1
+    ReturnedValueTextType: 0
+    SelectableValueList:
+    - realValue: off
+      UserValue: Off
+    - realValue: on
+      UserValue: On
+  - EditorBasedUIToggles:
+      SupportedRenderPipelines: 0
+      DefaultPlatform: 1
+      ExcludePlatform: 0
+      ValueToggle: 1
+      EditorVisable: 0
+    SupportedRenderPipeline: 030000000400000000000000
+    Round: 0
+    RoundTo: 2
+    MaxPercentage: 100
+    MinPercentage: 0
+    SliderMaxValue: 100
+    SliderMinValue: 0
+    Name: Opaque Support
+    ValueDescriptor: Opaque Support
+    SelectedValueDefault: 
+    ValueDefault: True
+    Explanation: 
+    selectedValue: off
+    Type: 1
+    TextDescription: {fileID: 0}
+    ObjectInput: {fileID: 0}
+    ApplyInput: {fileID: 0}
+    ResetToDefault: {fileID: 0}
+    PlatFormDefaultState:
+    - Platform: 11
+      GraphicsVendor: 3
+      SetString: False
+    ExcludeFromThesePlatforms: []
+    MasterQualityState: 0
+    ParseController: 1
+    ReturnedValueTextType: 0
+    SelectableValueList:
+    - realValue: off
+      UserValue: Off
+    - realValue: on
+      UserValue: On
   SaveModules:
   - {fileID: 4578771601958354073}
   - {fileID: 1567513160798075255}
@@ -2007,7 +2070,7 @@ MonoBehaviour:
   WorkArounds:
   - Name: Antialiasing
     DefaultValue: smaa
-    SelectedValue: smaa
+    SelectedValue: low
     Index: 0
     SelectableValueList:
     - realValue: very low
@@ -2126,7 +2189,7 @@ MonoBehaviour:
     Max: 0
   - Name: Vertical Sync
     DefaultValue: on
-    SelectedValue: on
+    SelectedValue: off
     Index: 7
     SelectableValueList:
     - realValue: on
@@ -2194,18 +2257,20 @@ MonoBehaviour:
     Max: 0
   - Name: HDR Support
     DefaultValue: true
-    SelectedValue: true
+    SelectedValue: normal
     Index: 11
     SelectableValueList:
-    - realValue: true
-      UserValue: true
-    - realValue: false
-      UserValue: false
+    - realValue: ultra
+      UserValue: Ultra
+    - realValue: normal
+      UserValue: Normal
+    - realValue: off
+      UserValue: Off
     Min: 0
     Max: 0
   - Name: Terrain Quality
     DefaultValue: ultra
-    SelectedValue: ultra
+    SelectedValue: medium
     Index: 12
     SelectableValueList:
     - realValue: very low
@@ -2239,7 +2304,7 @@ MonoBehaviour:
     Max: 0
   - Name: Microphone Denoiser
     DefaultValue: 
-    SelectedValue: false
+    SelectedValue: true
     Index: 14
     SelectableValueList:
     - realValue: true
@@ -2261,7 +2326,7 @@ MonoBehaviour:
     Max: 0
   - Name: Resolution
     DefaultValue: 
-    SelectedValue: 2560x1440
+    SelectedValue: 1920x1080
     Index: 16
     SelectableValueList:
     - realValue: 640x480
@@ -2318,15 +2383,15 @@ MonoBehaviour:
     Max: 0
   - Name: ScreenMode
     DefaultValue: 
-    SelectedValue: windowed
+    SelectedValue: fullscreen
     Index: 17
     SelectableValueList:
     - realValue: fullscreen
-      UserValue: fullscreen
+      UserValue: Fullscreen
     - realValue: maximized window
       UserValue: Maximized Window
     - realValue: windowed
-      UserValue: windowed
+      UserValue: Windowed
     Min: 0
     Max: 0
   - Name: Monitor
@@ -2340,74 +2405,70 @@ MonoBehaviour:
     Max: 0
   - Name: Selected Microphone
     DefaultValue: 
-    SelectedValue: microphone (nvidia broadcast)
+    SelectedValue: 0
     Index: 19
     SelectableValueList:
     - realValue: microphone (virtual desktop audio)
       UserValue: Microphone (Virtual Desktop Audio)
-    - realValue: microphone (antlion wireless microphone)
-      UserValue: Microphone (Antlion Wireless Microphone)
-    - realValue: headset microphone (oculus virtual audio device)
-      UserValue: Headset Microphone (Oculus Virtual Audio Device)
-    - realValue: microphone (logitech streamcam)
-      UserValue: Microphone (Logitech StreamCam)
-    - realValue: microphone (rode nt-usb)
-      UserValue: Microphone (RODE NT-USB)
-    - realValue: microphone (steam streaming microphone)
-      UserValue: Microphone (Steam Streaming Microphone)
     - realValue: microphone (nvidia broadcast)
       UserValue: Microphone (NVIDIA Broadcast)
+    - realValue: microphone (antlion wireless microphone)
+      UserValue: Microphone (Antlion Wireless Microphone)
+    - realValue: microphone (steam streaming microphone)
+      UserValue: Microphone (Steam Streaming Microphone)
+    - realValue: microphone (rode nt-usb)
+      UserValue: Microphone (RODE NT-USB)
     Min: 0
     Max: 0
   - Name: Main Audio
     DefaultValue: 100
-    SelectedValue: 100
+    SelectedValue: 12
     Index: 20
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 100
   - Name: Menus Volume
     DefaultValue: 50
-    SelectedValue: 70
+    SelectedValue: 80
     Index: 21
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 80
   - Name: World Volume
     DefaultValue: 50
-    SelectedValue: 70
+    SelectedValue: 55
     Index: 22
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 80
   - Name: Player Volume
     DefaultValue: 50
-    SelectedValue: 70
+    SelectedValue: 80
     Index: 23
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 80
   - Name: Microphone Volume
     DefaultValue: 1
     SelectedValue: 1
     Index: 24
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 1
   - Name: Mcrophone Volume
     DefaultValue: 1
-    SelectedValue: 1
+    SelectedValue: 1.126944
     Index: 25
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 1.5
   - Name: Render Resolution
     DefaultValue: 1
-    SelectedValue: 0.9680337
+    SelectedValue: 0.9523397
     Index: 26
     SelectableValueList: []
-    Min: 0
-    Max: 0
+    Min: 0.25
+    Max: 1.5
   - Name: Controller DeadZone
     DefaultValue: 0.05
     SelectedValue: 0.1
@@ -2417,32 +2478,54 @@ MonoBehaviour:
     Max: 0.5
   - Name: Microphone Range
     DefaultValue: 
-    SelectedValue: 
+    SelectedValue: 25
     Index: 28
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 25
   - Name: Hearing Range
     DefaultValue: 
-    SelectedValue: 
+    SelectedValue: 25
     Index: 29
     SelectableValueList: []
     Min: 0
-    Max: 0
+    Max: 25
   - Name: Maximum Avatar Distance
-    DefaultValue: 
-    SelectedValue: 
+    DefaultValue: 75
+    SelectedValue: 75
     Index: 30
     SelectableValueList: []
     Min: 0
     Max: 0
-  - Name: 
+  - Name: Snap Turn Angle
     DefaultValue: 
-    SelectedValue: 0
+    SelectedValue: -1
     Index: 31
     SelectableValueList: []
     Min: -1
     Max: 90
+  - Name: Depth Support
+    DefaultValue: 
+    SelectedValue: off
+    Index: 32
+    SelectableValueList:
+    - realValue: off
+      UserValue: Off
+    - realValue: on
+      UserValue: On
+    Min: 0
+    Max: 0
+  - Name: Opaque Support
+    DefaultValue: 
+    SelectedValue: off
+    Index: 33
+    SelectableValueList:
+    - realValue: off
+      UserValue: Off
+    - realValue: on
+      UserValue: On
+    Min: 0
+    Max: 0
   DefaultSaveType:
     Platform: 0
     SaveType: JSON
@@ -2649,11 +2732,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Selector: {fileID: 11400000, guid: 8393424ebf34934449c2d1309a700837, type: 2}
   DefaultScene:
-    UnlockPassword: Scene
+    UnlockPassword: 
     BasisRemoteBundleEncrypted:
       IsLocal: 0
-      MetaURL: https://BasisFramework.b-cdn.net/Worlds/Oasis2/c4096975-b089-468e-92e1-bd9bea145c04_638716034722167144.BasisEncyptedMeta
-      BundleURL: https://BasisFramework.b-cdn.net/Worlds/Oasis2/c4096975-b089-468e-92e1-bd9bea145c04_638716034722167144.BasisEncyptedBundle
+      MetaURL: 
+      BundleURL: 
     BasisLocalEncryptedBundle:
       LocalMetaFile: 
       LocalBundleFile: 

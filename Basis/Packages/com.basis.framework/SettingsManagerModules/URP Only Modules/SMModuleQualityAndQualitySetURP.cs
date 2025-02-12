@@ -1,108 +1,121 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-using static UnityEngine.Analytics.IAnalytic;
+
 namespace BattlePhaze.SettingsManager.Intergrations
 {
     public class SMModuleQualityAndQualitySetURP : SettingsManagerOption
     {
         public UniversalAdditionalCameraData Data;
+
         public override void ReceiveOption(SettingsMenuInput Option, SettingsManager Manager)
         {
             if (NameReturn(0, Option))
             {
+                ChangeOpaque(Option.SelectedValue);
+                QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
+            }
+            if (NameReturn(1, Option))
+            {
+                ChangeDepth(Option.SelectedValue);
+                QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
+            }
+            if (NameReturn(2, Option))
+            {
                 ChangeQualityLevel(Option.SelectedValue);
+
             }
         }
-        public AnisotropicFiltering VeryLow = AnisotropicFiltering.Disable;
-        public AnisotropicFiltering low = AnisotropicFiltering.Disable;
-        public AnisotropicFiltering medium = AnisotropicFiltering.Enable;
-        public AnisotropicFiltering high = AnisotropicFiltering.Enable;
-        public AnisotropicFiltering ultra = AnisotropicFiltering.Enable;
+
         public Camera Camera;
-        public void ChangeQualityLevel(string Quality)
+
+        private void EnsureCameraData()
         {
             if (Camera == null)
             {
                 Camera = Camera.main;
                 Data = Camera.GetComponent<UniversalAdditionalCameraData>();
             }
-            switch (Quality)
+        }
+
+        public void ChangeOpaque(string value)
+        {
+            EnsureCameraData();
+
+            if (Data != null)
+            {
+                bool State = value == "on";
+                Data.requiresColorOption = State ? CameraOverrideOption.On: CameraOverrideOption.Off;
+                Data.requiresColorTexture = State;
+                Debug.Log($"Opaque rendering set to {value}.");
+            }
+        }
+
+        public void ChangeDepth(string value)
+        {
+            EnsureCameraData();
+
+            if (Data != null)
+            {
+                bool State = value == "on";
+                Data.requiresDepthOption = State? CameraOverrideOption.On: CameraOverrideOption.Off;
+                Data.requiresDepthTexture = State;
+               Debug.Log($"Depth rendering set to {value}.");
+            }
+        }
+        public void ChangePostProcessing(string value)
+        {
+            EnsureCameraData();
+
+            if (Data != null)
+            {
+                Data.renderPostProcessing = value == "on";
+               // Debug.Log($"Post Processing set to {value}.");
+            }
+        }
+
+        public void ChangeQualityLevel(string quality)
+        {
+            EnsureCameraData();
+
+            switch (quality)
             {
                 case "very low":
-                    QualitySettings.anisotropicFiltering = VeryLow;
-                    QualitySettings.realtimeReflectionProbes = false;
-                    QualitySettings.softParticles = false;
-                    QualitySettings.particleRaycastBudget = 256;
-                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
-                    if (Data != null)
-                    {
-                        Data.renderPostProcessing = false;
-                        Data.requiresColorOption = CameraOverrideOption.Off;
-                        Data.requiresDepthOption = CameraOverrideOption.Off;
-                        Data.renderShadows = false;
-                        Data.stopNaN = false;
-                    }
+                    ApplyQualitySettings(AnisotropicFiltering.Disable, 256, false, false);
+                    Data.renderPostProcessing = false;
                     break;
                 case "low":
-                    QualitySettings.anisotropicFiltering = low;
-                    QualitySettings.realtimeReflectionProbes = true;
-                    QualitySettings.softParticles = true;
-                    QualitySettings.particleRaycastBudget = 512;
-                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
-                    if (Data != null)
-                    {
-                        Data.renderPostProcessing = true;
-                        Data.requiresColorOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.requiresDepthOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.renderShadows = true;
-                        Data.stopNaN = true;
-                    }
+                    ApplyQualitySettings(AnisotropicFiltering.Disable, 512, true, true);
+                    Data.renderPostProcessing = true;
                     break;
                 case "medium":
-                    QualitySettings.anisotropicFiltering = medium;
-                    QualitySettings.realtimeReflectionProbes = true;
-                    QualitySettings.softParticles = true;
-                    QualitySettings.particleRaycastBudget = 1024;
-                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
-                    if (Data != null)
-                    {
-                        Data.renderPostProcessing = true;
-                        Data.requiresColorOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.requiresDepthOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.renderShadows = true;
-                        Data.stopNaN = true;
-                    }
+                    ApplyQualitySettings(AnisotropicFiltering.Enable, 1024, true, true);
+                    Data.renderPostProcessing = true;
                     break;
                 case "high":
-                    QualitySettings.anisotropicFiltering = high;
-                    QualitySettings.realtimeReflectionProbes = true;
-                    QualitySettings.softParticles = true;
-                    QualitySettings.particleRaycastBudget = 2048;
-                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
-                    if (Data != null)
-                    {
-                        Data.renderPostProcessing = true;
-                        Data.requiresColorOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.requiresDepthOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.renderShadows = true;
-                        Data.stopNaN = true;
-                    }
+                    ApplyQualitySettings(AnisotropicFiltering.Enable, 2048, true, true);
+                    Data.renderPostProcessing = true;
                     break;
                 case "ultra":
-                    QualitySettings.anisotropicFiltering = ultra;
-                    QualitySettings.realtimeReflectionProbes = true;
-                    QualitySettings.softParticles = true;
-                    QualitySettings.particleRaycastBudget = 4096;
-                    QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
-                    if (Data != null)
-                    {
-                        Data.renderPostProcessing = true;
-                        Data.requiresColorOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.requiresDepthOption = CameraOverrideOption.UsePipelineSettings;
-                        Data.renderShadows = true;
-                        Data.stopNaN = true;
-                    }
+                    ApplyQualitySettings(AnisotropicFiltering.Enable, 4096, true, true);
+                    Data.renderPostProcessing = true;
                     break;
+            }
+        }
+
+        private void ApplyQualitySettings(
+            AnisotropicFiltering anisotropicFilter,
+            int particleBudget,
+            bool renderShadows,
+            bool stopNaN)
+        {
+            QualitySettings.anisotropicFiltering = anisotropicFilter;
+            QualitySettings.particleRaycastBudget = particleBudget;
+            QualitySettings.SetQualityLevel(QualitySettings.GetQualityLevel(), true);
+
+            if (Data != null)
+            {
+                Data.renderShadows = renderShadows;
+                Data.stopNaN = stopNaN;
             }
         }
     }

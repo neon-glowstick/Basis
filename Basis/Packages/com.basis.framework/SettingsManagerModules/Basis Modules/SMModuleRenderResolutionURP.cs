@@ -58,17 +58,17 @@ public class SMModuleRenderResolutionURP : SettingsManagerOption
                 XRSettings.useOcclusionMesh = true;
             }
             UniversalRenderPipelineAsset Asset = (UniversalRenderPipelineAsset)QualitySettings.renderPipeline;
-            if (Asset.renderScale != 1)
-            {
-                Asset.renderScale = 1;
-            }
+           // if (Asset.renderScale != 1)
+           // {
+            //    Asset.renderScale = 1;
+           // }
             if (XRSettings.eyeTextureResolutionScale != renderScale)
             {
                 XRSettings.eyeTextureResolutionScale = RenderScale;
             }
-            if (XRSettings.renderViewportScale != 1)
+            if (XRSettings.renderViewportScale != RenderScale)
             {
-                XRSettings.renderViewportScale = 1;
+                XRSettings.renderViewportScale = RenderScale;
             }
         }
     }

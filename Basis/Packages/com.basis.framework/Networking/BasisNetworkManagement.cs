@@ -242,6 +242,7 @@ namespace Basis.Scripts.Networking
                 IpString = "localhost";
                 BasisNetworkServerRunner = new BasisNetworkServerRunner();
                 Configuration ServerConfig =   new Configuration() { IPv4Address = IpString };
+                ServerConfig.UsingLoggingFile = false;
                 BasisNetworkServerRunner.Initalize(ServerConfig,string.Empty);
             }
 

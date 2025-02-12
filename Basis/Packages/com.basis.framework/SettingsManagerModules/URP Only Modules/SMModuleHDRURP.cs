@@ -9,13 +9,27 @@ public class SMModuleHDRURP : SettingsManagerOption
     {
         if (NameReturn(0, Option))
         {
-            SetHDR(Option.SelectedValue);
+            SetHDRPrecision(Option.SelectedValue);
         }
     }
-    public void SetHDR(string SelectedValue)
+    public void SetHDRPrecision(string SelectedValue)
     {
         UniversalRenderPipelineAsset Asset = (UniversalRenderPipelineAsset)QualitySettings.renderPipeline;
-        Asset.supportsHDR = CheckIsOn(SelectedValue);
+        switch (SelectedValue)
+        {
+            case "ultra":
+                Asset.hdrColorBufferPrecision = HDRColorBufferPrecision._64Bits;
+                Asset.supportsHDR = true;
+                break;
+            case "normal":
+                Asset.hdrColorBufferPrecision = HDRColorBufferPrecision._32Bits;
+                Asset.supportsHDR = true;
+                break;
+            case "off":
+                Asset.hdrColorBufferPrecision = HDRColorBufferPrecision._32Bits;
+                Asset.supportsHDR = false;
+                break;
+        }
     }
 }
 #endif
