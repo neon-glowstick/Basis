@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using Amazon.Runtime;
 using Amazon.S3;
 using UnityEditor;
 using UnityEngine;
@@ -127,8 +128,20 @@ namespace org.BasisVr.Contrib.Upload.S3
                     return;
                 }
 
-                // todo Actually upload
+                var credentials = new BasicAWSCredentials(_config.AccessKey, _config.SecretKey);
+                using var client = new AmazonS3Client(credentials, new AmazonS3Config
+                {
+                    ServiceURL = _config.ServiceUrl,
+                    RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
+                    ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED
+                });
+
+                await client.PutObjectAsync(_config.AvatarBucket, assetBundlePath, Application.exitCancellationToken);
+                await client.PutObjectAsync(_config.AvatarBucket, metaFilePath, Application.exitCancellationToken);
+
                 // todo Progress bar for upload of bundle and meta file
+
+                // todo Display urls where the avatar and meta file were uploaded. And button to copy to clipboard?
             }
             catch (Exception e)
             {
