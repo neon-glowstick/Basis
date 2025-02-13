@@ -125,7 +125,7 @@ namespace org.BasisVr.Contrib.Upload.S3
             _uploadButton.SetEnabled(false);
             try
             {
-                var assetBundleDirectory = Path.Combine(Application.dataPath, "../AssetBundles");
+                var assetBundleDirectory = Path.Combine(Environment.CurrentDirectory, "AssetBundles");
                 if (!TryGetFilesToUpload(assetBundleDirectory, out var assetBundlePath, out var metaFilePath))
                 {
                     Debug.LogError($"Could not find avatar to upload in :{assetBundleDirectory}");
@@ -206,8 +206,8 @@ namespace org.BasisVr.Contrib.Upload.S3
                 return false;
 
             var files = Directory.GetFiles(directory);
-            assetBundlePath = files.FirstOrDefault(f => f.EndsWith("BasisEncryptedBundle"));
-            metaFilePath = files.FirstOrDefault(f => f.EndsWith("BasisEncryptedMeta"));
+            assetBundlePath = files.FirstOrDefault(f => f.EndsWith("BasisEncyptedBundle"));
+            metaFilePath = files.FirstOrDefault(f => f.EndsWith("BasisEncyptedMeta"));
 
             var foundBoth = !string.IsNullOrEmpty(assetBundlePath) && !string.IsNullOrEmpty(metaFilePath);
             return foundBoth;
