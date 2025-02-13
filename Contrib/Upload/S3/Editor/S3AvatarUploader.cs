@@ -142,8 +142,6 @@ namespace org.BasisVr.Contrib.Upload.S3
 
                 await UploadFile(client, _config.AvatarBucket, assetBundlePath, Application.exitCancellationToken);
                 await UploadFile(client, _config.AvatarBucket, metaFilePath, Application.exitCancellationToken);
-
-                // todo Display urls where the avatar and meta file were uploaded. And button to copy to clipboard?
             }
             catch (Exception e)
             {
