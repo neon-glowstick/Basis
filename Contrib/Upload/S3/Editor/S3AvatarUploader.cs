@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
+using Amazon.S3;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -18,9 +18,9 @@ namespace org.BasisVr.Contrib.Upload.S3
         }
 
         private const string ConfigFile = "BasisVrS3UploadConfig.json";
-        private static Button _uploadButton;
         private static S3Config _config = new();
 
+        private static Button _uploadButton;
         private static TextField _accessKeyField;
         private static TextField _secretKeyField;
         private static TextField _serviceUrlField;
@@ -120,6 +120,13 @@ namespace org.BasisVr.Contrib.Upload.S3
             _uploadButton.SetEnabled(false);
             try
             {
+                var assetBundleDirectory = Path.Combine(Application.dataPath, "../AssetBundles");
+                if (!TryGetFilesToUpload(assetBundleDirectory, out var assetBundlePath, out var metaFilePath))
+                {
+                    Debug.LogError($"Could not find avatar to upload in :{assetBundleDirectory}");
+                    return;
+                }
+
                 // todo Actually upload
                 // todo Progress bar for upload of bundle and meta file
             }
@@ -128,6 +135,26 @@ namespace org.BasisVr.Contrib.Upload.S3
                 Debug.LogError($"Upload failed: {e.Message}");
             }
             _uploadButton.SetEnabled(true);
+        }
+
+        private static bool TryGetFilesToUpload(string directory, out string assetBundlePath, out string metaFilePath)
+        {
+            assetBundlePath = string.Empty;
+            metaFilePath = string.Empty;
+
+            // Make some assumptions, at the time of writing:
+            // The files are placed in the AssetBundles folder at the root of the Unity project
+            // There can only be 1 avatar built at a time. Building a new avatar replaces the files in AssetBundles
+            Debug.Log(directory);
+            if (!Directory.Exists(directory))
+                return false;
+
+            var files = Directory.GetFiles(directory);
+            assetBundlePath = files.FirstOrDefault(f => f.EndsWith("BasisEncryptedBundle"));
+            metaFilePath = files.FirstOrDefault(f => f.EndsWith("BasisEncryptedMeta"));
+
+            var foundBoth = !string.IsNullOrEmpty(assetBundlePath) && !string.IsNullOrEmpty(metaFilePath);
+            return foundBoth;
         }
 
         private static S3Config LoadConfig()
