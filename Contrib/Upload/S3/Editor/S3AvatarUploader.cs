@@ -1,8 +1,12 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.S3;
+using Amazon.S3.Model;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -136,10 +140,8 @@ namespace org.BasisVr.Contrib.Upload.S3
                     ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED
                 });
 
-                await client.PutObjectAsync(_config.AvatarBucket, assetBundlePath, Application.exitCancellationToken);
-                await client.PutObjectAsync(_config.AvatarBucket, metaFilePath, Application.exitCancellationToken);
-
-                // todo Progress bar for upload of bundle and meta file
+                await UploadFile(client, _config.AvatarBucket, assetBundlePath, Application.exitCancellationToken);
+                await UploadFile(client, _config.AvatarBucket, metaFilePath, Application.exitCancellationToken);
 
                 // todo Display urls where the avatar and meta file were uploaded. And button to copy to clipboard?
             }
@@ -150,6 +152,50 @@ namespace org.BasisVr.Contrib.Upload.S3
             _uploadButton.SetEnabled(true);
         }
 
+        private static async Task UploadFile(IAmazonS3 s3Client, string bucketName, string filePath, CancellationToken cancellationToken)
+        {
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var request = new PutObjectRequest
+            {
+                FilePath = filePath,
+                BucketName = bucketName,
+                DisablePayloadSigning = true
+            };
+
+            var title = "Upload";
+            var infoText = $"Uploading to bucket {bucketName}\n{filePath}";
+            try
+            {
+                request.StreamTransferProgress += (sender, args) =>
+                {
+                    var cancelled =
+                        EditorUtility.DisplayCancelableProgressBar(title, infoText, args.PercentDone / 100f);
+                    if (cancelled)
+                    {
+                        cts.Cancel();
+                    }
+                };
+
+                var response = await s3Client.PutObjectAsync(request, cts.Token);
+                if (response.HttpStatusCode is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous)
+                {
+                    Debug.Log($"Upload completed with status code {response.HttpStatusCode} for {filePath}");
+                }
+                else
+                {
+                    Debug.LogError($"Upload failed with status code {response.HttpStatusCode} for {filePath}");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Upload failed {e.Message}");
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
         private static bool TryGetFilesToUpload(string directory, out string assetBundlePath, out string metaFilePath)
         {
             assetBundlePath = string.Empty;
@@ -158,7 +204,6 @@ namespace org.BasisVr.Contrib.Upload.S3
             // Make some assumptions, at the time of writing:
             // The files are placed in the AssetBundles folder at the root of the Unity project
             // There can only be 1 avatar built at a time. Building a new avatar replaces the files in AssetBundles
-            Debug.Log(directory);
             if (!Directory.Exists(directory))
                 return false;
 
